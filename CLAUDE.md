@@ -100,11 +100,9 @@ plot(fig, ax, lambda_list, T, color=colors.blue)
 ### Experimental Track
 - **`bruggeman_mixture_search.py`** — searches 2-material Bruggeman mixtures for target (n,k,d)
 - **`bruggeman_load_TMM.py`** — loads precomputed nk from mixture search, runs TMM
-- **`lamellar_EMT_substrate.py`** — compares Bruggeman, stratified, and lamellar EMT approaches
+- **`EMT_bruggeman_vs_stratified_vs_lamellar.py`** — compares 3 EMT methods (Bruggeman, stratified, lamellar) for graphite/sapphire on ZnS in mid-IR
+- **`stratified_fab_design_SiAu_visible.py`** — fab team's device: stratified graphite/sapphire on Si+Au in visible/near-IR, computes Ψ/Δ
 - **`key_mixed_layers_on_substrate_2025Oct30.py`** — specific Bruggeman mixture test on ZnS substrate
-
-### Pending Review (kept but may have bugs)
-- **`single_mixed_layer_on_substrate.py`** — overlaps with lamellar_EMT_substrate.py
 
 Both tracks share `tmm_helper.py` and the `RI/` data. Do not reorganize into subfolders — relative paths to `RI/` files would break.
 
