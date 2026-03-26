@@ -96,24 +96,4 @@ print(asym2)
 print(T_avg)
 # %% ############################################################################################
 
-# plotting using Will's plot modules
-
-xlabel = 'Angle (degrees)'; ylabel = 'Fraction of Power'
-title = f''
-fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(angle_list[0],angle_list[-1]),figsize=(5,4),auto_scale=True)
-
-plot(fig,ax,angle_list,R_list_LR,label='R$_{total}$',color=colors.green,auto_scale=True)
-
-plot(fig,ax,angle_list,R_front, '--', label='R$_{front}$',color=colors.green,auto_scale=True)
-
-plot(fig,ax,angle_list,R_noise, '*-', markersize=8, markevery=15, label='R$_{noise}$',color=colors.red,auto_scale=True)
-
-legend(fig,ax,auto_scale=True)
-
-# %%
-
-noise = np.trapezoid(R_noise, x=angle_list) / (angle_list[-1] - angle_list[0])
-
-print(f'total noise is: {noise}')
-
 # %%
