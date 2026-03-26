@@ -56,11 +56,8 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','c','i']
-
 n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
-c_list_reversed = c_list[::-1]
 
 for i, wl in enumerate(lambda_list):
     print(wl)
@@ -71,8 +68,8 @@ for i, wl in enumerate(lambda_list):
     n_list[2] = nk_eff
     n_list_reversed[1] = nk_eff
 
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle, pol=pol)
-    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=wl,
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle, pol=pol)
+    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA(n_list_reversed, d_list_reversed, lamb=wl,
     angle=angle, pol=pol)
 
 print(lambda_list[99])
@@ -137,11 +134,9 @@ c_list = ['i','i','c','i']
 
 n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
-c_list_reversed = c_list[::-1]
 
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, lamb=lamb, angle_list=angle_list*degrees, pol=pol)
-T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=lamb,
- angle_list=angle_list*degrees, pol=pol)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_list, d_list, angle_list=angle_list*degrees, lamb=lamb, pol=pol)
+T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle(n_list_reversed, d_list_reversed, angle_list=angle_list*degrees, lamb=lamb, pol=pol)
 
 vw_list = []
 for j, angle in enumerate(angle_list*degrees):

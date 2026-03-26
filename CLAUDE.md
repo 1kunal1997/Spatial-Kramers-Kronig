@@ -26,8 +26,8 @@ For interactive work, use VS Code interactive mode (#%%) .
 
 - **`tmm_helper.py`** — primary module imported as `tmm_h`. Contains:
   - `generate_n_and_d_v6_symmetry()` — the only discretization function (legacy versions archived)
-  - `TRA()`, `TRA_wavelength()`, `TRA_angle()` — compute Transmission/Reflection/Absorption (coherent)
-  - `TRA_inc()`, `TRA_wavelength_inc()`, `TRA_angle_inc()` — incoherent TMM variants
+  - `TRA()`, `TRA_wavelength()`, `TRA_angle()` — unified TMM functions with auto-coherence classification (see below)
+  - `_make_c_list()` — auto-generates coherent/incoherent layer classification per wavelength/angle
   - `hilbert_fom_derivative()`, `skk_spectral_fom()` — Spatial-KK Figure of Merit calculations
   - `HT_help()` — Hilbert transform-based logistic profile generation
   - `plot_tra_curves()`, `plot_param_sweep()` — domain-specific plotting helpers
@@ -54,6 +54,19 @@ Parameters (A, gam, nb)
 | `nb` | Background refractive index |
 | `delta` | Discretization step size |
 | `lam` / `lambda_list` | Wavelength array (um, typically 2-15 um infrared) |
+| `threshold` | Coherence classification threshold (default 5, see below) |
+
+### Auto-Coherence Classification
+
+The unified `TRA()`, `TRA_wavelength()`, and `TRA_angle()` functions automatically classify each layer as coherent ('c') or incoherent ('i') using `_make_c_list()`. The criterion is:
+
+- A layer is **incoherent** if `n_real · d · cos(θ_layer) / λ > threshold` (default threshold=5)
+- `cos(θ_layer)` is computed via Snell's law from the incidence angle
+- Semi-infinite layers (`d=inf`) and first/last layers are always incoherent (tmm convention)
+
+This means thin sKK coating layers (typical max n·d/λ ≈ 0.05) are always coherent, preserving the sKK effect, while thick substrates (n·d/λ ~ 1000s) are automatically incoherent. The `threshold` parameter can be passed to any TRA function to override the default.
+
+Deprecated shims `TRA_inc()`, `TRA_wavelength_inc()`, `TRA_angle_inc()` exist for backward compatibility but simply call the unified versions (ignoring any `c_list` argument).
 
 ### Data & Files
 
@@ -86,7 +99,7 @@ n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=0.1)
 
 # Compute spectra
 lambda_list = np.linspace(2, 5, 100)
-T, R_LR, R_RL, A_LR, A_RL = tmm_h.TRA_wavelength(n_list, d_list, lambda_list)
+T, R, A = tmm_h.TRA_wavelength(n_list, d_list, lambda_list)
 
 # Plot
 fig, ax = plot_setup('Wavelength (um)', 'Transmittance')

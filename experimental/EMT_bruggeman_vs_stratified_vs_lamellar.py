@@ -85,18 +85,15 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','c','i']
-
 n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
-c_list_reversed = c_list[::-1]
 
 for i, wl in enumerate(lambda_list):
     n_list[2] = nk_eff[i]
     n_list_reversed[1] = nk_eff[i]
 
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle*degrees, pol=pol)
-    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=wl,
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA(n_list_reversed, d_list_reversed, lamb=wl,
     angle=angle*degrees, pol=pol)
 
 ##################################################################################
@@ -131,18 +128,14 @@ d_list = [d_substrate, d_layer]
 # add semi-infinite air layers
 d_list.append(np.inf)
 d_list.insert(0, np.inf)
-n_list.append(1)       
+n_list.append(1)
 n_list.insert(0, 1)
-
-c_list = ['i','i','c','i']
 
 n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
-c_list_reversed = c_list[::-1]
 
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, lamb=lamb, angle_list=angle_list*degrees, pol=pol)
-T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=lamb,
- angle_list=angle_list*degrees, pol=pol)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_list, d_list, angle_list=angle_list*degrees, lamb=lamb, pol=pol)
+T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle(n_list_reversed, d_list_reversed, angle_list=angle_list*degrees, lamb=lamb, pol=pol)
 
 ##################################################################################
 # %% plot
@@ -185,37 +178,31 @@ angle = 60
 for i, wl in enumerate(lambda_list):
     n_list = [n_substrate]
     d_list = [d_substrate]
-    c_list = ['i']
 
     for _ in range(N_pairs):
         """"""
         n_list.append(n_sapphire[i] + 1j*k_sapphire[i])
-        d_list.append(d_sapphire) 
-        c_list.append('c')
-        
+        d_list.append(d_sapphire)
+
         n_list.append(n_graphite[i] + 1j*k_graphite[i])
         d_list.append(d_graphite)
-        c_list.append('c')
-        
+
 
     # add semi-infinite air layers
     d_list.append(np.inf)
     d_list.insert(0, np.inf)
-    n_list.append(1)       
+    n_list.append(1)
     n_list.insert(0, 1)
-    c_list.append('i')
-    c_list.insert(0,'i')
 
     n_list_reversed = n_list[::-1]
     d_list_reversed = d_list[::-1]
-    c_list_reversed = c_list[::-1]
 
     #for j,n in enumerate(n_list):
-    #    print(f'n is: {n}, d is: {d_list[j]}, c is: {c_list[j]}')
+    #    print(f'n is: {n}, d is: {d_list[j]}')
 
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle*degrees, pol=pol)
     #print(f'Absorption at {wl} is {A_list_LR[i]}')
-    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=wl,
+    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA(n_list_reversed, d_list_reversed, lamb=wl,
     angle=angle*degrees, pol=pol)
     #print(R_list_RL[i])
 
@@ -280,18 +267,15 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','c','i']
-
 n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
-c_list_reversed = c_list[::-1]
 
 for i, wl in enumerate(lambda_list):
     n_list[2] = n_eff_par[i]
     n_list_reversed[1] = n_eff_par[i]
 
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle*degrees, pol=pol)
-    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=wl,
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA(n_list_reversed, d_list_reversed, lamb=wl,
     angle=angle*degrees, pol=pol)
 
 ##################################################################################

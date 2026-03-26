@@ -73,38 +73,28 @@ angle = 80
 for i, wl in enumerate(lambda_list):
     n_list = []
     d_list = []
-    c_list = []
 
     for _ in range(N_pairs):
         """"""
         n_list.append(n_Al2O3[i])
-        d_list.append(d_sapphire) 
-        c_list.append('c')
-        
+        d_list.append(d_sapphire)
+
         n_list.append(n_C[i] + 1j*k_C[i])
         d_list.append(d_graphite)
-        c_list.append('c')
 
     n_list.append(n_Au[i]+1j*k_Au[i])
     d_list.append(0.05)
-    c_list.append('c')        
 
     # add semi-infinite air layers
     d_list.append(np.inf)
     d_list.insert(0, np.inf)
-    n_list.append(n_Si[i]+1j*k_Si[i])       
+    n_list.append(n_Si[i]+1j*k_Si[i])
     n_list.insert(0, 1)
-    c_list.append('i')
-    c_list.insert(0,'i')
-
-    n_list_reversed = n_list[::-1]
-    d_list_reversed = d_list[::-1]
-    c_list_reversed = c_list[::-1]
 
     #for j,n in enumerate(n_list):
-    #    print(f'n is: {n}, d is: {d_list[j]}, c is: {c_list[j]}')
+    #    print(f'n is: {n}, d is: {d_list[j]}')
 
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle*degrees, pol=pol)
     Psi[i] = tmm_h.tmm.ellips(n_list, d_list, th_0=angle*degrees, lam_vac=wl)['psi']
     Delta[i] = tmm_h.tmm.ellips(n_list, d_list, th_0=angle*degrees, lam_vac=wl)['Delta']
     #print(f'Absorption at {wl} is {A_list_LR[i]}')

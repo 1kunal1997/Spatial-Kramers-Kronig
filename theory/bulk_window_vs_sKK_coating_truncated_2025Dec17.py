@@ -1,5 +1,5 @@
 # wavelength sweep and angle sweep of 5mm bulk sapphire vs. sKK truncated coating vs. GRIN . R_back calculated for ellipsometry, but outdated. presented Dec 17, 2025.
-# STATUS: reviewed 2025-03-25. Sections 1-4 kept for refactoring. Uses generate_n_and_d_v6_symmetry, TRA_inc, TRA_angle_inc, plot_tra_curves.
+# STATUS: reviewed 2025-03-25. Sections 1-4 kept for refactoring. Uses generate_n_and_d_v6_symmetry, TRA, TRA_angle, plot_tra_curves.
 
 # %%
 
@@ -46,14 +46,12 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','i']
-
 for i, wl in enumerate(lamdata_sapphire):
     n_list[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
     print(f'wl: {wl}, n: {n_list[1]}')
     th_f[i] = tmm.snell(1, n_list[1], angle)
     R_front[i] = tmm.interface_R(pol, 1, n_list[1], angle, th_f[i])
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle*degrees, pol=pol)
 
 # %% ##################################################################################
 
@@ -109,14 +107,10 @@ for i, n in enumerate(n_coating):
 
 n_window = ndata_sapphire[0] + 1j*kdata_sapphire[0]
 d_window = 5000
-c_total = []
-for _ in range(len(n_coating)):
-    c_total.append('c')
 n_total = n_coating
 n_total.insert(0, n_window)
 d_total = d_coating
 d_total.insert(0, d_window)
-c_total.insert(0, 'i')
 
 # %%
 
@@ -126,20 +120,18 @@ R_front = np.empty(len(lamdata_sapphire), dtype=float)
 # add semi-infinite air layers
 d_total.append(np.inf)
 d_total.insert(0, np.inf)
-n_total.append(1)       
+n_total.append(1)
 n_total.insert(0, 1)
-c_total.append('i')
-c_total.insert(0, 'i')
 
 for i, n in enumerate(n_total):
-   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
+   print(f'n is: {n}, d is: {d_total[i]}')
 
 for i, wl in enumerate(lamdata_sapphire):
     n_total[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
     print(f'wl: {wl}, n: {n_total[1]}')
     th_f[i] = tmm.snell(1, n_total[1], angle)
     R_front[i] = tmm.interface_R(pol, 1, n_total[1], angle, th_f[i])
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_total, d_total, c_total, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_total, d_total, lamb=wl, angle=angle*degrees, pol=pol)
 
 R_back = R_list_LR - R_front
 # %% ##################################################################################
@@ -206,9 +198,7 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','i']
-
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, angle_list*degrees, lamb=lamb, pol=pol)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_list, d_list, angle_list*degrees, lamb=lamb, pol=pol)
 
 # %% ##################################################################################
 
@@ -280,14 +270,10 @@ idx = np.where(lamdata_sapphire == lamb)[0][0]
 print(idx)
 n_window = ndata_sapphire[idx] + 1j*kdata_sapphire[idx]
 d_window = 5000
-c_total = []
-for _ in range(len(n_coating)):
-    c_total.append('c')
 n_total = n_coating
 n_total.insert(0, n_window)
 d_total = d_coating
 d_total.insert(0, d_window)
-c_total.insert(0, 'i')
 
 # %%
 
@@ -301,15 +287,13 @@ for i, theta in enumerate(angle_list*degrees):
 # add semi-infinite air layers
 d_total.append(np.inf)
 d_total.insert(0, np.inf)
-n_total.append(1)       
+n_total.append(1)
 n_total.insert(0, 1)
-c_total.append('i')
-c_total.insert(0, 'i')
 
 for i, n in enumerate(n_total):
-   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
+   print(f'n is: {n}, d is: {d_total[i]}')
 
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_total, d_total, c_total, angle_list*degrees, lamb=lamb, pol=pol)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_total, d_total, angle_list*degrees, lamb=lamb, pol=pol)
 
 # %% ##################################################################################
 

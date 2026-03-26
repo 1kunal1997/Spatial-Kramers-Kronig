@@ -36,15 +36,11 @@ n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
 
 '''
-c_list = ['i', 'i', 'c', 'c', 'c', 'i', 'i']
-
 for i, n in enumerate(n_list):
-    print(f'n: {np.round(n.real, 2)}, k: {np.round(n.imag, 2)}, d: {np.round(d_list[i], 2)}, c: {c_list[i]}')
+    print(f'n: {np.round(n.real, 2)}, k: {np.round(n.imag, 2)}, d: {np.round(d_list[i], 2)}')
 
-c_list_reversed = c_list[::-1]
-
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_wavelength_inc(n_list, d_list, c_list, lambda_list)
-T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_wavelength_inc(n_list_reversed, d_list_reversed, c_list_reversed, lambda_list)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_wavelength(n_list, d_list, lambda_list)
+T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_wavelength(n_list_reversed, d_list_reversed, lambda_list)
 '''
 T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_wavelength(n_list, d_list, lambda_list)
 T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_wavelength(n_list_reversed, d_list_reversed, lambda_list)
@@ -141,15 +137,12 @@ d_list.insert(0, np.inf)
 n_list.append(nb)
 n_list.insert(0,nb)
 
-#c_list = ['i', 'i', 'c', 'c', 'c', 'i', 'i']
-
 n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
-#c_list_reversed = c_list[::-1]
 
 '''
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, angle_list=angle_list_rad, pol='s')
-T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle_inc(n_list_reversed, d_list_reversed, c_list_reversed, angle_list=angle_list_rad, pol='s') 
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_list, d_list, angle_list_rad, lamb=lamb, pol='s')
+T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle(n_list_reversed, d_list_reversed, angle_list_rad, lamb=lamb, pol='s')
 '''
 
 T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_list, d_list, angle_list_rad, lamb=lamb, pol=pol)

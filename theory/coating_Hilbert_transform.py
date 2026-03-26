@@ -50,14 +50,12 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','i']
-
 for i, wl in enumerate(lamdata_sapphire):
     n_list[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
     #print(f'wl: {wl}, n: {n_list[1]}')
     th_f[i] = tmm.snell(1, n_list[1], angle*degrees)
     R_front[i] = tmm.interface_R(pol, 1, n_list[1], angle*degrees, th_f[i])
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle*degrees, pol=pol)
 
 R_back = R_list_LR - R_front
 
@@ -116,14 +114,10 @@ d_coating = d_list
 
 n_window = ndata_sapphire[0] + 1j*kdata_sapphire[0]
 d_window = 5000
-c_total = []
-for _ in range(len(n_coating)):
-    c_total.append('c')
 n_total = n_coating
 n_total.insert(0, n_window)
 d_total = d_coating
 d_total.insert(0, d_window)
-c_total.insert(0, 'i')
 
 ##################################################################################
 # %% wavelength dep. with coating
@@ -134,20 +128,15 @@ R_front = np.empty(len(lamdata_sapphire), dtype=float)
 # add semi-infinite air layers
 d_total.append(np.inf)
 d_total.insert(0, np.inf)
-n_total.append(1)       
+n_total.append(1)
 n_total.insert(0, 1)
-c_total.append('i')
-c_total.insert(0, 'i')
-
-#for i, n in enumerate(n_total):
-#   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
 
 for i, wl in enumerate(lamdata_sapphire):
     n_total[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
     #print(f'wl: {wl}, n: {n_total[1]}')
     th_f[i] = tmm.snell(1, n_total[1], angle*degrees)
     R_front[i] = tmm.interface_R(pol, 1, n_total[1], angle*degrees, th_f[i])
-    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_total, d_total, c_total, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_total, d_total, lamb=wl, angle=angle*degrees, pol=pol)
 
 R_back = R_list_LR - R_front
 
@@ -201,9 +190,7 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','i']
-
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, angle_list*degrees, lamb=lamb, pol=pol)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_list, d_list, angle_list*degrees, lamb=lamb, pol=pol)
 R_back = R_list_LR - R_front
 
 ##################################################################################
@@ -264,14 +251,10 @@ idx = np.where(lamdata_sapphire == lamb)[0][0]
 print(idx)
 n_window = ndata_sapphire[idx] + 1j*kdata_sapphire[idx]
 d_window = 5000
-c_total = []
-for _ in range(len(n_coating)):
-    c_total.append('c')
 n_total = n_coating
 n_total.insert(0, n_window)
 d_total = d_coating
 d_total.insert(0, d_window)
-c_total.insert(0, 'i')
 
 ##################################################################################
 # %%
@@ -286,15 +269,10 @@ for i, theta in enumerate(angle_list*degrees):
 # add semi-infinite air layers
 d_total.append(np.inf)
 d_total.insert(0, np.inf)
-n_total.append(1)       
+n_total.append(1)
 n_total.insert(0, 1)
-c_total.append('i')
-c_total.insert(0, 'i')
 
-#for i, n in enumerate(n_total):
-#   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
-
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_total, d_total, c_total, angle_list*degrees, lamb=lamb, pol=pol)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_total, d_total, angle_list*degrees, lamb=lamb, pol=pol)
 R_back = R_list_LR - R_front
 
 ##################################################################################
@@ -349,11 +327,9 @@ c_list = ['i','i','c','i']
 
 n_list_reversed = n_list[::-1]
 d_list_reversed = d_list[::-1]
-c_list_reversed = c_list[::-1]
 
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, lamb=lamb, angle_list=angle_list*degrees, pol=pol)
-T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=lamb,
- angle_list=angle_list*degrees, pol=pol)
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_list, d_list, angle_list=angle_list*degrees, lamb=lamb, pol=pol)
+T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle(n_list_reversed, d_list_reversed, angle_list=angle_list*degrees, lamb=lamb, pol=pol)
 
 vw_list = []
 for j, angle in enumerate(angle_list*degrees):
@@ -412,22 +388,16 @@ d_coating = d_list
 
 n_window = ndata_sapphire[0] + 1j*kdata_sapphire[0]
 d_window = 5000
-c_total = []
-for _ in range(len(n_coating)):
-    c_total.append('c')
 n_total = n_coating
 n_total.insert(0, n_window)
 d_total = d_coating
 d_total.insert(0, d_window)
-c_total.insert(0, 'i')
 
 # add semi-infinite air layers
 d_total.append(np.inf)
 d_total.insert(0, np.inf)
-n_total.append(1)       
+n_total.append(1)
 n_total.insert(0, 1)
-c_total.append('i')
-c_total.insert(0, 'i')
 
 for i, angle in enumerate(angle_list*degrees):
     print(angle)
@@ -436,7 +406,7 @@ for i, angle in enumerate(angle_list*degrees):
         #print(f'wl: {wl}, n: {n_total[1]}')
         th_f[i][j] = tmm.snell(1, n_total[1], angle)
         R_front[i][j] = tmm.interface_R(pol, 1, n_total[1], angle, th_f[i][j])
-        T_list_LR[i][j], R_list_LR[i][j], A_list_LR[i][j] = tmm_h.TRA_inc(n_total, d_total, c_total, lamb=wl, angle=angle, pol=pol)
+        T_list_LR[i][j], R_list_LR[i][j], A_list_LR[i][j] = tmm_h.TRA(n_total, d_total, lamb=wl, angle=angle, pol=pol)
         R_back[i][j] = R_list_LR[i][j] - R_front[i][j]
 
 # %%
@@ -468,8 +438,6 @@ d_list.insert(0, np.inf)
 n_list.append(1)       
 n_list.insert(0, 1)
 
-c_list = ['i','i','i']
-
 for i, angle in enumerate(angle_list*degrees):
     print(angle)
     for j, wl in enumerate(lamdata_sapphire):
@@ -477,7 +445,7 @@ for i, angle in enumerate(angle_list*degrees):
         #print(f'wl: {wl}, n: {n_list[1]}')
         th_f[i][j] = tmm.snell(1, n_list[1], angle)
         R_front[i][j] = tmm.interface_R(pol, 1, n_list[1], angle, th_f[i][j])
-        T_list_LR[i][j], R_list_LR[i][j], A_list_LR[i][j] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle, pol=pol)
+        T_list_LR[i][j], R_list_LR[i][j], A_list_LR[i][j] = tmm_h.TRA(n_list, d_list, lamb=wl, angle=angle, pol=pol)
         R_back[i][j] = R_list_LR[i][j] - R_front[i][j]
 
 np.save(os.path.join(_PROJECT_ROOT, "Data/Rback_sapphire_bulk_5mm_p-pol_angle=0-90~1_lamdata_sapphire.npy"), R_back)
@@ -517,32 +485,23 @@ for j, alpha in enumerate(alpha_list):
 
     n_window = ndata_sapphire[0] + 1j*kdata_sapphire[0]
     d_window = 5000
-    c_total = []
-    for _ in range(len(n_coating)):
-        c_total.append('c')
     n_total = n_coating
     n_total.insert(0, n_window)
     d_total = d_coating
     d_total.insert(0, d_window)
-    c_total.insert(0, 'i')
 
     # add semi-infinite air layers
     d_total.append(np.inf)
     d_total.insert(0, np.inf)
-    n_total.append(1)       
+    n_total.append(1)
     n_total.insert(0, 1)
-    c_total.append('i')
-    c_total.insert(0, 'i')
-
-    #for i, n in enumerate(n_total):
-    #   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
 
     for i, wl in enumerate(lamdata_sapphire):
         n_total[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
         #print(f'wl: {wl}, n: {n_total[1]}')
         th_f[i] = tmm.snell(1, n_total[1], angle*degrees)
         R_front[i] = tmm.interface_R(pol, 1, n_total[1], angle*degrees, th_f[i])
-        T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_total, d_total, c_total, lamb=wl, angle=angle*degrees, pol=pol)
+        T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA(n_total, d_total, lamb=wl, angle=angle*degrees, pol=pol)
 
     R_back = R_list_LR - R_front
 
@@ -586,14 +545,10 @@ for j, alpha in enumerate(alpha_list):
     idx = np.where(lamdata_sapphire == lamb)[0][0]
     n_window = ndata_sapphire[idx] + 1j*kdata_sapphire[idx]
     d_window = 5000
-    c_total = []
-    for _ in range(len(n_coating)):
-        c_total.append('c')
     n_total = n_coating
     n_total.insert(0, n_window)
     d_total = d_coating
     d_total.insert(0, d_window)
-    c_total.insert(0, 'i')
 
     for i, theta in enumerate(angle_list*degrees):
         th_f[i] = tmm.snell(1, n_window, theta)
@@ -602,15 +557,10 @@ for j, alpha in enumerate(alpha_list):
     # add semi-infinite air layers
     d_total.append(np.inf)
     d_total.insert(0, np.inf)
-    n_total.append(1)       
+    n_total.append(1)
     n_total.insert(0, 1)
-    c_total.append('i')
-    c_total.insert(0, 'i')
 
-    #for i, n in enumerate(n_total):
-    #   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
-
-    T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_total, d_total, c_total, angle_list*degrees, lamb=lamb, pol=pol)
+    T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle(n_total, d_total, angle_list*degrees, lamb=lamb, pol=pol)
     R_back = R_list_LR - R_front
     R_noise[j] = np.trapezoid(R_back, x=angle_list) / (angle_list[-1] - angle_list[0])
     A_avg[j] = np.trapezoid(A_list_LR, x=angle_list) / (angle_list[-1] - angle_list[0])

@@ -551,41 +551,57 @@ def generate_n_and_d_v6_symmetry(gam, a, nb, delta=0.02, plot_flag=False, zoomed
     
     return (n_list.tolist(), d_list.tolist())
 
-def TRA(n_list, d_list, lamb=3, angle=0, pol='p'):
+def _make_c_list(n_list, d_list, lamb, angle=0, threshold=5):
+    """Auto-generate coherent/incoherent classification for each layer.
 
-    result = tmm.coh_tmm(pol, n_list, d_list, angle, lamb)
-    T, R = result['T'], result['R']
+    A layer is incoherent when its optical path n*d*cos(theta)/lambda exceeds
+    the threshold — meaning Fabry-Perot fringes are too dense to resolve.
 
-    return (T, R, 1 - T - R)
+    Parameters
+    ----------
+    n_list : list of complex — refractive indices
+    d_list : list of float — layer thicknesses (um)
+    lamb : float — vacuum wavelength (um)
+    angle : float — angle of incidence in radians (in medium 0)
+    threshold : float — layers with n*d*cos(theta)/lambda > threshold are 'i'
 
-def TRA_inc(n_list, d_list, c_list, lamb=3, angle=0, pol='p'):
+    Returns
+    -------
+    c_list : list of str — 'c' (coherent) or 'i' (incoherent) per layer
+    """
+    n0_real = np.real(n_list[0])
+    sin_angle = np.sin(angle)
+    c_list = []
+    for i, (n, d) in enumerate(zip(n_list, d_list)):
+        if i == 0 or i == len(n_list) - 1 or d == inf:
+            c_list.append('i')
+        else:
+            n_real = np.real(n)
+            # Snell's law: cos(theta) inside this layer
+            sin_ratio = n0_real * sin_angle / n_real
+            cos_theta = np.sqrt(max(0, 1 - sin_ratio**2))
+            optical_thickness = n_real * d * cos_theta / lamb
+            c_list.append('i' if optical_thickness > threshold else 'c')
+    return c_list
 
+
+def TRA(n_list, d_list, lamb=3, angle=0, pol='p', threshold=5):
+
+    c_list = _make_c_list(n_list, d_list, lamb, angle, threshold)
     result = tmm.inc_tmm(pol, n_list, d_list, c_list, angle, lamb)
     T, R = result['T'], result['R']
 
     return (T, R, 1 - T - R)
 
-def TRA_wavelength(n_list, d_list, lambda_list, angle=0, pol='p'):
+
+def TRA_wavelength(n_list, d_list, lambda_list, angle=0, pol='p', threshold=5):
 
     T_list = np.zeros_like(lambda_list)
     R_list = np.zeros_like(lambda_list)
     A_list = np.zeros_like(lambda_list)
 
     for j, lamb in enumerate(lambda_list):
-        result = tmm.coh_tmm(pol, n_list, d_list, angle, lamb)
-        T_list[j] = result['T']
-        R_list[j] = result['R']
-        A_list[j] = 1 - T_list[j] - R_list[j]
-
-    return (T_list, R_list, A_list)
-
-def TRA_wavelength_inc(n_list, d_list, c_list, lambda_list, angle=0, pol='p'):
-
-    T_list = np.zeros_like(lambda_list)
-    R_list = np.zeros_like(lambda_list)
-    A_list = np.zeros_like(lambda_list)
-
-    for j, lamb in enumerate(lambda_list):
+        c_list = _make_c_list(n_list, d_list, lamb, angle, threshold)
         result = tmm.inc_tmm(pol, n_list, d_list, c_list, angle, lamb)
         T_list[j] = result['T']
         R_list[j] = result['R']
@@ -593,33 +609,32 @@ def TRA_wavelength_inc(n_list, d_list, c_list, lambda_list, angle=0, pol='p'):
 
     return (T_list, R_list, A_list)
 
-def TRA_angle(n_list, d_list, angle_list, lamb=3, pol='p'):
 
-    T_list = np.zeros_like(angle_list)
-    R_list = np.zeros_like(angle_list)
-    A_list = np.zeros_like(angle_list)
-    
-    for j, angle in enumerate(angle_list):
-        O = tmm.coh_tmm(pol, n_list, d_list, angle, lamb)
-        T_list[j] = O['T']
-        R_list[j] = O['R']
-        A_list[j] = 1 - T_list[j] - R_list[j]
-
-    return (T_list, R_list, A_list)
-
-def TRA_angle_inc(n_list, d_list, c_list, angle_list, lamb=3, pol='p'):
+def TRA_angle(n_list, d_list, angle_list, lamb=3, pol='p', threshold=5):
 
     T_list = np.zeros_like(angle_list)
     R_list = np.zeros_like(angle_list)
     A_list = np.zeros_like(angle_list)
 
     for j, angle in enumerate(angle_list):
+        c_list = _make_c_list(n_list, d_list, lamb, angle, threshold)
         result = tmm.inc_tmm(pol, n_list, d_list, c_list, angle, lamb)
         T_list[j] = result['T']
         R_list[j] = result['R']
         A_list[j] = 1 - T_list[j] - R_list[j]
 
     return (T_list, R_list, A_list)
+
+
+# Deprecated shims — c_list is now auto-generated internally
+def TRA_inc(n_list, d_list, c_list=None, lamb=3, angle=0, pol='p', threshold=5):
+    return TRA(n_list, d_list, lamb=lamb, angle=angle, pol=pol, threshold=threshold)
+
+def TRA_wavelength_inc(n_list, d_list, c_list=None, lambda_list=None, angle=0, pol='p', threshold=5):
+    return TRA_wavelength(n_list, d_list, lambda_list, angle=angle, pol=pol, threshold=threshold)
+
+def TRA_angle_inc(n_list, d_list, c_list=None, angle_list=None, lamb=3, pol='p', threshold=5):
+    return TRA_angle(n_list, d_list, angle_list, lamb=lamb, pol=pol, threshold=threshold)
 
 def TRA_more(n_list, d_list, lambda_list, pol='p', angle=0):
 
