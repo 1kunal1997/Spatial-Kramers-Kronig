@@ -18,7 +18,7 @@ lamb = 3
 
 for i, delta in enumerate(delta_arr):
     print(delta)
-    n_list, d_list = tmm_h.generate_n_and_d_new(gam, A, nb, delta=delta, plot_flag=False)
+    n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=delta, plot_flag=False)
 
     d_list.append(np.inf)
     d_list.insert(0, np.inf)
@@ -40,32 +40,6 @@ plot(fig,ax,np.log10(delta_arr),np.log10(R_arr),label=r'T',color=colors.blue,aut
 
 # %%
 
-np.savetxt(f'C:\\Users\\kl89\\MS Window Project\\Data\\R_vs_delta~0.005-0.5_A~{A}_gam~{gam}_nb~{nb}_L~300gam.txt', R_arr)
-
-# %%
-
-R_1 = np.loadtxt('C:\\Users\\kl89\\MS Window Project\\Data\\R_vs_delta~0.005-0.5_A~10_gam~0.05_nb~2.3.txt')
-R_8 = np.loadtxt('C:\\Users\\kl89\\MS Window Project\\Data\\R_vs_delta~0.005-0.5_A~10_gam~0.05_nb~2.3_L~380gam.txt')
-R_10 = np.loadtxt('C:\\Users\\kl89\\MS Window Project\\Data\\R_vs_delta~0.005-0.5_A~10_gam~0.05_nb~2.3_L~350gam.txt')
-R_50 = np.loadtxt('C:\\Users\\kl89\\MS Window Project\\Data\\R_vs_delta~0.005-0.5_A~10_gam~0.05_nb~2.3_L~300gam.txt')
-
-xlabel = 'delta'; ylabel = 'Reflectance'
-title = f'Reflectance'
-fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(np.log10(0.005),np.log10(0.5)),figsize=(5,4),auto_scale=True)
-
-plot(fig,ax,np.log10(delta_arr),np.log10(R_1),label='L=400gam', color=colors.blue,auto_scale=True)
-plot(fig,ax,np.log10(delta_arr),np.log10(R_8),label='L=380gam',color=colors.red,auto_scale=True)
-plot(fig,ax,np.log10(delta_arr),np.log10(R_10),label='L=350gam',color=colors.green,auto_scale=True)
-plot(fig,ax,np.log10(delta_arr),np.log10(R_50),label='L=300gam',color=colors.purple,auto_scale=True)
-
-legend(fig,ax,auto_scale=True)
-# %%
-
-print(delta_arr[71])
-print(delta_arr[111])
-
-# %%
-
 A = 10
 gam = 0.05
 nb = 2.3
@@ -79,7 +53,7 @@ E_rms_arr = []
 
 for i, delta in enumerate(delta_arr):
     print(delta)
-    n_list, d_list = tmm_h.generate_n_and_d_new(gam, A, nb, delta=delta, plot_flag=False)
+    n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=delta, plot_flag=False)
 
     d_list.append(np.inf)
     d_list.insert(0, np.inf)
@@ -91,7 +65,7 @@ for i, delta in enumerate(delta_arr):
     #R_arr.append(R_LR)
     R_arr.append(abs(r))
 
-    n_list, d_list = tmm_h.generate_n_and_d_new(gam, A, nb, delta=delta, plot_flag=False)
+    n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=delta, plot_flag=False)
     n_list = np.array(n_list, dtype=np.complex128)
     d_list = np.array(d_list)          # physical thicknesses (µm)
 

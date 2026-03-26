@@ -19,6 +19,10 @@ Figures:
 Requirements:
   - numpy, scipy, matplotlib, tmm
   - Sapphire data: lam_um_T_K_Al2O3_no_ko_ne_ke.dat
+
+NOTE: This script intentionally re-implements core functions from tmm_helper.py
+to remain self-contained for paper figure reproduction. If you change the physics
+in tmm_helper.py, sync the corresponding functions here if needed.
 """
 
 import numpy as np

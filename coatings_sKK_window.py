@@ -66,22 +66,9 @@ T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_wavelength_inc(n_total_reversed, d_t
 
 # %% #############################################################################################
 
-'''
 data = {
-    "T": T_list_LR,      # or T_list_RL, doesn't matter anymore
+    "T": T_list_LR,
     "A_RL": A_list_RL,
-    "A_LR": A_list_LR,
-    "R_RL": R_list_RL,
-    "R_LR": R_list_LR,
-    "T_bulk": trans_bulk,
-    "A_bulk": emiss_bulk
-}
-'''
-data = {
-    "T": T_list_LR,      # or T_list_RL, doesn't matter anymore
-    "A_RL": A_list_RL,
-    #"A_LR": A_list_LR,
-    #"R_RL": R_list_RL,
     "R_LR": R_list_LR,
 }
 
@@ -89,7 +76,6 @@ tmm_h.plot_tra_curves(
     lambda_list,
     data=data,
     title='AR coating (sKK with no losses)'
-    #title='Truncated sKK Coating'
 )
 
 tmm_h.show_textbox(text=f'n$_b$={nb}\nA={A}\nx$_0$={gam}')
@@ -169,23 +155,9 @@ T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle_inc(n_total_reversed, d_total_
 
 # %% #############################################################################################
 
-'''
 data = {
-    "T": T_list_LR,      # or T_list_RL, doesn't matter anymore
+    "T": T_list_LR,
     "A_RL": A_list_RL,
-    "A_LR": A_list_LR,
-    "R_RL": R_list_RL,
-    "R_LR": R_list_LR,
-    "T_bulk": trans_bulk,
-    "A_bulk": emiss_bulk
-}
-'''
-data = {
-    "T": T_list_LR,      # or T_list_RL, doesn't matter anymore
-    "A_RL": A_list_RL,
-    #"A_LR": A_list_LR,
-    #"R_RL": R_list_RL,
-    #"R_LR": R_list_LR,
 }
 
 tmm_h.plot_tra_curves(
@@ -193,7 +165,6 @@ tmm_h.plot_tra_curves(
     data=data,
     xlabel='Angle (degrees)',
     title='AR coating (p-pol)'
-    #title='Truncated sKK Coating (p-pol)'
 )
 
 tmm_h.show_textbox(text=f'n$_b$={nb}\nA={A}\nx$_0$={gam}')
