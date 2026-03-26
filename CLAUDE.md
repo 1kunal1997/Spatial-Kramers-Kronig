@@ -105,7 +105,6 @@ plot(fig, ax, lambda_list, T, color=colors.blue)
 
 ### Pending Review (kept but may have bugs)
 - **`coatings_2_TE.py`** — TE polarization analysis (has undefined variable bugs)
-- **`pre_Bruggeman_design.py`** — sKK coating at oblique angles (has undefined variable bug)
 - **`single_mixed_layer_on_substrate.py`** — overlaps with lamellar_EMT_substrate.py
 
 Both tracks share `tmm_helper.py` and the `RI/` data. Do not reorganize into subfolders — relative paths to `RI/` files would break.
