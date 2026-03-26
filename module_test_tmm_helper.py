@@ -11,8 +11,7 @@ gam = 0.01
 #nb = 2.3
 nb = 1.7
 
-#n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=0.01, plot_flag=True, zoomed=False)
-n_list, d_list = tmm_h.generate_n_and_d_v5_avg_over_cell(gam, A, nb, delta=0.01, plot_flag=True, zoomed=False)
+n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=0.01, plot_flag=True, zoomed=False)
 #n_list, d_list = tmm_h.generate_n_and_d_5_layers(gam, A, nb, plot_flag=False, zoomed=True)
 
 #n_list = np.array(n_list).real + 1j*np.array(n_list).imag*10
@@ -208,9 +207,10 @@ angle_rad_list = angle_list*np.pi/180
 a_prop_k = 0.8
 a_prop_n = 0.5
 
-n_list, d_list = tmm_h.generate_n_and_d(gam, A, nb, plot_flag=True)
-n_list.imag = n_list.imag*a_prop_k
-n_list.real = a_prop_n*n_list.real + (1-a_prop_n)*nb
+n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=0.01, plot_flag=True)
+n_list = np.array(n_list)
+n_list = n_list.real * a_prop_n + (1 - a_prop_n) * nb + 1j * n_list.imag * a_prop_k
+n_list = n_list.tolist()
 
 losses_total = np.sum(d_list * np.imag(n_list))
 trans_bulk = np.exp(-4*np.pi*losses_total/(lamb*np.cos(angle_rad_list)))

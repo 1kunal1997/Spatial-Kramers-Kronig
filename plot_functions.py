@@ -402,7 +402,7 @@ def bar(fig, ax, coords, heights,
     # Set to no color if none specified
     if barcolors == ['black']:
         for n in range(len(coords)-1):
-            barcolors = barcolors.append('black')
+            barcolors.append('black')
 
     # Plot bar plot on axis
     ax.bar(coords,heights,width=barwidth,color=barcolors)
