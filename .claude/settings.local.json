@@ -11,7 +11,12 @@
       "Bash(mdcat)",
       "Bash(find '/Users/kunal/Documents/Spatial KK Project' -name *.mph -exec du -sh {})",
       "Bash(2)",
-      "Bash(find '/Users/kunal/Documents/Spatial KK Project' -name *.npy -exec du -sh {})"
+      "Bash(find '/Users/kunal/Documents/Spatial KK Project' -name *.npy -exec du -sh {})",
+      "Bash(mv coatings_sKK_ellipsometry.py archive/)",
+      "Bash(mv stacks_of_stacks_incoherent_debug.py archive/)",
+      "Bash(mv stacks_of_stacks_incoherent_debug_singleWavelength.py archive/)",
+      "Bash(mv tmm_inc_vs_manual.py archive/)",
+      "Bash(mv discretize_e_test.py archive/)"
     ]
   }
 }
