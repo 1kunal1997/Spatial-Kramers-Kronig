@@ -21,7 +21,10 @@ Display spectrum computed from centered profiles with pad_factor=8 for
 visual smoothness.
 """
 
-import os
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')

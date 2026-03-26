@@ -27,7 +27,10 @@ structure is visible (at k!=0 this is identical to what skk_spectral_fom
 sees, since the DC only lives at k=0 which is excluded from both sides).
 """
 
-import os
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')

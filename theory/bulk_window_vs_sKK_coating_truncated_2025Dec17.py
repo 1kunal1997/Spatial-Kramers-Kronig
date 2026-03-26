@@ -3,16 +3,19 @@
 
 # %%
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import tmm_helper as tmm_h
 import numpy as np
 from plot_functions import plot_setup, plot, legend
 import colors
 import tmm
-import os
 
 # %%
 degrees = np.pi/180
-nkdata_sapphire = np.genfromtxt(os.path.join('RI', 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat'))
+nkdata_sapphire = np.genfromtxt(os.path.join(_PROJECT_ROOT, 'RI', 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat'))
 kdata_sapphire = nkdata_sapphire[50:351, 3]
 ndata_sapphire = nkdata_sapphire[50:351, 2]
 lamdata_sapphire = nkdata_sapphire[50:351, 0]

@@ -1,11 +1,14 @@
 """Plot the Lorentzian dielectric profile used in the forward/backward FoM figure."""
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import tmm_helper as tmm_h
-import os
 
 plt.rcParams.update({
     'font.family': 'serif', 'font.size': 12,
@@ -38,6 +41,7 @@ ax2.tick_params(axis='y', labelcolor=RED)
 plt.tight_layout()
 
 FIGDIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figures')
+os.makedirs(FIGDIR, exist_ok=True)
 plt.savefig(os.path.join(FIGDIR, 'fig_lorentzian_profile.png'))
 plt.close()
 print('Saved fig_lorentzian_profile.png')

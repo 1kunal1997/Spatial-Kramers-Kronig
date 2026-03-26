@@ -18,6 +18,10 @@ Notes
 """
 #%% ##############################################################################################################
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import itertools
 import math
 import sys
@@ -354,7 +358,7 @@ def match_targets(material_nk: Dict[str, complex],
 wl_um = 3.0
 grid = 1001
 top = 8
-csv_file = 'mixture_results.csv'
+csv_file = os.path.join(_PROJECT_ROOT, 'mixture_results.csv')
 wl_nm = wl_um * 1000.0
 print(f"Loading materials at {wl_um:.3f} µm ({wl_nm:.1f} nm)...")
 material_nk = load_material_nk(wl_nm, MATERIALS)
@@ -497,8 +501,8 @@ plt.show()
 
 # %%
 
-np.savetxt('nk_eff_graphite_only.txt', nk_eff_list)
-np.savetxt('d_list_graphite_only.txt', d_list)
+np.savetxt(os.path.join(_PROJECT_ROOT, 'nk_eff_graphite_only.txt'), nk_eff_list)
+np.savetxt(os.path.join(_PROJECT_ROOT, 'd_list_graphite_only.txt'), d_list)
 
 
 # %%
@@ -554,5 +558,5 @@ print(wls[99])
 print(nk[99])
 
 data = np.column_stack([wls, np.real(nk), np.imag(nk)])
-np.savetxt("ZnS_nk_2-5um.txt", data, header="wl[um] n k", fmt="%.6e")
+np.savetxt(os.path.join(_PROJECT_ROOT, "RI", "ZnS_nk_2-5um.txt"), data, header="wl[um] n k", fmt="%.6e")
 # %%

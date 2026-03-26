@@ -13,7 +13,8 @@ targeting backside reflection suppression in **mid-IR ellipsometry** on sapphire
 This is a pure Python research project — no build system. Run scripts directly:
 
 ```bash
-python <script_name>.py
+python theory/<script_name>.py          # theory scripts
+python experimental/<script_name>.py    # experimental scripts
 python -m pytest module_test_tmm_helper.py   # run tests
 ```
 
@@ -58,12 +59,20 @@ Parameters (A, gam, nb)
 
 - **`Data/`** — computed `.npy`/`.txt` results organized by parameter sweeps
 - **`RI/`** — refractive index data for real materials (sapphire, ZnS, graphite, silicon, etc.)
+- **`theory/`** — active theory/paper scripts (sKK analysis, coatings, figure generation)
+- **`experimental/`** — active experimental scripts (Bruggeman mixtures, EMT comparisons, fab designs)
 - **`archive/`** — ~28 previously used scripts, kept for reference but not actively maintained
 - **`tmm/`** — vendored TMM package (do not modify)
 
 ### Typical Script Pattern
 
+Scripts in `theory/` and `experimental/` include a path preamble so they can import shared modules from root:
+
 ```python
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import tmm_helper as tmm_h
 import numpy as np
 from plot_functions import plot_setup, plot, legend
@@ -84,9 +93,11 @@ fig, ax = plot_setup('Wavelength (um)', 'Transmittance')
 plot(fig, ax, lambda_list, T, color=colors.blue)
 ```
 
+File paths to `RI/` and `Data/` use `os.path.join(_PROJECT_ROOT, 'RI', ...)` so scripts work regardless of working directory.
+
 ## Active Scripts
 
-### Theory Track
+### Theory Track (`theory/`)
 - **`skk_analysis_consolidated.py`** — self-contained script generating all 10 paper figures. Intentionally re-implements tmm_helper functions for reproducibility.
 - **`coating_Hilbert_transform.py`** — applies sKK coating to real sapphire substrate for mid-IR ellipsometry
 - **`bulk_window_vs_sKK_coating_truncated_2025Dec17.py`** — ellipsometry benchmark: bulk sapphire vs sKK coating (wavelength + angle sweeps)
@@ -97,14 +108,14 @@ plot(fig, ax, lambda_list, T, color=colors.blue)
 - **`fig_sinc_leakage.py`**, **`fig_forward_backward.py`**, **`fig_lorentzian_profile.py`** — standalone figure scripts
 - **`verify_lorentzian_spectral_fom.py`** — validates spectral FoM k=0 fix
 
-### Experimental Track
+### Experimental Track (`experimental/`)
 - **`bruggeman_mixture_search.py`** — searches 2-material Bruggeman mixtures for target (n,k,d)
 - **`bruggeman_load_TMM.py`** — loads precomputed nk from mixture search, runs TMM
 - **`EMT_bruggeman_vs_stratified_vs_lamellar.py`** — compares 3 EMT methods (Bruggeman, stratified, lamellar) for graphite/sapphire on ZnS in mid-IR
 - **`stratified_fab_design_SiAu_visible.py`** — fab team's device: stratified graphite/sapphire on Si+Au in visible/near-IR, computes Ψ/Δ
 - **`key_mixed_layers_on_substrate_2025Oct30.py`** — specific Bruggeman mixture test on ZnS substrate
 
-Both tracks share `tmm_helper.py` and the `RI/` data. Do not reorganize into subfolders — relative paths to `RI/` files would break.
+Both tracks share `tmm_helper.py`, `plot_functions.py`, `colors.py` (in root) and the `RI/` data.
 
 ## File Relationships
 

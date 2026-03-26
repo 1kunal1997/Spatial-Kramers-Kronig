@@ -1,5 +1,9 @@
 # %%
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import tmm_helper as tmm_h
 import numpy as np
 from plot_functions import plot_setup, plot, legend
@@ -7,8 +11,8 @@ import colors
 
 # %% ##############################################################################################
 
-n_list = (np.loadtxt('nk_eff_graphite_only.txt', dtype=complex)).tolist()
-d_list = (np.loadtxt('d_list_graphite_only.txt')).tolist()
+n_list = (np.loadtxt(os.path.join(_PROJECT_ROOT, 'nk_eff_graphite_only.txt'), dtype=complex)).tolist()
+d_list = (np.loadtxt(os.path.join(_PROJECT_ROOT, 'd_list_graphite_only.txt'))).tolist()
 
 print(n_list)
 print(d_list)
@@ -47,8 +51,8 @@ tmm_h.plot_tra_curves(
 )
 
 # %% #############################################################################################
-n_list = (np.loadtxt('nk_eff_graphite_only.txt', dtype=complex)).tolist()
-d_list = (np.loadtxt('d_list_graphite_only.txt')).tolist()
+n_list = (np.loadtxt(os.path.join(_PROJECT_ROOT, 'nk_eff_graphite_only.txt'), dtype=complex)).tolist()
+d_list = (np.loadtxt(os.path.join(_PROJECT_ROOT, 'd_list_graphite_only.txt'))).tolist()
 
 lambda_list = np.linspace(2,5,100)
 losses_total = np.sum(d_list * np.imag(n_list))

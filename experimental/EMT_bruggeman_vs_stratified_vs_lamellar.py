@@ -1,5 +1,9 @@
 # %%
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import tmm_helper as tmm_h
 import numpy as np
 from plot_functions import plot_setup, plot, legend
@@ -34,8 +38,8 @@ d_substrate = 300
 n_substrate = 2.27 #ZnS
 d_layer = 0.1
 n_layer = 1 #placeholder for dispersive material. set in wavelength sweep
-lambda_list, n_graphite, k_graphite = np.loadtxt("graphite_nk.txt", unpack=True)
-_, n_sapphire, k_sapphire = np.loadtxt("sapphire_nk_2-5um.txt", unpack=True)
+lambda_list, n_graphite, k_graphite = np.loadtxt(os.path.join(_PROJECT_ROOT, "RI", "graphite_nk.txt"), unpack=True)
+_, n_sapphire, k_sapphire = np.loadtxt(os.path.join(_PROJECT_ROOT, "RI", "sapphire_nk_2-5um.txt"), unpack=True)
 nk_eff = [] # effective RI of mixed layer using Bruggeman model
 T_list_LR, T_list_RL, R_list_LR, R_list_RL, A_list_LR, A_list_RL = (np.zeros_like(lambda_list) for _ in range(6))
 

@@ -1,12 +1,15 @@
 # %%
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import tmm_helper as tmm_h
 import numpy as np
 from plot_functions import plot_setup, plot, legend
 import matplotlib.pyplot as plt
 import colors
 import tmm
-import os
 
 # %%
 #n_list, d_list = tmm_h.generate_n_and_d_coating_logistic(plot_flag=True, zoomed=False)
@@ -15,7 +18,7 @@ n_list, d_list = tmm_h.HT_help(k=2, alpha=1, sigma=0.1, plot_flag=True)
 
 # %%
 degrees = np.pi/180
-nkdata_sapphire = np.genfromtxt(os.path.join('RI', 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat'))
+nkdata_sapphire = np.genfromtxt(os.path.join(_PROJECT_ROOT, 'RI', 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat'))
 kdata_sapphire = nkdata_sapphire[50:351, 3]
 ndata_sapphire = nkdata_sapphire[50:351, 2]
 lamdata_sapphire = nkdata_sapphire[50:351, 0]
@@ -437,7 +440,7 @@ for i, angle in enumerate(angle_list*degrees):
         R_back[i][j] = R_list_LR[i][j] - R_front[i][j]
 
 # %%
-np.save(f"Data/Rback_HTlogistic_delta=0.01_k=100_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy", R_back)
+np.save(os.path.join(_PROJECT_ROOT, f"Data/Rback_HTlogistic_delta=0.01_k=100_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy"), R_back)
 
 # %%
 
@@ -477,15 +480,15 @@ for i, angle in enumerate(angle_list*degrees):
         T_list_LR[i][j], R_list_LR[i][j], A_list_LR[i][j] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle, pol=pol)
         R_back[i][j] = R_list_LR[i][j] - R_front[i][j]
 
-np.save("Data/Rback_sapphire_bulk_5mm_p-pol_angle=0-90~1_lamdata_sapphire.npy", R_back)
+np.save(os.path.join(_PROJECT_ROOT, "Data/Rback_sapphire_bulk_5mm_p-pol_angle=0-90~1_lamdata_sapphire.npy"), R_back)
 
 ##################################################################################
 # %%
 
 pol = 's'
-R_back_GRIN = np.load(f"Data/Rback_HTlogistic_alpha=0_k=2_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy")
-R_back_sKK = np.load(f"Data/Rback_HTlogistic_k=100_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy")
-R_back_bulk = np.load(f"Data/Rback_sapphire_bulk_5mm_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy")
+R_back_GRIN = np.load(os.path.join(_PROJECT_ROOT, f"Data/Rback_HTlogistic_alpha=0_k=2_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy"))
+R_back_sKK = np.load(os.path.join(_PROJECT_ROOT, f"Data/Rback_HTlogistic_k=100_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy"))
+R_back_bulk = np.load(os.path.join(_PROJECT_ROOT, f"Data/Rback_sapphire_bulk_5mm_{pol}-pol_angle=0-90~1_lamdata_sapphire.npy"))
 plt.figure()
 plt.imshow((R_back_sKK).T, interpolation='none', norm='linear', aspect='auto', origin='lower', extent=(0, 90, lamdata_sapphire[0], lamdata_sapphire[-1]))
 plt.ylabel('Wavelength ($\mu$m)')

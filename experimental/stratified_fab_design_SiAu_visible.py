@@ -1,4 +1,8 @@
 # %%
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import numpy as np
 from scipy.interpolate import interp1d
 from matplotlib import pyplot as plt
@@ -19,7 +23,7 @@ files = ["silicon_n_0.25-1.45um_Schinke.txt",
 lambda_list = np.linspace(0.3, 1.45, 2000)                     # common lambda grid (um)
 n = []
 for f in files:
-    d = np.loadtxt(f)
+    d = np.loadtxt(os.path.join(_PROJECT_ROOT, "RI", f))
     n.append(interp1d(d[:,0], d[:,1], kind="linear")(lambda_list))
 n_Si, k_Si, n_Au, k_Au, n_Al2O3, n_C, k_C = n
 

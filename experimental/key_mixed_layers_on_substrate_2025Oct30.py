@@ -2,6 +2,10 @@
 
 # %%
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import tmm_helper as tmm_h
 import numpy as np
 from plot_functions import plot_setup, plot, legend
@@ -32,9 +36,9 @@ def bruggeman_eps_single(nk1: complex, nk2: complex, f2: float) -> complex:
 conc = 0.269
 #conc_ZnS = 0.203
 #conc_sapphire = 0.355
-lambda_list, n_graphite, k_graphite = np.loadtxt("graphite_nk.txt", unpack=True)
+lambda_list, n_graphite, k_graphite = np.loadtxt(os.path.join(_PROJECT_ROOT, "RI", "graphite_nk.txt"), unpack=True)
 #nk_sapphire = 1.595 + 1j*0.00066
-_, n_sapphire, k_sapphire = np.loadtxt("sapphire_nk_2-5um.txt", unpack=True)
+_, n_sapphire, k_sapphire = np.loadtxt(os.path.join(_PROJECT_ROOT, "RI", "sapphire_nk_2-5um.txt"), unpack=True)
 #nk_ZnS = 2.27
 nk_MgF2 = 2.27
 nk_eff_vs_lambda = []

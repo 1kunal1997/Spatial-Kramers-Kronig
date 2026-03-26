@@ -25,6 +25,10 @@ to remain self-contained for paper figure reproduction. If you change the physic
 in tmm_helper.py, sync the corresponding functions here if needed.
 """
 
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -33,7 +37,6 @@ from scipy.signal import hilbert
 from scipy.signal.windows import tukey
 from scipy.integrate import cumulative_trapezoid
 import tmm
-import os
 
 # ============================================================================
 # Plot style
@@ -61,11 +64,8 @@ os.makedirs(FIGDIR, exist_ok=True)
 # ============================================================================
 def load_sapphire_data():
     """Load sapphire ordinary-ray optical constants (2-5 μm)."""
-    base = os.path.dirname(os.path.abspath(__file__))
-    for ri_path in [
-        os.path.join(base, 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat'),
-        os.path.join(base, 'RI', 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat'),
-    ]:
+    ri_path = os.path.join(_PROJECT_ROOT, 'RI', 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat')
+    for ri_path in [ri_path]:
         if os.path.exists(ri_path):
             data = np.genfromtxt(ri_path)
             # columns: lam(μm), T(K), n_o, k_o, n_e, k_e

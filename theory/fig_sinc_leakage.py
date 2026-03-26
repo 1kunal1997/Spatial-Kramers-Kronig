@@ -12,7 +12,10 @@ Normalization: each panel by max(pwr[k > 0.1]) to exclude the DC spike.
 DC spike (k=0) is off-scale and annotated.
 """
 
-import os
+import sys, os
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
