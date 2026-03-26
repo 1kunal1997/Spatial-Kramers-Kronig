@@ -126,9 +126,9 @@ d_total_reversed = d_total[::-1]
 c_total_reversed = c_total[::-1]
 
 for i, wl in enumerate(lamdata_sapphire):
-    n_total[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
-    n_total_reversed[-2] = n_total[1]
-    print(f'wl: {wl}, n: {n_total[1]}')
+    n_total[-2] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
+    n_total_reversed[1] = n_total[-2]
+    print(f'wl: {wl}, n: {n_total[-2]}')
     T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_total, d_total, c_total, lamb=wl, angle=angle*degrees, pol=pol)
     T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA_inc(n_total_reversed, d_total_reversed, c_total_reversed, lamb=wl, angle=angle*degrees, pol=pol)
 
@@ -319,79 +319,6 @@ E_noise = np.trapezoid(A_list_LR, x=angle_list) / (angle_list[-1] - angle_list[0
 noise = R_noise + E_noise
 print(f'R noise is: {R_noise}')
 print(f'E noise is: {E_noise}')
-print(f'total noise is: {noise}')
-# %% ##############################################################################################
-
-n_list = [2.27, 2.17 + 1j*0.48]
-d_list = [300, 0.02]
-
-angle_list = np.linspace(0,80,200)
-degrees = np.pi/180
-lamb = 3
-pol = 'p'
-
-th_f = np.zeros_like(angle_list)
-R_front = np.zeros_like(angle_list)
-
-for i, theta in enumerate(angle_list*degrees):
-    th_f[i] = tmm.snell(1, 1.7255, theta)
-    R_front[i] = tmm.interface_R(pol, 1, 1.7255, theta, th_f[i])
-
-# add semi-infinite air layers
-d_list.append(np.inf)
-d_list.insert(0, np.inf)
-n_list.append(1)       
-n_list.insert(0, 1)
-
-c_list = ['i','i','c','i']
-
-n_list_reversed = n_list[::-1]
-d_list_reversed = d_list[::-1]
-c_list_reversed = c_list[::-1]
-
-T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, lamb=lamb, angle_list=angle_list*degrees, pol=pol)
-T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=lamb,
- angle_list=angle_list*degrees, pol=pol)
-
-vw_list = []
-for j, angle in enumerate(angle_list*degrees):
-    vw_list.append(tmm.inc_tmm('p', n_list, d_list, c_list, angle, lamb)['VW_list'])
-
-R_noise = R_list_LR - R_front
-
-data = {
-    "T": T_list_LR,
-    'A_LR': A_list_LR,
-    'A_RL': A_list_RL,
-    'R_LR': R_list_LR,
-    'R_RL': R_list_RL
-}
-tmm_h.plot_tra_curves(
-    angle_list,
-    data=data,
-    xlabel='Angle (degrees)',
-    title=f'{pol}-pol, $\lambda$={lamb}$\mu$m'
-)
-# %% ############################################################################################
-
-# plotting using Will's plot modules
-
-xlabel = 'Angle (degrees)'; ylabel = 'Fraction of Power'
-title = f''
-fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(angle_list[0],angle_list[-1]),figsize=(5,4),auto_scale=True)
-
-plot(fig,ax,angle_list,R_list_LR,label='R$_{total}$',color=colors.green,auto_scale=True)
-
-plot(fig,ax,angle_list,R_front, '--', label='R$_{front}$',color=colors.green,auto_scale=True)
-
-plot(fig,ax,angle_list,R_noise, '*-', markersize=8, markevery=15, label='R$_{noise}$',color=colors.red,auto_scale=True)
-
-legend(fig,ax,auto_scale=True)
-
-# %%
-
-noise = np.trapezoid(R_noise, x=angle_list) / (angle_list[-1] - angle_list[0])
-
 print(f'total noise is: {noise}')
 
 # %%

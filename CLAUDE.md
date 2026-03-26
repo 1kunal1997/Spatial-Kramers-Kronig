@@ -90,7 +90,7 @@ plot(fig, ax, lambda_list, T, color=colors.blue)
 - **`skk_analysis_consolidated.py`** — self-contained script generating all 10 paper figures. Intentionally re-implements tmm_helper functions for reproducibility.
 - **`coating_Hilbert_transform.py`** — applies sKK coating to real sapphire substrate for mid-IR ellipsometry
 - **`bulk_window_vs_sKK_coating_truncated_2025Dec17.py`** — ellipsometry benchmark: bulk sapphire vs sKK coating (wavelength + angle sweeps)
-- **`coatings_sKK_window.py`** — sKK AR coating on incoherent window substrate
+- **`sKK_coating_thermal_emission_2025Dec17.py`** — thermal emission: sKK coating in front of sapphire bulk (wavelength + angle sweeps, bulk vs coated comparison)
 - **`stack_of_stacks_constant_losses.py`** — stacked sKK coatings with constant absorption
 - **`delta_sweep.py`** — effect of discretization step size on reflectance
 - **`modify_KK_losses.py`** — effect of loss (Im(n)) scaling on TRA spectra
@@ -104,7 +104,6 @@ plot(fig, ax, lambda_list, T, color=colors.blue)
 - **`key_mixed_layers_on_substrate_2025Oct30.py`** — specific Bruggeman mixture test on ZnS substrate
 
 ### Pending Review (kept but may have bugs)
-- **`coatings_2_TE.py`** — TE polarization analysis (has undefined variable bugs)
 - **`single_mixed_layer_on_substrate.py`** — overlaps with lamellar_EMT_substrate.py
 
 Both tracks share `tmm_helper.py` and the `RI/` data. Do not reorganize into subfolders — relative paths to `RI/` files would break.
