@@ -1,0 +1,32 @@
+# COMSOL models (multi-GB, not suitable for git)
+*.mph
+*.mph.lock
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Office temp files
+~$*
+
+# PDFs (papers, not source code)
+*.pdf
+
+# Large image outputs (regenerable from scripts)
+# Keeping figures/ directory tracked since those are paper figures
+*.png
+!figures/*.png
+
+# Empty submodule (files moved to root)
+modules/

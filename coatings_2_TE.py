@@ -1,0 +1,397 @@
+# %%
+
+import tmm_helper as tmm_h
+import numpy as np
+from plot_functions import plot_setup, plot, legend
+import colors
+import tmm
+import os
+
+# %%
+degrees = np.pi/180
+nkdata_sapphire = np.genfromtxt(os.path.join('RI', 'lam_um_T_K_Al2O3_no_ko_ne_ke.dat'))
+kdata_sapphire = nkdata_sapphire[50:351, 3]
+ndata_sapphire = nkdata_sapphire[50:351, 2]
+lamdata_sapphire = nkdata_sapphire[50:351, 0]
+delta_lamb = lamdata_sapphire[-1] - lamdata_sapphire[0]
+
+xlabel = 'Wavelength ($\mu$m)'; ylabel = 'Refractive Index'
+title = f'Real Refractive Index of Sapphire'
+fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(lamdata_sapphire[0],lamdata_sapphire[-1]),figsize=(5,4),auto_scale=True)
+
+plot(fig,ax,lamdata_sapphire,ndata_sapphire,label=r'n',color=colors.blue,auto_scale=True)
+
+title = f'Imaginary Refractive Index of Sapphire'
+fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(lamdata_sapphire[0],lamdata_sapphire[-1]),figsize=(5,4),auto_scale=True)
+plot(fig,ax,lamdata_sapphire,kdata_sapphire,label=r'k',color=colors.red,auto_scale=True)
+
+# %% wavelength sweep, bulk sapphire
+pol = 'p'
+angle = 0
+T_list_LR, T_list_RL, R_list_LR, R_list_RL, A_list_LR, A_list_RL = (np.zeros_like(lamdata_sapphire) for _ in range(6))
+th_f = np.empty(len(lamdata_sapphire), dtype=np.complex128)
+R_front = np.empty(len(lamdata_sapphire), dtype=float)
+
+n_list = [1]
+d_list = [5000]
+
+# add semi-infinite air layers
+d_list.append(np.inf)
+d_list.insert(0, np.inf)
+n_list.append(1)       
+n_list.insert(0, 1)
+
+c_list = ['i','i','i']
+
+for i, wl in enumerate(lamdata_sapphire):
+    n_list[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
+    print(f'wl: {wl}, n: {n_list[1]}')
+    th_f[i] = tmm.snell(1, n_list[1], angle)
+    R_front[i] = tmm.interface_R(pol, 1, n_list[1], angle, th_f[i])
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_list, d_list, c_list, lamb=wl, angle=angle*degrees, pol=pol)
+
+# %% ##################################################################################
+
+xlabel = 'Wavelength (um)'; ylabel = 'Fraction of Power'
+title = f'Bulk Sapphire'
+fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(lamdata_sapphire[0],lamdata_sapphire[-1]),figsize=(5,4),auto_scale=True)
+
+plot(fig,ax,lamdata_sapphire,T_list_LR,label='T',color=colors.blue,auto_scale=True)
+plot(fig,ax,lamdata_sapphire,A_list_LR,label='A',color=colors.red,auto_scale=True)
+
+legend(fig,ax,auto_scale=True)
+
+# %%
+
+noise = np.trapezoid(A_list_LR, x=lamdata_sapphire) / delta_lamb
+signal = np.trapezoid(T_list_LR, x=lamdata_sapphire) / delta_lamb
+FOM = signal / noise
+
+print(f'average T is: {signal}')
+print(f'average E is: {noise}')
+print(f'average FOM is: {FOM}')
+
+# %% wavelength sweep with coating
+
+# %% ##############################################################################################
+
+#A = 2*1.89
+A = 2*1.8
+gam = 0.01
+nb = 1
+
+n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=0.1, plot_flag=True, zoomed=True)
+
+max_index = np.argmax(np.array(n_list).real)
+
+print(f"max index is: {max_index} and n_list here is: {n_list[max_index]}")
+
+#for i, n in enumerate(n_list):
+#    print(n)
+max_index = 18
+n_coating = n_list[0:max_index+1]
+#n_coating = [num.real for num in n_coating]
+d_coating = d_list[0:max_index+1]
+
+k_window = 1e-5
+n_window = n_coating[-1].real
+c_total = []
+for _ in range(len(n_coating)):
+    c_total.append('c')
+n_total = n_coating
+n_total.append(n_window + 1j*k_window)
+d_total = d_coating
+d_total.append(5000)
+c_total.append('i')
+
+pol = 's'
+angle = 0
+T_list_LR, T_list_RL, R_list_LR, R_list_RL, A_list_LR, A_list_RL = (np.zeros_like(lamdata_sapphire) for _ in range(6))
+
+# %%
+
+# add semi-infinite air layers
+d_total.append(np.inf)
+d_total.insert(0, np.inf)
+n_total.append(1)       
+n_total.insert(0, 1)
+c_total.append('i')
+c_total.insert(0, 'i')
+
+for i, n in enumerate(n_total):
+   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
+
+n_total_reversed = n_total[::-1]
+d_total_reversed = d_total[::-1]
+c_total_reversed = c_total[::-1]
+
+for i, wl in enumerate(lamdata_sapphire):
+    n_total[1] = ndata_sapphire[i] + 1j*kdata_sapphire[i]
+    n_total_reversed[-2] = n_total[1]
+    print(f'wl: {wl}, n: {n_total[1]}')
+    T_list_LR[i], R_list_LR[i], A_list_LR[i] = tmm_h.TRA_inc(n_total, d_total, c_total, lamb=wl, angle=angle*degrees, pol=pol)
+    T_list_RL[i], R_list_RL[i], A_list_RL[i] = tmm_h.TRA_inc(n_total_reversed, d_total_reversed, c_total_reversed, lamb=wl, angle=angle*degrees, pol=pol)
+
+# %% ##################################################################################
+
+xlabel = 'Wavelength (um)'; ylabel = 'Fraction of Power'
+title = f'Bulk Sapphire With Coating'
+fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(lamdata_sapphire[0],lamdata_sapphire[-1]),figsize=(5,4),auto_scale=True)
+
+plot(fig,ax,lamdata_sapphire,T_list_LR,label='T',color=colors.blue,auto_scale=True)
+plot(fig,ax,lamdata_sapphire,A_list_RL,label='A',color=colors.red,auto_scale=True)
+
+legend(fig,ax,auto_scale=True)
+
+# %%
+
+noise = np.trapezoid(A_list_RL, x=lamdata_sapphire) / delta_lamb
+signal = np.trapezoid(T_list_LR, x=lamdata_sapphire) / delta_lamb
+FOM = signal / noise
+
+print(f'average T is: {signal}')
+print(f'average E is: {noise}')
+print(f'average FOM is: {FOM}')
+
+# %%
+
+data = {
+    "T": T_list_LR,
+    'A_LR': A_list_LR,
+    'R_LR': R_list_LR
+}
+tmm_h.plot_tra_curves(
+    lamdata_sapphire,
+    data=data,
+    title=f'Normal Incidence'
+)
+
+# %% angle sweep, bulk sapphire
+
+pol = 's'
+lamb = 5
+angle_list = np.arange(0,80,1)
+T_list_LR, T_list_RL, R_list_LR, R_list_RL, A_list_LR, A_list_RL = (np.zeros_like(angle_list) for _ in range(6))
+
+idx = np.where(lamdata_sapphire == lamb)[0][0]
+print(idx)
+n_list = [ndata_sapphire[idx] + 1j*kdata_sapphire[idx]]
+d_list = [5000]
+print(f'lam: {lamdata_sapphire[idx]}')
+print(n_list[0])
+
+th_f = np.empty(len(angle_list), dtype=np.complex128)
+R_front = np.empty(len(angle_list), dtype=float)
+
+for i, theta in enumerate(angle_list*degrees):
+    th_f[i] = tmm.snell(1, n_list[0], theta)
+    R_front[i] = tmm.interface_R(pol, 1, n_list[0], theta, th_f[i])
+
+# add semi-infinite air layers
+d_list.append(np.inf)
+d_list.insert(0, np.inf)
+n_list.append(1)       
+n_list.insert(0, 1)
+
+c_list = ['i','i','i']
+
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, angle_list*degrees, lamb=lamb, pol=pol)
+
+# %% ##################################################################################
+
+xlabel = 'Angle (degrees)'; ylabel = 'Fraction of Power'
+title = f'{pol}-pol, $\lambda$={lamb}$\mu$m'
+fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(angle_list[0],angle_list[-1]),figsize=(5,4),auto_scale=True)
+
+#plot(fig,ax,angle_list,T_list_LR,label='T',color=colors.blue,auto_scale=True)
+plot(fig,ax,angle_list,R_list_LR,label='R$_{total}$',color=colors.green,auto_scale=True)
+plot(fig,ax,angle_list,R_front, '--', label='R$_{front}$',color=colors.green,auto_scale=True)
+plot(fig,ax,angle_list,A_list_LR,label='A',color=colors.red,auto_scale=True)
+
+legend(fig,ax,auto_scale=True)
+
+# %%
+R_back = R_list_LR - R_front
+R_noise = np.trapezoid(R_back, x=angle_list) / (angle_list[-1] - angle_list[0])
+E_noise = np.trapezoid(A_list_LR, x=angle_list) / (angle_list[-1] - angle_list[0])
+
+noise = R_noise + E_noise
+print(f'R noise is: {R_noise}')
+print(f'E noise is: {E_noise}')
+
+print(f'total noise is: {noise}')
+# %%
+
+data = {
+    "T": T_list_LR,
+    'A_LR': A_list_LR,
+    'R_LR': R_list_LR,
+    'R_RL':R_front
+}
+tmm_h.plot_tra_curves(
+    angle_list,
+    data=data,
+    xlabel='Angle (degrees)',
+    title=f'{pol}-pol, $\lambda$={lamb}$\mu$m'
+)
+
+# %% coating included angle sweep
+
+A = 1.89
+gam = 1
+nb = 1.395
+
+pol = 's'
+lamb = 5
+angle_list = np.arange(0,80,1)
+T_list_LR, T_list_RL, R_list_LR, R_list_RL, A_list_LR, A_list_RL = (np.zeros_like(angle_list) for _ in range(6))
+
+n_list, d_list = tmm_h.generate_n_and_d_v6_symmetry(gam, A, nb, delta=0.1, plot_flag=False, zoomed=True)
+
+max_index = np.argmax(np.array(n_list).real)
+min_index = np.argmin(np.array(n_list).real)
+
+print(f"min index is: {min_index} and n_list here is: {n_list[min_index]}")
+print(f"max index is: {max_index} and n_list here is: {n_list[max_index]}")
+
+#for i, n in enumerate(n_list):
+#    print(n)
+
+n_coating = n_list[max_index:min_index+1]
+n_coating = [num.real + 1j*num.imag*0.01 for num in n_coating]
+d_coating = d_list[max_index:min_index+1]
+for i, n in enumerate(n_coating):
+    print(n)
+
+idx = np.where(lamdata_sapphire == lamb)[0][0]
+print(idx)
+n_window = ndata_sapphire[idx] + 1j*kdata_sapphire[idx]
+d_window = 5000
+c_total = []
+for _ in range(len(n_coating)):
+    c_total.append('c')
+n_total = n_coating
+n_total.insert(0, n_window)
+d_total = d_coating
+d_total.insert(0, d_window)
+c_total.insert(0, 'i')
+
+# %%
+
+th_f = np.empty(len(angle_list), dtype=np.complex128)
+R_front = np.empty(len(angle_list), dtype=float)
+
+for i, theta in enumerate(angle_list*degrees):
+    th_f[i] = tmm.snell(1, n_window, theta)
+    R_front[i] = tmm.interface_R(pol, 1, n_window, theta, th_f[i])
+
+# add semi-infinite air layers
+d_total.append(np.inf)
+d_total.insert(0, np.inf)
+n_total.append(1)       
+n_total.insert(0, 1)
+c_total.append('i')
+c_total.insert(0, 'i')
+
+for i, n in enumerate(n_total):
+   print(f'n is: {n}, d is: {d_total[i]}, c is: {c_total[i]}')
+
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_total, d_total, c_total, angle_list*degrees, lamb=lamb, pol=pol)
+
+# %% ##################################################################################
+
+xlabel = 'Angle (degrees)'; ylabel = 'Fraction of Power'
+title = f'{pol}-pol, $\lambda$={lamb}$\mu$m with Coating'
+fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(angle_list[0],angle_list[-1]),figsize=(5,4),auto_scale=True)
+
+#plot(fig,ax,angle_list,T_list_LR,label='T',color=colors.blue,auto_scale=True)
+plot(fig,ax,angle_list,R_list_LR,label='R$_{total}$',color=colors.green,auto_scale=True)
+plot(fig,ax,angle_list,R_front, '--', label='R$_{front}$',color=colors.green,auto_scale=True)
+plot(fig,ax,angle_list,A_list_LR,label='A',color=colors.red,auto_scale=True)
+
+legend(fig,ax,auto_scale=True)
+
+# %%
+R_back = R_list_LR - R_front
+R_noise = np.trapezoid(R_back, x=angle_list) / (angle_list[-1] - angle_list[0])
+E_noise = np.trapezoid(A_list_LR, x=angle_list) / (angle_list[-1] - angle_list[0])
+
+noise = R_noise + E_noise
+print(f'R noise is: {R_noise}')
+print(f'E noise is: {E_noise}')
+print(f'total noise is: {noise}')
+# %% ##############################################################################################
+
+n_list = [2.27, 2.17 + 1j*0.48]
+d_list = [300, 0.02]
+
+angle_list = np.linspace(0,80,200)
+degrees = np.pi/180
+lamb = 3
+pol = 'p'
+
+th_f = np.zeros_like(angle_list)
+R_front = np.zeros_like(angle_list)
+
+for i, theta in enumerate(angle_list*degrees):
+    th_f[i] = tmm.snell(1, 1.7255, theta)
+    R_front[i] = tmm.interface_R(pol, 1, 1.7255, theta, th_f[i])
+
+# add semi-infinite air layers
+d_list.append(np.inf)
+d_list.insert(0, np.inf)
+n_list.append(1)       
+n_list.insert(0, 1)
+
+c_list = ['i','i','c','i']
+
+n_list_reversed = n_list[::-1]
+d_list_reversed = d_list[::-1]
+c_list_reversed = c_list[::-1]
+
+T_list_LR, R_list_LR, A_list_LR = tmm_h.TRA_angle_inc(n_list, d_list, c_list, lamb=lamb, angle_list=angle_list*degrees, pol=pol)
+T_list_RL, R_list_RL, A_list_RL = tmm_h.TRA_angle_inc(n_list_reversed, d_list_reversed, c_list_reversed, lamb=lamb,
+ angle_list=angle_list*degrees, pol=pol)
+
+vw_list = []
+for j, angle in enumerate(angle_list*degrees):
+    vw_list.append(tmm.inc_tmm('p', n_list, d_list, c_list, angle, lamb)['VW_list'])
+
+R_noise = R_list_LR - R_front
+
+data = {
+    "T": T_list_LR,
+    'A_LR': A_list_LR,
+    'A_RL': A_list_RL,
+    'R_LR': R_list_LR,
+    'R_RL': R_list_RL
+}
+tmm_h.plot_tra_curves(
+    angle_list,
+    data=data,
+    xlabel='Angle (degrees)',
+    title=f'{pol}-pol, $\lambda$={lamb}$\mu$m'
+)
+# %% ############################################################################################
+
+# plotting using Will's plot modules
+
+xlabel = 'Angle (degrees)'; ylabel = 'Fraction of Power'
+title = f''
+fig,ax = plot_setup(xlabel,ylabel,title=title,xlim=(angle_list[0],angle_list[-1]),figsize=(5,4),auto_scale=True)
+
+plot(fig,ax,angle_list,R_list_LR,label='R$_{total}$',color=colors.green,auto_scale=True)
+
+plot(fig,ax,angle_list,R_front, '--', label='R$_{front}$',color=colors.green,auto_scale=True)
+
+plot(fig,ax,angle_list,R_noise, '*-', markersize=8, markevery=15, label='R$_{noise}$',color=colors.red,auto_scale=True)
+
+legend(fig,ax,auto_scale=True)
+
+# %%
+
+noise = np.trapezoid(R_noise, x=angle_list) / (angle_list[-1] - angle_list[0])
+
+print(f'total noise is: {noise}')
+
+# %%

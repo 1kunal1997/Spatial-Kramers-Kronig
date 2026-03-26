@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew install:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3:*)",
+      "Bash(conda run:*)",
+      "Bash(ls:*)",
+      "Bash(latex:*)",
+      "Bash(mdcat)",
+      "Bash(find '/Users/kunal/Documents/Spatial KK Project' -name *.mph -exec du -sh {})",
+      "Bash(2)",
+      "Bash(find '/Users/kunal/Documents/Spatial KK Project' -name *.npy -exec du -sh {})"
+    ]
+  }
+}
