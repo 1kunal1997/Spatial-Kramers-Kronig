@@ -16,7 +16,15 @@
       "Bash(mv stacks_of_stacks_incoherent_debug.py archive/)",
       "Bash(mv stacks_of_stacks_incoherent_debug_singleWavelength.py archive/)",
       "Bash(mv tmm_inc_vs_manual.py archive/)",
-      "Bash(mv discretize_e_test.py archive/)"
+      "Bash(mv discretize_e_test.py archive/)",
+      "Bash(conda info:*)",
+      "Read(//Users/kunal/anaconda3/**)",
+      "Read(//Users/kunal/miniconda3/**)",
+      "Read(//Users/kunal/miniforge3/**)",
+      "Bash(/opt/miniconda3/envs/env/bin/python -c \"import tmm_helper as tmm_h; print\\(''OK''\\)\")",
+      "Bash(/Users/kunal/opt/anaconda3/bin/python -c \"import numpy; print\\(''anaconda OK''\\)\")",
+      "Bash(/opt/miniconda3/envs/env/bin/python -c \":*)",
+      "Bash(gh auth:*)"
     ]
   }
 }

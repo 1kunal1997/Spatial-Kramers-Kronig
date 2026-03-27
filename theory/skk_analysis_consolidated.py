@@ -20,9 +20,9 @@ Requirements:
   - numpy, scipy, matplotlib, tmm
   - Sapphire data: lam_um_T_K_Al2O3_no_ko_ne_ke.dat
 
-NOTE: This script intentionally re-implements core functions from tmm_helper.py
-to remain self-contained for paper figure reproduction. If you change the physics
-in tmm_helper.py, sync the corresponding functions here if needed.
+NOTE: This script re-implements profile generation and FoM functions locally for
+self-contained paper figure reproduction, but uses tmm_helper.TRA() for all TMM
+calculations to get automatic coherent/incoherent layer classification.
 """
 
 import sys, os
@@ -37,6 +37,7 @@ from scipy.signal import hilbert
 from scipy.signal.windows import tukey
 from scipy.integrate import cumulative_trapezoid
 import tmm
+import tmm_helper as tmm_h
 
 # ============================================================================
 # Plot style
@@ -163,71 +164,60 @@ def spectral_fom(x, u, v, pad_factor=8):
 # TMM helpers
 # ============================================================================
 def Rback_vs_wavelength(n_coating, d_coating, ndata, kdata, lamdata, angle_deg, pol):
-    """Backside reflection and absorption vs wavelength (incoherent substrate)."""
+    """Backside reflection and absorption vs wavelength (auto-coherence)."""
     deg = np.pi/180; angle = angle_deg * deg
-    n_t = list(n_coating); d_t = list(d_coating)
-    c_t = ['c'] * len(n_coating)
-    n_t.insert(0, complex(ndata[0], kdata[0]))
-    d_t.insert(0, 5000); c_t.insert(0, 'i')
-    n_t.insert(0, 1); n_t.append(1)
-    d_t.insert(0, np.inf); d_t.append(np.inf)
-    c_t.insert(0, 'i'); c_t.append('i')
-
     Rb = np.zeros(len(lamdata)); At = np.zeros(len(lamdata))
     for i, wl in enumerate(lamdata):
-        n_t[1] = complex(ndata[i], kdata[i])
-        th_f = tmm.snell(1, n_t[1], angle)
-        Rf = tmm.interface_R(pol, 1, n_t[1], angle, th_f)
-        res = tmm.inc_tmm(pol, n_t, d_t, c_t, angle, wl)
-        Rb[i] = res['R'] - Rf
-        At[i] = 1 - res['T'] - res['R']
+        n_sub = complex(ndata[i], kdata[i])
+        n_t = [1, n_sub] + list(n_coating) + [1]
+        d_t = [np.inf, 5000] + list(d_coating) + [np.inf]
+        T, R, A = tmm_h.TRA(n_t, d_t, lamb=wl, angle=angle, pol=pol)
+        th_f = tmm.snell(1, n_sub, angle)
+        Rf = tmm.interface_R(pol, 1, n_sub, angle, th_f)
+        Rb[i] = R - Rf
+        At[i] = A
     return Rb, At
 
 def Rback_vs_angle(n_coating, d_coating, n_sub, angle_list_deg, lam, pol):
-    """Backside reflection vs angle at a single wavelength."""
+    """Backside reflection vs angle at a single wavelength (auto-coherence)."""
     deg = np.pi/180
-    n_t = list(n_coating); d_t = list(d_coating)
-    c_t = ['c'] * len(n_coating)
-    n_t.insert(0, n_sub); d_t.insert(0, 5000); c_t.insert(0, 'i')
-    n_t.insert(0, 1); n_t.append(1)
-    d_t.insert(0, np.inf); d_t.append(np.inf)
-    c_t.insert(0, 'i'); c_t.append('i')
-
+    n_t = [1, n_sub] + list(n_coating) + [1]
+    d_t = [np.inf, 5000] + list(d_coating) + [np.inf]
     Rb = np.zeros(len(angle_list_deg)); At = np.zeros(len(angle_list_deg))
     for i, ang in enumerate(angle_list_deg):
         theta = ang * deg
+        T, R, A = tmm_h.TRA(n_t, d_t, lamb=lam, angle=theta, pol=pol)
         th_f = tmm.snell(1, n_sub, theta)
         Rf = tmm.interface_R(pol, 1, n_sub, theta, th_f)
-        res = tmm.inc_tmm(pol, n_t, d_t, c_t, theta, lam)
-        Rb[i] = res['R'] - Rf
-        At[i] = 1 - res['T'] - res['R']
+        Rb[i] = R - Rf
+        At[i] = A
     return Rb, At
 
 def Rback_bulk_wl(ndata, kdata, lamdata, angle_deg, pol):
-    """Bulk sapphire backside reflection (no coating)."""
+    """Bulk sapphire backside reflection (no coating, auto-coherence)."""
     deg = np.pi/180; angle = angle_deg * deg
-    n_b = [1, complex(ndata[0], kdata[0]), 1]
-    d_b = [np.inf, 5000, np.inf]; c_b = ['i','i','i']
     Rb = np.zeros(len(lamdata)); At = np.zeros(len(lamdata))
     for i, wl in enumerate(lamdata):
-        n_b[1] = complex(ndata[i], kdata[i])
-        th_f = tmm.snell(1, n_b[1], angle)
-        Rf = tmm.interface_R(pol, 1, n_b[1], angle, th_f)
-        res = tmm.inc_tmm(pol, n_b, d_b, c_b, angle, wl)
-        Rb[i] = res['R'] - Rf; At[i] = 1 - res['T'] - res['R']
+        n_sub = complex(ndata[i], kdata[i])
+        n_b = [1, n_sub, 1]
+        d_b = [np.inf, 5000, np.inf]
+        T, R, A = tmm_h.TRA(n_b, d_b, lamb=wl, angle=angle, pol=pol)
+        th_f = tmm.snell(1, n_sub, angle)
+        Rf = tmm.interface_R(pol, 1, n_sub, angle, th_f)
+        Rb[i] = R - Rf; At[i] = A
     return Rb, At
 
 def Rback_bulk_angle(n_sub, angle_list_deg, lam, pol):
-    """Bulk sapphire backside reflection vs angle."""
+    """Bulk sapphire backside reflection vs angle (auto-coherence)."""
     deg = np.pi/180
-    n_b = [1, n_sub, 1]; d_b = [np.inf, 5000, np.inf]; c_b = ['i','i','i']
+    n_b = [1, n_sub, 1]; d_b = [np.inf, 5000, np.inf]
     Rb = np.zeros(len(angle_list_deg))
     for i, ang in enumerate(angle_list_deg):
         theta = ang * deg
+        T, R, A = tmm_h.TRA(n_b, d_b, lamb=lam, angle=theta, pol=pol)
         th_f = tmm.snell(1, n_sub, theta)
         Rf = tmm.interface_R(pol, 1, n_sub, theta, th_f)
-        res = tmm.inc_tmm(pol, n_b, d_b, c_b, theta, lam)
-        Rb[i] = res['R'] - Rf
+        Rb[i] = R - Rf
     return Rb
 
 def _find_contiguous(xx, mask):

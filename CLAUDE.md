@@ -111,7 +111,7 @@ File paths to `RI/` and `Data/` use `os.path.join(_PROJECT_ROOT, 'RI', ...)` so 
 ## Active Scripts
 
 ### Theory Track (`theory/`)
-- **`skk_analysis_consolidated.py`** — self-contained script generating all 10 paper figures. Intentionally re-implements tmm_helper functions for reproducibility.
+- **`skk_analysis_consolidated.py`** — self-contained script generating all 10 paper figures. Re-implements profile generation and FoM functions locally for reproducibility, but uses `tmm_helper.TRA()` for all TMM calculations (auto-coherence).
 - **`coating_Hilbert_transform.py`** — applies sKK coating to real sapphire substrate for mid-IR ellipsometry
 - **`bulk_window_vs_sKK_coating_truncated_2025Dec17.py`** — ellipsometry benchmark: bulk sapphire vs sKK coating (wavelength + angle sweeps)
 - **`sKK_coating_thermal_emission_2025Dec17.py`** — thermal emission: sKK coating in front of sapphire bulk (wavelength + angle sweeps, bulk vs coated comparison)
@@ -137,6 +137,10 @@ Do not infer supersession, redundancy, or status from filenames. Suffixes like `
 ## Communication Style
 
 When giving physics explanations, use Unicode math symbols (epsilon, gamma, lambda, etc.) instead of LaTeX syntax. LaTeX does not render in the terminal and is hard to read raw.
+
+## Git Workflow
+
+Push to the GitHub repo after big changes or at the end of a session. No need to push after every small edit — use judgment.
 
 ## Dependencies
 
