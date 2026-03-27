@@ -256,6 +256,209 @@ def test_phase3_validation():
 
 
 # ============================================================================
+# Figures: 1-to-1 before/after comparison
+# ============================================================================
+def save_figures(figdir="theory/figures"):
+    import os
+    from plot_functions import plot_setup, plot, legend
+    import colors
+    os.makedirs(figdir, exist_ok=True)
+
+    lambda_list = np.linspace(2, 5, 300)
+
+    # ---- Case 1: Thin sKK coating (clearly coherent) ----
+    # Parameters: A=10, gam=0.01, nb=2.3, delta=0.1
+    # Semi-infinite layers use n_inf=nb to eliminate FP cavity at air/coating boundary
+    nb = 2.3
+    n_raw, d_raw = tmm_h.generate_n_and_d_v6_symmetry(0.01, 10, nb, plot_flag=False)
+    n_list = [nb] + n_raw + [nb]
+    d_list = [inf] + d_raw + [inf]
+
+    # "BEFORE": old coh_tmm directly (what the old TRA_wavelength did)
+    T_old = np.zeros_like(lambda_list)
+    R_old = np.zeros_like(lambda_list)
+    for j, lamb in enumerate(lambda_list):
+        res = tmm.coh_tmm('s', n_list, d_list, 0, lamb)
+        T_old[j] = res['T']
+        R_old[j] = res['R']
+    A_old = 1 - T_old - R_old
+
+    # "AFTER": new unified TRA_wavelength (uses inc_tmm + auto c_list)
+    T_new, R_new, A_new = tmm_h.TRA_wavelength(n_list, d_list, lambda_list, pol='s')
+
+    # Figure 1a: T comparison
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Transmittance',
+                         title='Thin sKK Coating: T (A=10, $\\gamma$=0.01, nb=2.3, n$_{inf}$=nb)',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_list, T_old, label='T old (coh\\_tmm)', color=colors.blue, auto_scale=True)
+    plot(fig, ax, lambda_list, T_new, '--', label='T new (unified)', color=colors.red, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_thin_coating_T.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_thin_coating_T.png")
+    print(f"    max|T_old - T_new| = {np.max(np.abs(T_old - T_new)):.2e}")
+
+    # Figure 1b: R comparison
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Reflectance',
+                         title='Thin sKK Coating: R (A=10, $\\gamma$=0.01, nb=2.3, n$_{inf}$=nb)',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_list, R_old, label='R old (coh\\_tmm)', color=colors.blue, auto_scale=True)
+    plot(fig, ax, lambda_list, R_new, '--', label='R new (unified)', color=colors.red, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_thin_coating_R.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_thin_coating_R.png")
+    print(f"    max|R_old - R_new| = {np.max(np.abs(R_old - R_new)):.2e}")
+
+    # Figure 1c: A_LR vs A_RL (sKK asymmetry preserved)
+    T_old_rev = np.zeros_like(lambda_list)
+    R_old_rev = np.zeros_like(lambda_list)
+    n_rev, d_rev = n_list[::-1], d_list[::-1]
+    for j, lamb in enumerate(lambda_list):
+        res = tmm.coh_tmm('s', n_rev, d_rev, 0, lamb)
+        T_old_rev[j] = res['T']
+        R_old_rev[j] = res['R']
+    A_old_rev = 1 - T_old_rev - R_old_rev
+    T_new_rev, R_new_rev, A_new_rev = tmm_h.TRA_wavelength(n_rev, d_rev, lambda_list, pol='s')
+
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Absorptance',
+                         title='Thin sKK: A$_{LR}$ vs A$_{RL}$ (A=10, $\\gamma$=0.01, nb=2.3, n$_{inf}$=nb)',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_list, A_old, label='A$_{LR}$ old', color=colors.blue, auto_scale=True)
+    plot(fig, ax, lambda_list, A_new, '--', label='A$_{LR}$ new', color=colors.red, auto_scale=True)
+    plot(fig, ax, lambda_list, A_old_rev, label='A$_{RL}$ old', color=colors.green, auto_scale=True)
+    plot(fig, ax, lambda_list, A_new_rev, '--', label='A$_{RL}$ new', color=colors.orange, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_thin_coating_A_asymmetry.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_thin_coating_A_asymmetry.png")
+    print(f"    max|A_LR_old - A_LR_new| = {np.max(np.abs(A_old - A_new)):.2e}")
+    print(f"    max|A_RL_old - A_RL_new| = {np.max(np.abs(A_old_rev - A_new_rev)):.2e}")
+
+    # ---- Case 2: Thick substrate (clearly incoherent) ----
+    # 5mm sapphire (n=1.7), no absorption
+    n_sub = [1, 1.7, 1]
+    d_sub = [inf, 5000, inf]
+
+    # "BEFORE" for thick: old TRA_inc with manual c_list=['i','i','i']
+    # which called inc_tmm directly — replicate that
+    T_old_sub = np.zeros_like(lambda_list)
+    R_old_sub = np.zeros_like(lambda_list)
+    for j, lamb in enumerate(lambda_list):
+        res = tmm.inc_tmm('s', n_sub, d_sub, ['i','i','i'], 0, lamb)
+        T_old_sub[j] = res['T']
+        R_old_sub[j] = res['R']
+    A_old_sub = 1 - T_old_sub - R_old_sub
+
+    # "AFTER": new unified (should auto-detect incoherent)
+    T_new_sub, R_new_sub, A_new_sub = tmm_h.TRA_wavelength(n_sub, d_sub, lambda_list, pol='s')
+
+    # Figure 2: T comparison for thick substrate
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Transmittance',
+                         title='5mm Sapphire: T (old manual inc vs new auto)',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_list, T_old_sub, label='T old (manual c\\_list)', color=colors.blue, auto_scale=True)
+    plot(fig, ax, lambda_list, T_new_sub, '--', label='T new (unified)', color=colors.red, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_thick_substrate_T.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_thick_substrate_T.png")
+    print(f"    max|T_old - T_new| = {np.max(np.abs(T_old_sub - T_new_sub)):.2e}")
+
+    # ---- Case 3: sKK coating + thick substrate (mixed) ----
+    # This is the key demo: forced all-coherent produces FP fringes from substrate,
+    # auto-coherence flips substrate to 'i' while keeping coating layers 'c'.
+    n_coat, d_coat = tmm_h.generate_n_and_d_v6_symmetry(0.01, 10, 2.3, plot_flag=False)
+    n_mix = [1] + n_coat + [1.7, 1]
+    d_mix = [inf] + d_coat + [5000, inf]
+
+    # Forced all-coherent (threshold=1e12 so nothing is ever 'i' except semi-inf)
+    T_allc, R_allc, A_allc = tmm_h.TRA_wavelength(n_mix, d_mix, lambda_list, pol='s', threshold=1e12)
+
+    # Auto-coherence (threshold=5): substrate should flip to 'i'
+    T_auto, R_auto, A_auto = tmm_h.TRA_wavelength(n_mix, d_mix, lambda_list, pol='s', threshold=5)
+
+    # Print c_list to confirm
+    c_sample = tmm_h._make_c_list(n_mix, d_mix, 3.0, threshold=5)
+    n_c = sum(1 for c in c_sample if c == 'c')
+    n_i = sum(1 for c in c_sample if c == 'i')
+    print(f"\n  Case 3: sKK coating + 5mm sapphire")
+    print(f"    c_list: {n_c} coherent, {n_i} incoherent")
+    print(f"    Substrate (second-to-last layer) classified: '{c_sample[-2]}'")
+
+    # Figure 3a: T — forced coherent vs auto
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Transmittance',
+                         title='sKK Coating + 5mm Sapphire: T',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_list, T_allc, label='T forced all-coherent', color=colors.red, auto_scale=True)
+    plot(fig, ax, lambda_list, T_auto, label='T auto-coherence', color=colors.blue, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_mixed_coating_substrate_T.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_mixed_coating_substrate_T.png")
+
+    # Figure 3b: R — forced coherent vs auto
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Reflectance',
+                         title='sKK Coating + 5mm Sapphire: R',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_list, R_allc, label='R forced all-coherent', color=colors.red, auto_scale=True)
+    plot(fig, ax, lambda_list, R_auto, label='R auto-coherence', color=colors.blue, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_mixed_coating_substrate_R.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_mixed_coating_substrate_R.png")
+
+    # ---- Case 4: Intermediate — coarse sKK with thick high-contrast layers ----
+    # A=50, gam=0.1, nb=2.3, delta=0.5 => 10 layers
+    # Layers 0-2 and 8-9: thick (d=3-10um), n up to 3.1, n*d/lam=5-12 -> 'i'
+    # Layers 3-7: thin sKK peak (d=0.06-0.12um), n up to 5.7 -> 'c'
+    # Big n contrast at boundaries (3.1 -> 5.7) means FP fringes should be visible
+    nb_int = 2.3
+    n_int_raw, d_int_raw = tmm_h.generate_n_and_d_v6_symmetry(0.1, 50, nb_int, delta=0.5, plot_flag=False)
+    n_int = [nb_int] + n_int_raw + [nb_int]
+    d_int = [inf] + d_int_raw + [inf]
+
+    lambda_int = np.linspace(2, 5, 2000)
+
+    # "BEFORE" / naive: all-coherent via coh_tmm
+    T_coh_int = np.zeros_like(lambda_int)
+    R_coh_int = np.zeros_like(lambda_int)
+    for j, lamb in enumerate(lambda_int):
+        res = tmm.coh_tmm('s', n_int, d_int, 0, lamb)
+        T_coh_int[j] = res['T']
+        R_coh_int[j] = res['R']
+    A_coh_int = 1 - T_coh_int - R_coh_int
+
+    # "AFTER": auto-coherence flips thick outer layers to 'i'
+    T_auto_int, R_auto_int, A_auto_int = tmm_h.TRA_wavelength(n_int, d_int, lambda_int, pol='s', threshold=5)
+
+    # Report classification
+    c_int = tmm_h._make_c_list(n_int, d_int, 2.0, threshold=5)
+    n_c_int = sum(1 for c in c_int[1:-1] if c == 'c')
+    n_i_int = sum(1 for c in c_int[1:-1] if c == 'i')
+    print(f"\n  Case 4: Intermediate coating (A=50, gam=0.1, nb=2.3, delta=0.5)")
+    print(f"    {len(n_int_raw)} layers, {n_c_int} coherent, {n_i_int} incoherent at lambda=2um")
+    for i, (n, d) in enumerate(zip(n_int_raw, d_int_raw)):
+        o = np.real(n) * d / 2.0
+        tag = 'i' if o > 5 else 'c'
+        print(f"      layer {i}: n={np.real(n):.2f}, d={d:.2f}um, n*d/lam={o:.1f} -> {tag}")
+
+    # Figure 4a: T
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Transmittance',
+                         title='Intermediate: T (A=50, $\\gamma$=0.1, $\\delta$=0.5, n$_{inf}$=nb)',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_int, T_coh_int, label='T old (all coherent)', color=colors.red, auto_scale=True)
+    plot(fig, ax, lambda_int, T_auto_int, label='T new (auto-coherence)', color=colors.blue, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_intermediate_T.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_intermediate_T.png")
+
+    # Figure 4b: R
+    fig, ax = plot_setup('Wavelength ($\\mu$m)', 'Reflectance',
+                         title='Intermediate: R (A=50, $\\gamma$=0.1, $\\delta$=0.5, n$_{inf}$=nb)',
+                         xlim=(2, 5), figsize=(6, 4), auto_scale=True)
+    plot(fig, ax, lambda_int, R_coh_int, label='R old (all coherent)', color=colors.red, auto_scale=True)
+    plot(fig, ax, lambda_int, R_auto_int, label='R new (auto-coherence)', color=colors.blue, auto_scale=True)
+    legend(fig, ax, auto_scale=True)
+    fig.savefig(os.path.join(figdir, "verify_intermediate_R.png"), dpi=150, bbox_inches='tight')
+    print(f"  Saved: {figdir}/verify_intermediate_R.png")
+
+
+# ============================================================================
 # Main
 # ============================================================================
 if __name__ == "__main__":
@@ -272,6 +475,11 @@ if __name__ == "__main__":
     test_E_threshold_sensitivity()
     test_F_intermediate()
     passed_phase3 = test_phase3_validation()
+
+    print("\n" + "=" * 70)
+    print("FIGURES")
+    print("=" * 70)
+    save_figures()
 
     print("\n" + "=" * 70)
     print("OVERALL SUMMARY")
