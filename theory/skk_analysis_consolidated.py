@@ -89,7 +89,7 @@ def eps_lorentz(x, A, x0, nb):
     """Lorentzian dielectric profile: ε(x) = nb² - A·x₀/(x + i·x₀)"""
     return nb**2 - A * x0 / (x + 1j * x0)
 
-def ht_derivative(xx, e_re, pad_factor=8):
+def ht_derivative(xx, e_re):
     """Derivative-then-integrate HT method (main contribution of the paper).
 
     Key idea: dε'/dx → 0 at both ends, so standard FFT-based HT works
@@ -97,10 +97,7 @@ def ht_derivative(xx, e_re, pad_factor=8):
     """
     N = len(e_re)
     u = np.gradient(e_re, xx)
-    pad = pad_factor * N
-    u_pad = np.pad(u, (pad, pad), mode='constant', constant_values=0)
-    v_pad = np.imag(hilbert(u_pad))
-    v = v_pad[pad:pad+N]
+    v = np.imag(hilbert(u))
     e_im = cumulative_trapezoid(v, xx, initial=0)
     e_im -= np.linspace(e_im[0], e_im[-1], N)
     return e_im
@@ -128,18 +125,16 @@ def discretize_profile(xx, ee, delta=0.05):
     n_list = np.sqrt(e_list).tolist()
     return n_list, d_list
 
-def hilbert_fom(x, u, v, pad_factor=8):
+def hilbert_fom(x, u, v):
     """Hilbert FoM: derivative-space correlation between ε'' and ideal HT-derived ε''."""
     ud = np.gradient(u, x)
     vd = np.gradient(v, x)
-    pad = pad_factor * len(x)
-    ud_pad = np.pad(ud, (pad, pad), mode='constant')
-    vd_ht = np.imag(hilbert(ud_pad))[pad:-pad]
+    vd_ht = np.imag(hilbert(ud))
     num = 2 * np.trapezoid(vd * vd_ht, x)
     den = np.trapezoid(vd**2, x) + np.trapezoid(vd_ht**2, x)
     return 100 * max(0.0, num / den)
 
-def spectral_fom(x, u, v, pad_factor=8):
+def spectral_fom(x, u, v):
     """Spectral one-sidedness FoM.
 
     Forms z(x) = dε'/dx + i·dε''/dx, computes Z(k) = FFT{z(x)},
@@ -151,8 +146,6 @@ def spectral_fom(x, u, v, pad_factor=8):
     ud = np.gradient(u, x)
     vd = np.gradient(v, x)
     z = ud + 1j * vd
-    pad = pad_factor * len(x)
-    z = np.pad(z, (pad, pad), mode='constant')
     dx = x[1] - x[0]
     Z = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z)))
     k = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z), d=dx))

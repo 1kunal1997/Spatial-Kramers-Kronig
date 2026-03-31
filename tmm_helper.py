@@ -20,7 +20,7 @@ def logistic(x, k, nb, sx):
 
 # %%
 
-def hilbert_fom_derivative(x, u, v, pad_factor=8, sign=+1):
+def hilbert_fom_derivative(x, u, v, sign=+1):
     """
     x : uniform grid
     u : real profile
@@ -36,12 +36,7 @@ def hilbert_fom_derivative(x, u, v, pad_factor=8, sign=+1):
     ud = np.gradient(u, x)
     vd = np.gradient(v, x)
 
-    # Zero pad to reduce FFT/Hilbert wrap-around artifacts
-    pad = pad_factor * len(x)
-    ud_pad = np.pad(ud, (pad, pad), mode='constant')
-
-    vd_ht_pad = np.imag(hilbert(ud_pad))
-    vd_ht = sign * vd_ht_pad[pad:-pad]
+    vd_ht = sign * np.imag(hilbert(ud))
 
     num = 2 * np.trapezoid(vd * vd_ht, x)
     den = np.trapezoid(vd**2, x) + np.trapezoid(vd_ht**2, x)
@@ -49,7 +44,7 @@ def hilbert_fom_derivative(x, u, v, pad_factor=8, sign=+1):
     fom = 100 * max(0.0, num / den)
     return fom, vd_ht
 
-def skk_spectral_fom(x, u, v, pad_factor=8, allowed_side='positive', derivative=True):
+def skk_spectral_fom(x, u, v, allowed_side='positive', derivative=True):
     """
     allowed_side = 'positive' or 'negative'
     derivative=True is recommended for step-like profiles
@@ -63,9 +58,6 @@ def skk_spectral_fom(x, u, v, pad_factor=8, allowed_side='positive', derivative=
         v = np.gradient(v, x)
 
     z = u + 1j * v
-
-    pad = pad_factor * len(x)
-    z = np.pad(z, (pad, pad), mode='constant')
 
     dx = x[1] - x[0]
     Z = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z)))
@@ -84,7 +76,7 @@ def skk_spectral_fom(x, u, v, pad_factor=8, allowed_side='positive', derivative=
     fom = 100 * max(0.0, (E_allowed - E_forbidden) / (E_allowed + E_forbidden))
     return fom, k, Z
 
-def ht_derivative(xx, e_re, pad_factor=8):
+def ht_derivative(xx, e_re):
     """Derivative-then-integrate Hilbert transform method.
 
     Key idea: dε'/dx → 0 at both ends, so standard FFT-based HT works
@@ -92,10 +84,7 @@ def ht_derivative(xx, e_re, pad_factor=8):
     """
     N = len(e_re)
     u = np.gradient(e_re, xx)
-    pad = pad_factor * N
-    u_pad = np.pad(u, (pad, pad), mode='constant', constant_values=0)
-    v_pad = np.imag(hilbert(u_pad))
-    v = v_pad[pad:pad+N]
+    v = np.imag(hilbert(u))
     e_im = cumulative_trapezoid(v, xx, initial=0)
     e_im -= np.linspace(e_im[0], e_im[-1], N)
     return e_im
@@ -509,10 +498,10 @@ def HT_help(k=8, nb=1.7, sx=1, delta=0.05, alpha=None, sigma=None, n0=1.3, plot_
     return (n_list.tolist(), d_list.tolist()) 
 
 
-def generate_n_and_d_v6_symmetry(gam, a, nb, delta=0.02, plot_flag=False, zoomed=True):
-    
+def generate_n_and_d_v6_symmetry(gam, a, nb, delta=0.02, domain_factor=200, plot_flag=False, zoomed=True):
+
     dx      = gam/100             # Step size in 'continuous' Lorentzian
-    xmax    = gam * 200          # Limits of Lorentzian
+    xmax    = gam * domain_factor  # Limits of Lorentzian
 
     nx      = 1 + int(np.floor(xmax / dx))
     xx      = np.linspace(0.0, xmax, nx)

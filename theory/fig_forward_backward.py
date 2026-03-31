@@ -16,9 +16,8 @@ Physics:
   FT support to k ≤ 0. For the centered profile u_c = Re(ε) − nb² (which
   is odd), this is equivalent to u_c → −u_c while v is unchanged (even).
 
-FoM computed with pad_factor=0 (validates the k=0 exclusion fix).
-Display spectrum computed from centered profiles with pad_factor=8 for
-visual smoothness.
+FoM computed without padding (endpoints converge, no padding needed).
+Display spectrum computed from centered profiles.
 """
 
 import sys, os
@@ -54,33 +53,29 @@ ee   = tmm_h.eps(xx, a, gam, nb)
 u    = np.real(ee)
 v    = np.imag(ee)
 
-# ── FoM: pad_factor=0 validates the k=0 exclusion fix ───────────────────────
 # Forward: u + iv, pole at -iγ → FT support k>0
 fom_fwd, _, _ = tmm_h.skk_spectral_fom(
-    xx, u, v, pad_factor=0, allowed_side='positive', derivative=False)
+    xx, u, v, allowed_side='positive', derivative=False)
 
 # Backward (reversed profile): same allowed_side → FoM ≈ 0%
 fom_bwd, _, _ = tmm_h.skk_spectral_fom(
-    xx, u[::-1], v[::-1], pad_factor=0, allowed_side='positive', derivative=False)
+    xx, u[::-1], v[::-1], allowed_side='positive', derivative=False)
 
 print(f"Forward  (allowed_side='positive') FoM = {fom_fwd:.2f}%")
 print(f"Reversed (allowed_side='positive') FoM = {fom_bwd:.2f}%")
 
-# ── Display spectrum: centered profiles + pad_factor=8 for smoothness ────────
 # u_c = u − nb²   is odd → FT supported on k>0
 # −u_c = −u + nb² is odd → FT supported on k<0
 u_c   =  u - nb**2    # forward centered
 u_c_b = -u + nb**2    # backward centered = -u_c
 
 dx_val = xx[1] - xx[0]
-pad_n  = 8 * len(xx)
 
 
 def compute_spectrum(u_centered, v_signal):
     z     = u_centered + 1j * v_signal
-    z_pad = np.pad(z, (pad_n, pad_n), mode='constant')
-    Z     = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z_pad)))
-    k     = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z_pad), d=dx_val))
+    Z     = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z)))
+    k     = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z), d=dx_val))
     pwr   = np.abs(Z)**2
     pwr  /= pwr.max()
     return k, pwr

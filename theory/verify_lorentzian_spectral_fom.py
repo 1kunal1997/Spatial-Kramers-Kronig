@@ -12,15 +12,11 @@ Physics:
   => allowed_side='positive' (forward, +x propagation) => FoM ~100%
   => allowed_side='negative' (backward, -x propagation) => FoM ~0%
 
-Two ways the DC spike bug manifested with the old ~mask code:
-  - With pad_factor=0 (periodic extension): Z[k=0] ~ nb^2 * N ~ 90000,
-    which landed in E_forbidden via `~mask`, driving FoM to ~0%.
-  - With pad_factor>0 (zero-padding): the constant nb^2 creates a large
-    step-to-zero at the boundaries, generating sinc leakage on all k.
+The DC spike bug manifested with the old ~mask code: Z[k=0] ~ nb^2 * N
+landed in E_forbidden via `~mask`, driving FoM to ~0%.
 
-The fix (exclude k=0 via strict inequality) resolves the pad_factor=0
-case cleanly, giving ~100% FoM.  We use pad_factor=0 here so the test
-directly validates the fix.
+The fix (exclude k=0 via strict inequality) resolves this cleanly,
+giving ~100% FoM.
 
 For the plot, we subtract nb^2 from u so the Lorentzian spectral
 structure is visible (at k!=0 this is identical to what skk_spectral_fom
@@ -62,12 +58,11 @@ ee   = tmm_h.eps(xx, a, gam, nb)
 u    = np.real(ee)
 v    = np.imag(ee)
 
-# ── FoM: use pad_factor=0 (periodic extension avoids step-to-zero artifact)
 # k=0 is excluded from both sides by the fixed mask logic.
 fom_fwd, k_fwd, Z_fwd = tmm_h.skk_spectral_fom(
-    xx, u, v, pad_factor=0, allowed_side='positive', derivative=False)
+    xx, u, v, allowed_side='positive', derivative=False)
 fom_bwd, k_bwd, Z_bwd = tmm_h.skk_spectral_fom(
-    xx, u, v, pad_factor=0, allowed_side='negative', derivative=False)
+    xx, u, v, allowed_side='negative', derivative=False)
 
 print(f"Forward  (allowed_side='positive') FoM = {fom_fwd:.2f}%")
 print(f"Backward (allowed_side='negative') FoM = {fom_bwd:.2f}%")
@@ -78,12 +73,9 @@ print(f"Backward (allowed_side='negative') FoM = {fom_bwd:.2f}%")
 u_c  = u - nb**2                    # = Re(eps) - nb^2 = -a*gam*x/(x^2+gam^2)
 z_plt = u_c + 1j * v               # = -a*gam / (x + i*gam)
 
-# Use pad_factor=8 here only for a smoother-looking spectrum in the plot.
-pad_n  = 8 * len(xx)
-z_pad  = np.pad(z_plt, (pad_n, pad_n), mode='constant')
 dx_val = xx[1] - xx[0]
-Z_plt  = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z_pad)))
-k_plt  = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z_pad), d=dx_val))
+Z_plt  = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z_plt)))
+k_plt  = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z_plt), d=dx_val))
 pwr    = np.abs(Z_plt)**2
 pwr   /= pwr.max()              # max is now at small positive k (Lorentzian peak)
 
