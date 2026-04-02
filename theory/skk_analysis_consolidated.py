@@ -20,9 +20,11 @@ Requirements:
   - numpy, scipy, matplotlib, tmm
   - Sapphire data: lam_um_T_K_Al2O3_no_ko_ne_ke.dat
 
-NOTE: This script re-implements profile generation and FoM functions locally for
-self-contained paper figure reproduction, but uses tmm_helper.TRA() for all TMM
-calculations to get automatic coherent/incoherent layer classification.
+NOTE: This script re-implements profile generation locally for self-contained
+paper figure reproduction. FoM functions and spectral FoM plotting use
+tmm_helper (skk_spectral_fom, hilbert_fom_derivative, plot_spectral_fom).
+TMM calculations use tmm_helper.TRA() for automatic coherent/incoherent
+layer classification.
 """
 
 import sys, os
@@ -33,11 +35,9 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from scipy.signal import hilbert
-from scipy.signal.windows import tukey
-from scipy.integrate import cumulative_trapezoid
 import tmm
 import tmm_helper as tmm_h
+from scipy.signal import hilbert  # used directly in Figs 2-3 (naive HT demonstration)
 
 # ============================================================================
 # Plot style
@@ -78,80 +78,15 @@ def load_sapphire_data():
             return lamdata, ndata, kdata
     raise FileNotFoundError("Sapphire data file not found")
 
-# ============================================================================
-# Core physics functions
-# ============================================================================
-def logistic_eps(x, k, nb, sx=1):
-    """Logistic GRIN dielectric profile: ε'(x) = (nb²-1)/(1+exp(sk·x)) + 1"""
-    return (nb**2 - 1) / (1 + np.exp(sx * k * x)) + 1
 
-def eps_lorentz(x, A, x0, nb):
-    """Lorentzian dielectric profile: ε(x) = nb² - A·x₀/(x + i·x₀)"""
-    return nb**2 - A * x0 / (x + 1j * x0)
-
-def ht_derivative(xx, e_re):
-    """Derivative-then-integrate HT method (main contribution of the paper).
-
-    Key idea: dε'/dx → 0 at both ends, so standard FFT-based HT works
-    on the derivative. Integrate back to recover ε''.
-    """
-    N = len(e_re)
-    u = np.gradient(e_re, xx)
-    v = np.imag(hilbert(u))
-    e_im = cumulative_trapezoid(v, xx, initial=0)
-    e_im -= np.linspace(e_im[0], e_im[-1], N)
-    return e_im
-
-def smooth_gate(eps_re, eps0, sigma):
-    """Smooth tanh gate: g(ε') = 0.5*(1 + tanh((ε' - ε₀)/σ))"""
-    return 0.5 * (1.0 + np.tanh((eps_re - eps0) / sigma))
-
-def discretize_profile(xx, ee, delta=0.05):
-    """Discretize continuous ε(x) into TMM layers."""
-    e_scale = np.max(np.abs(ee - ee[0]))
-    if e_scale < 1e-12: e_scale = 1.0
-    x_scale = xx[-1] - xx[0]
-    xq, eq = [xx[0]], [ee[0]]
-    for k in range(1, len(xx)):
-        dx = (xx[k] - xq[-1]) / x_scale
-        de = abs(ee[k] - eq[-1]) / e_scale
-        ds = np.sqrt(dx**2 + de**2)
-        if ds > delta:
-            xq.append(xx[k]); eq.append(ee[k])
-    xq.append(xx[-1]); eq.append(ee[-1])
-    xq, eq = np.array(xq), np.array(eq)
-    d_list = np.diff(xq).tolist()
-    e_list = (eq[:-1] + eq[1:]) / 2
-    n_list = np.sqrt(e_list).tolist()
-    return n_list, d_list
-
-def hilbert_fom(x, u, v):
-    """Hilbert FoM: derivative-space correlation between ε'' and ideal HT-derived ε''."""
-    ud = np.gradient(u, x)
-    vd = np.gradient(v, x)
-    vd_ht = np.imag(hilbert(ud))
-    num = 2 * np.trapezoid(vd * vd_ht, x)
-    den = np.trapezoid(vd**2, x) + np.trapezoid(vd_ht**2, x)
-    return 100 * max(0.0, num / den)
-
-def spectral_fom(x, u, v):
-    """Spectral one-sidedness FoM.
-
-    Forms z(x) = dε'/dx + i·dε''/dx, computes Z(k) = FFT{z(x)},
-    then measures: FoM = (E₊ - E₋)/(E₊ + E₋)
-    where E₊ = ∫|Z(k)|² dk for k > 0, E₋ for k < 0.
-
-    A truly analytic (sKK-consistent) profile has FoM → 1.
-    """
-    ud = np.gradient(u, x)
-    vd = np.gradient(v, x)
-    z = ud + 1j * vd
-    dx = x[1] - x[0]
-    Z = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z)))
-    k = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z), d=dx))
-    E_pos = np.sum(np.abs(Z[k > 0])**2)
-    E_neg = np.sum(np.abs(Z[k < 0])**2)
-    return 100 * max(0.0, (E_pos - E_neg) / (E_pos + E_neg))
+# Core physics functions: all from tmm_helper
+# logistic_eps  → tmm_h.logistic()
+# eps_lorentz   → tmm_h.eps()
+# ht_derivative → tmm_h.tmm_h.ht_derivative()
+# smooth_gate   → tmm_h.tmm_h.smooth_gate()
+# discretize_profile → tmm_h.tmm_h.discretize_profile()
+# skk_spectral_fom   → tmm_h.skk_spectral_fom()
+# hilbert_fom        → tmm_h.hilbert_fom_derivative()
 
 # ============================================================================
 # TMM helpers
@@ -237,20 +172,20 @@ if __name__ == '__main__':
     dx = 1/(100*k_steep); xmin = -20/k_steep; xmax = -xmin
     nx = 1 + int(np.floor((xmax - xmin) / dx))
     xx = np.linspace(xmin, xmax, nx)
-    e_re = logistic_eps(xx, k_steep, nb)
+    e_re = tmm_h.logistic(xx, k_steep, nb)
 
     lamdata, ndata, kdata = load_sapphire_data()
 
     # ht_original() moved to archive/tmm_helper_backup_v2.py
-    e_im_deriv = ht_derivative(xx, e_re)
+    e_im_deriv = tmm_h.ht_derivative(xx, e_re)
 
     angle_test = 80; pol_test = 's'
 
     # Coatings
     ee_full = e_re + 1j * e_im_deriv
-    nc_full, dc_full = discretize_profile(xx, ee_full, delta=delta)
+    nc_full, dc_full = tmm_h.discretize_profile(xx, ee_full, delta=delta)
     ee_grin = e_re + 0j
-    nc_grin, dc_grin = discretize_profile(xx, ee_grin, delta=delta)
+    nc_grin, dc_grin = tmm_h.discretize_profile(xx, ee_grin, delta=delta)
 
     # TMM baseline results
     Rb_full, A_full = Rback_vs_wavelength(nc_full, dc_full, ndata, kdata, lamdata, angle_test, pol_test)
@@ -262,8 +197,8 @@ if __name__ == '__main__':
 
     print("=== FoM Comparison ===")
     for name, eim in [("Derivative", e_im_deriv)]:
-        hf = hilbert_fom(xx, e_re, eim)
-        sf = spectral_fom(xx, e_re, eim)
+        hf = tmm_h.hilbert_fom_derivative(xx, e_re, eim)[0]
+        sf = tmm_h.skk_spectral_fom(xx, e_re, eim)[0]
         print(f"  {name}: HT_FoM={hf:.2f}%, Spectral_FoM={sf:.2f}%")
 
     Rb_avg_bulk = np.trapezoid(Rb_bulk, lamdata) / (lamdata[-1] - lamdata[0])
@@ -283,7 +218,7 @@ if __name__ == '__main__':
     dx_l = x0_lor / 50; xmax_l = x0_lor * 100
     nx_l = 1 + int(np.floor(2 * xmax_l / dx_l))
     xx_l = np.linspace(-xmax_l, xmax_l, nx_l)
-    ee_l = eps_lorentz(xx_l, A_lor, x0_lor, nb)
+    ee_l = tmm_h.eps(xx_l, A_lor, x0_lor, nb)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
 
@@ -446,39 +381,28 @@ if __name__ == '__main__':
 
     # ====================================================================
     # FIGURE 5 (Slide 5): Spectral FoM introduction — single panel
-    # y-axis: |Z(k)|² (arb. units)
     # ====================================================================
-    # Use denser grid for smoother spectral plot
+    # M=2000 domain for accurate spectral FoM resolution (separate from
+    # xx_dense used later for loss shape TMM calculations)
+    M_fom = 2000
+    dx_fom = 1 / (100 * k_steep)
+    xmin_fom = -M_fom / k_steep
+    xx_fom = np.linspace(xmin_fom, -xmin_fom,
+                         1 + int(np.floor((-2 * xmin_fom) / dx_fom)))
+    e_re_fom = (nb**2 - 1) / (1 + np.exp(k_steep * xx_fom)) + 1
+    e_im_fom = tmm_h.ht_derivative(xx_fom, e_re_fom)
+
+    fom_full, k_freq, power_d = tmm_h.skk_spectral_fom(
+        xx_fom, e_re_fom, e_im_fom)
+
+    # Dense grid for loss shape comparison (M=20, same as original)
     xx_dense = np.linspace(-0.2, 0.2, 4001)
     e_re_dense = (nb**2 - 1) / (1 + np.exp(k_steep * xx_dense)) + 1
-    e_im_dense = ht_derivative(xx_dense, e_re_dense)
-
-    ud_d = np.gradient(e_re_dense, xx_dense)
-    vd_d = np.gradient(e_im_dense, xx_dense)
-    z_d = ud_d + 1j * vd_d
-    pad_d = 8 * len(xx_dense)
-    z_d_pad = np.pad(z_d, (pad_d, pad_d), mode='constant')
-    dx_d = xx_dense[1] - xx_dense[0]
-    Z_d = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z_d_pad)))
-    k_freq = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z_d_pad), d=dx_d))
-    power_d = np.abs(Z_d)**2
-    power_d /= power_d.max()
-
-    E_pos = np.sum(np.abs(Z_d[k_freq > 0])**2)
-    E_neg = np.sum(np.abs(Z_d[k_freq <= 0])**2)
-    fom_full = (E_pos - E_neg) / (E_pos + E_neg)
+    e_im_dense = tmm_h.ht_derivative(xx_dense, e_re_dense)
 
     fig, ax = plt.subplots(1, 1, figsize=(5.5, 4.0))
-    ax.fill_between(k_freq[k_freq >= 0], power_d[k_freq >= 0], alpha=0.35, color='#2ca02c',
-                    label=r'Positive $k$')
-    ax.fill_between(k_freq[k_freq <= 0], power_d[k_freq <= 0], alpha=0.35, color='#d62728',
-                    label=r'Negative $k$ (forbidden)')
-    ax.plot(k_freq, power_d, 'k-', linewidth=0.5, alpha=0.5)
-    ax.set_yscale('log'); ax.set_ylim(1e-10, 2); ax.set_xlim(-400, 400)
-    ax.set_xlabel(r'Spatial frequency $k$ ($\mu$m$^{-1}$)')
-    ax.set_ylabel(r'$|Z(k)|^2$ (arb. units)')
-    ax.set_title(f'Full sKK profile — Spectral FoM = {fom_full*100:.1f}%')
-    ax.legend(loc='upper left', fontsize=9)
+    tmm_h.plot_spectral_fom(ax, k_freq, power_d, fom_full,
+                            title=f'Full sKK profile — Spectral FoM = {fom_full:.1f}%')
     plt.tight_layout()
     plt.savefig(f'{FIGDIR}/fig_fom_intro_single.png')
     plt.close()
@@ -495,11 +419,11 @@ if __name__ == '__main__':
     for j, alpha in enumerate(alpha_list):
         e_im_a = alpha * e_im_deriv
         ee_a = e_re + 1j * e_im_a
-        nc_a, dc_a = discretize_profile(xx, ee_a, delta=delta)
+        nc_a, dc_a = tmm_h.discretize_profile(xx, ee_a, delta=delta)
         Rb_a, At_a = Rback_vs_wavelength(nc_a, dc_a, ndata, kdata, lamdata, angle_test, pol_test)
         R_vs_a[j] = np.trapezoid(Rb_a, lamdata) / (lamdata[-1] - lamdata[0])
         A_vs_a[j] = np.trapezoid(At_a, lamdata) / (lamdata[-1] - lamdata[0])
-        FoM_vs_a[j] = spectral_fom(xx, e_re, e_im_a) / 100.0
+        FoM_vs_a[j] = tmm_h.skk_spectral_fom(xx, e_re, e_im_a)[0] / 100.0
         if j % 10 == 0:
             print(f"  α={alpha:.2f}: ⟨R⟩={R_vs_a[j]:.4f}, ⟨A⟩={A_vs_a[j]:.4f}, FoM={FoM_vs_a[j]:.3f}")
 
@@ -533,7 +457,7 @@ if __name__ == '__main__':
     for idx, sigma in enumerate(sigma_list):
         e_im_base = e_im_deriv.copy()
         if sigma is not None:
-            gate = smooth_gate(e_re, n0_gate**2, sigma)
+            gate = tmm_h.smooth_gate(e_re, n0_gate**2, sigma)
             e_im_gated = e_im_base * gate
             label = f'$\\sigma$ = {sigma}'
         else:
@@ -549,7 +473,7 @@ if __name__ == '__main__':
         ax.set_title(label, fontsize=13, fontweight='bold')
         ax.tick_params(axis='y', labelcolor=BLUE)
         ax2t.tick_params(axis='y', labelcolor=RED)
-        sf = spectral_fom(xx, e_re, e_im_gated)
+        sf = tmm_h.skk_spectral_fom(xx, e_re, e_im_gated)[0]
         ax.text(0.97, 0.97, f'Spectral FoM:\n{sf:.1f}%',
                 transform=ax.transAxes, fontsize=9, va='top', ha='right',
                 bbox=dict(facecolor='wheat', alpha=0.7, boxstyle='round'))
@@ -557,7 +481,7 @@ if __name__ == '__main__':
         # Bottom row: reflection (no bulk curve)
         ax = axes[1, idx]
         ee_g = e_re + 1j * e_im_gated
-        nc_g, dc_g = discretize_profile(xx, ee_g, delta=delta)
+        nc_g, dc_g = tmm_h.discretize_profile(xx, ee_g, delta=delta)
         Rb_g, At_g = Rback_vs_wavelength(nc_g, dc_g, ndata, kdata, lamdata, angle_test, pol_test)
         ax.plot(lamdata, Rb_g, color=GREEN, lw=2.5, label=r'$R_{\rm back}$')
         ax.plot(lamdata, At_g, color=RED, lw=2.5, label='$A$')
@@ -573,35 +497,18 @@ if __name__ == '__main__':
 
     # ====================================================================
     # FIGURE 8 (Slide 8): FoM comparison — full sKK vs gated (both panels)
-    # y-axis: |Z(k)|² (arb. units)
     # ====================================================================
-    gate_01 = smooth_gate(e_re_dense, 1.3**2, 0.1)
-    e_im_gated_dense = e_im_dense * gate_01
+    gate_01_fom = tmm_h.smooth_gate(e_re_fom, 1.3**2, 0.1)
+    e_im_gated_fom = e_im_fom * gate_01_fom
 
-    ud_g = np.gradient(e_re_dense, xx_dense)
-    vd_g = np.gradient(e_im_gated_dense, xx_dense)
-    z_g = ud_g + 1j * vd_g
-    z_g_pad = np.pad(z_g, (pad_d, pad_d), mode='constant')
-    Z_g = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z_g_pad)))
-    power_g = np.abs(Z_g)**2; power_g /= power_g.max()
-    E_pos_g = np.sum(np.abs(Z_g[k_freq > 0])**2)
-    E_neg_g = np.sum(np.abs(Z_g[k_freq <= 0])**2)
-    fom_gated = (E_pos_g - E_neg_g) / (E_pos_g + E_neg_g)
+    fom_gated, k_g, power_g = tmm_h.skk_spectral_fom(
+        xx_fom, e_re_fom, e_im_gated_fom)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
-    for ax, pwr, fom_val, title_prefix in [
-        (ax1, power_d, fom_full, '(a) Full sKK profile'),
-        (ax2, power_g, fom_gated, r'(b) Gated ($\sigma=0.1$)')]:
-        ax.fill_between(k_freq[k_freq >= 0], pwr[k_freq >= 0], alpha=0.35, color='#2ca02c',
-                        label=r'Positive $k$')
-        ax.fill_between(k_freq[k_freq <= 0], pwr[k_freq <= 0], alpha=0.35, color='#d62728',
-                        label=r'Negative $k$')
-        ax.plot(k_freq, pwr, 'k-', linewidth=0.5, alpha=0.5)
-        ax.set_yscale('log'); ax.set_ylim(1e-10, 2); ax.set_xlim(-400, 400)
-        ax.set_xlabel(r'Spatial frequency $k$ ($\mu$m$^{-1}$)')
-        ax.set_ylabel(r'$|Z(k)|^2$ (arb. units)')
-        ax.set_title(f'{title_prefix} — Spectral FoM = {fom_val*100:.1f}%')
-        ax.legend(loc='upper left', fontsize=9)
+    tmm_h.plot_spectral_fom(ax1, k_freq, power_d, fom_full,
+                            title=f'(a) Full sKK profile — Spectral FoM = {fom_full:.1f}%')
+    tmm_h.plot_spectral_fom(ax2, k_g, power_g, fom_gated,
+                            title=r'(b) Gated ($\sigma=0.1$)' + f' — Spectral FoM = {fom_gated:.1f}%')
     plt.tight_layout()
     plt.savefig(f'{FIGDIR}/fig_new5_fom_explanation.png')
     plt.close()
@@ -647,25 +554,25 @@ if __name__ == '__main__':
         dx_k = 1/(100*k_val); xmin_k = -20/k_val; xmax_k = -xmin_k
         nx_k = 1+int(np.floor((xmax_k-xmin_k)/dx_k))
         xx_k = np.linspace(xmin_k, xmax_k, nx_k)
-        e_re_k = logistic_eps(xx_k, k_val, nb)
-        e_im_k = ht_derivative(xx_k, e_re_k)
+        e_re_k = tmm_h.logistic(xx_k, k_val, nb)
+        e_im_k = tmm_h.ht_derivative(xx_k, e_re_k)
         thickness = 2*xmax_k
         thicknesses.append(thickness)
 
         # GRIN
-        nc_gk, dc_gk = discretize_profile(xx_k, e_re_k + 0j, delta=delta)
+        nc_gk, dc_gk = tmm_h.discretize_profile(xx_k, e_re_k + 0j, delta=delta)
         Rb_gk, _ = Rback_vs_wavelength(nc_gk, dc_gk, ndata, kdata, lamdata, angle_test, pol_test)
         R_grin_arr.append(np.trapezoid(Rb_gk, lamdata) / (lamdata[-1] - lamdata[0]))
 
         # Full sKK
-        nc_fk, dc_fk = discretize_profile(xx_k, e_re_k + 1j*e_im_k, delta=delta)
+        nc_fk, dc_fk = tmm_h.discretize_profile(xx_k, e_re_k + 1j*e_im_k, delta=delta)
         Rb_fk, At_fk = Rback_vs_wavelength(nc_fk, dc_fk, ndata, kdata, lamdata, angle_test, pol_test)
         R_skk_arr.append(np.trapezoid(Rb_fk, lamdata) / (lamdata[-1] - lamdata[0]))
         A_skk_arr.append(np.trapezoid(At_fk, lamdata) / (lamdata[-1] - lamdata[0]))
 
         # Gated sKK (σ=0.1)
-        gate_k = smooth_gate(e_re_k, 1.3**2, 0.1)
-        nc_gatk, dc_gatk = discretize_profile(xx_k, e_re_k + 1j*e_im_k*gate_k, delta=delta)
+        gate_k = tmm_h.smooth_gate(e_re_k, 1.3**2, 0.1)
+        nc_gatk, dc_gatk = tmm_h.discretize_profile(xx_k, e_re_k + 1j*e_im_k*gate_k, delta=delta)
         Rb_gatk, _ = Rback_vs_wavelength(nc_gatk, dc_gatk, ndata, kdata, lamdata, angle_test, pol_test)
         R_gated_arr.append(np.trapezoid(Rb_gatk, lamdata) / (lamdata[-1] - lamdata[0]))
 
@@ -769,12 +676,12 @@ if __name__ == '__main__':
         """Plot a two-panel figure: profile (left) + R_back/A vs wavelength (right)."""
         # Discretize and run TMM
         ee = e_re + 1j * e_im_shape
-        nc, dc = discretize_profile(xx, ee, delta=delta)
+        nc, dc = tmm_h.discretize_profile(xx, ee, delta=delta)
         Rb, At = Rback_vs_wavelength(nc, dc, ndata, kdata, lamdata, angle_deg, pol)
 
         R_avg = np.trapezoid(Rb, lamdata) / (lamdata[-1] - lamdata[0])
         A_avg = np.trapezoid(At, lamdata) / (lamdata[-1] - lamdata[0])
-        sf = spectral_fom(xx, e_re, e_im_shape)
+        sf = tmm_h.skk_spectral_fom(xx, e_re, e_im_shape)[0]
         total_loss = np.trapezoid(e_im_shape, xx)
 
         fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(13, 5))
@@ -836,7 +743,7 @@ if __name__ == '__main__':
 
     # --- Batch 2: Gated loss placement ---
     print("\n=== LOSS SHAPE COMPARISON — Batch 2: Gated ===")
-    gate_dense = smooth_gate(e_re_dense, 1.3**2, 0.1)
+    gate_dense = tmm_h.smooth_gate(e_re_dense, 1.3**2, 0.1)
     e_im_gated_ref = e_im_dense * gate_dense
     loss_ref_gated = np.trapezoid(e_im_gated_ref, xx_dense)
     print(f"  Reference total loss (gated sKK): ∫ε''dx = {loss_ref_gated:.6f}")
@@ -919,7 +826,7 @@ if __name__ == '__main__':
     for j, s_val in enumerate(s_sweep):
         eim_s = scale_eim(xx_dense, e_im_dense, x_center, s_val, loss_ref_width)
         ee_s = e_re_dense + 1j * eim_s
-        nc_s, dc_s = discretize_profile(xx_dense, ee_s, delta=delta)
+        nc_s, dc_s = tmm_h.discretize_profile(xx_dense, ee_s, delta=delta)
         Rb_s, At_s = Rback_vs_wavelength(nc_s, dc_s, ndata, kdata, lamdata, angle_test, pol_test)
         R_vs_s[j] = np.trapezoid(Rb_s, lamdata) / (lamdata[-1] - lamdata[0])
         A_vs_s[j] = np.trapezoid(At_s, lamdata) / (lamdata[-1] - lamdata[0])
@@ -981,8 +888,8 @@ if __name__ == '__main__':
     xmax_thick = -xmin_thick
     xx_thick = np.linspace(xmin_thick, xmax_thick,
                            1 + int(np.floor((xmax_thick - xmin_thick) / dx_thick)))
-    e_re_thick = logistic_eps(xx_thick, k_steep_thick, nb)
-    e_im_thick = ht_derivative(xx_thick, e_re_thick)
+    e_re_thick = tmm_h.logistic(xx_thick, k_steep_thick, nb)
+    e_im_thick = tmm_h.ht_derivative(xx_thick, e_re_thick)
 
     print(f"  k_steep = {k_steep_thick}, grid: {xmin_thick} to {xmax_thick} μm, "
           f"{len(xx_thick)} pts")
@@ -1056,7 +963,7 @@ if __name__ == '__main__':
     for j, s_val in enumerate(s_sweep_thick):
         eim_s = scale_eim(xx_thick, e_im_thick, x_center_thick, s_val, loss_ref_width_thick)
         ee_s = e_re_thick + 1j * eim_s
-        nc_s, dc_s = discretize_profile(xx_thick, ee_s, delta=delta)
+        nc_s, dc_s = tmm_h.discretize_profile(xx_thick, ee_s, delta=delta)
         Rb_s, At_s = Rback_vs_wavelength(nc_s, dc_s, ndata, kdata, lamdata, angle_test, pol_test)
         R_vs_s_thick[j] = np.trapezoid(Rb_s, lamdata) / (lamdata[-1] - lamdata[0])
         A_vs_s_thick[j] = np.trapezoid(At_s, lamdata) / (lamdata[-1] - lamdata[0])

@@ -8,14 +8,16 @@ import numpy as np
 from plot_functions import plot_setup, plot, legend
 import colors
 from scipy.signal import hilbert
-from scipy.signal.windows import tukey
-from scipy.integrate import cumulative_trapezoid
+try:
+    from scipy.integrate import cumulative_trapezoid
+except ImportError:
+    from scipy.integrate import cumtrapz as cumulative_trapezoid
 
 # generate nk for spatial KK stack
 def eps(x, a, gam, nb):
     return nb**2 - a * gam / (x + 1j*gam)
 
-def logistic(x, k, nb, sx):
+def logistic(x, k, nb, sx=1):
     return (nb**2-1) / (1 + np.exp(sx*k*x)) + 1
 
 # %%
@@ -45,9 +47,12 @@ def hilbert_fom_derivative(x, u, v, sign=+1):
     return fom, vd_ht
 
 def skk_spectral_fom(x, u, v, allowed_side='positive', derivative=True):
-    """
-    allowed_side = 'positive' or 'negative'
-    derivative=True is recommended for step-like profiles
+    """Spectral one-sidedness FoM using derivative → FFT → ÷ik method.
+
+    Takes derivative of ε(x), FFTs, divides by ik to recover ε̂(k),
+    then measures energy asymmetry: FoM = (E₊ − E₋)/(E₊ + E₋).
+
+    Returns (fom, k, pwr) where pwr = |ε̂(k)|².
     """
     x = np.asarray(x, float)
     u = np.asarray(u, float)
@@ -60,8 +65,16 @@ def skk_spectral_fom(x, u, v, allowed_side='positive', derivative=True):
     z = u + 1j * v
 
     dx = x[1] - x[0]
-    Z = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z)))
+    Z_d = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z)))
     k = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z), d=dx))
+
+    # Divide by ik to recover ε̂(k)
+    eps_hat = np.zeros_like(Z_d)
+    nonzero = k != 0
+    eps_hat[nonzero] = Z_d[nonzero] / (1j * k[nonzero])
+    eps_hat[~nonzero] = 0
+
+    pwr = np.abs(eps_hat)**2
 
     if allowed_side == 'positive':
         mask_allowed = k > 0
@@ -70,11 +83,34 @@ def skk_spectral_fom(x, u, v, allowed_side='positive', derivative=True):
         mask_allowed = k < 0
         mask_forbidden = k > 0
 
-    E_allowed = np.sum(np.abs(Z[mask_allowed])**2)
-    E_forbidden = np.sum(np.abs(Z[mask_forbidden])**2)
+    E_allowed = np.sum(pwr[mask_allowed])
+    E_forbidden = np.sum(pwr[mask_forbidden])
 
     fom = 100 * max(0.0, (E_allowed - E_forbidden) / (E_allowed + E_forbidden))
-    return fom, k, Z
+    return fom, k, pwr
+
+def plot_spectral_fom(ax, k, pwr, fom, klim=400, title=None):
+    """Plot green/red shaded spectral FoM spectrum on given axes.
+
+    ax: matplotlib axes
+    k, pwr: arrays from skk_spectral_fom()
+    fom: scalar FoM percentage
+    klim: symmetric x-axis limit for spatial frequency
+    title: optional title (default auto-generates from fom)
+    """
+    ax.fill_between(k[k >= 0], pwr[k >= 0], alpha=0.35, color='#2ca02c',
+                    label=r'$k > 0$ (allowed)')
+    ax.fill_between(k[k <= 0], pwr[k <= 0], alpha=0.35, color='#d62728',
+                    label=r'$k < 0$ (forbidden)')
+    ax.plot(k, pwr, 'k-', lw=0.5, alpha=0.5)
+    ax.set_yscale('log')
+    ax.set_xlim(-klim, klim)
+    ax.set_xlabel(r'Spatial frequency $k$ ($\mu$m$^{-1}$)')
+    ax.set_ylabel(r'$|\hat{\varepsilon}(k)|^2$')
+    if title is None:
+        title = f'Spectral FoM = {fom:.1f}%'
+    ax.set_title(title)
+    ax.legend(loc='upper right', fontsize=9)
 
 def ht_derivative(xx, e_re):
     """Derivative-then-integrate Hilbert transform method.
@@ -413,132 +449,94 @@ def eps_plot(xx, ee, xq, e_list, gam, a, nb, zoomed):
     ax.stairs(e_imag, xq, baseline=0, label='discrete', linewidth = 2)
     plot(fig,ax, midpoints, e_imag, '*', markersize=7, label='inputs', color=colors.green,auto_scale=True)
 
-def smooth_gate_by_epsprime(eps_re, eps0, sigma):
-    """
-    Gate ~1 when eps_re > eps0, ~0 when eps_re < eps0.
-    eps0: threshold (e.g., eps0 = 1.3**2)
-    sigma: softness of threshold (smaller = harder slam)
+def smooth_gate(eps_re, eps0, sigma):
+    """Smooth tanh gate on ε'(x): ~1 where ε' > ε₀, ~0 where ε' < ε₀.
+
+    eps0: threshold (e.g., n0**2)
+    sigma: softness of transition (smaller = harder cutoff)
     """
     return 0.5 * (1.0 + np.tanh((eps_re - eps0) / sigma))
   
-def HT_help(k=8, nb=1.7, sx=1, delta=0.05, alpha=None, sigma=None, n0=1.3, plot_flag=True, zoomed=False):
+def HT_help(k=8, nb=1.7, sx=1, delta=0.05, alpha=None, sigma=None, n0=1.3, plot_flag=True, zoomed=False, M=2000):
+    """Generate sKK logistic coating profile and discretize into TMM layers.
 
-    dx      = 1/(100*k)               # Step size in 'continuous' Lorentzian
-    xmin    = -20/k
-    xmax    = - xmin
+    Uses derivative→HT→integrate method to compute ε’’(x) from ε’(x).
 
-    nx      = 1 + int(np.floor((xmax - xmin) / dx))
-    xx      = np.linspace(xmin, xmax, nx)
-    e_re    = logistic(xx,k,nb,sx)                    # Smooth Lorentzian curve
+    Parameters
+    ----------
+    k     : steepness of logistic profile (μm⁻¹)
+    nb    : background refractive index (ε’ left asymptote = nb²)
+    sx    : sign of logistic (default 1: high-to-low left-to-right)
+    delta : arc-length discretization threshold
+    alpha : optional scalar to scale ε’’ (0=GRIN only, 1=full sKK)
+    sigma : optional gating softness for smooth_gate (removes lossy-air region)
+    n0    : gate threshold refractive index (gate activates at ε’ = n0²)
+    M     : domain half-width in units of 1/k (default 2000)
+    """
+    dx   = 1 / (100 * k)
+    xmin = -M / k
+    xmax = -xmin
+    nx   = 1 + int(np.floor((xmax - xmin) / dx))
+    xx   = np.linspace(xmin, xmax, nx)
 
-    # x: your coordinate array, n_re: your real index profile (logistic), same length
-    e_re = e_re.astype(float)
-    N = len(e_re)
+    # Step 1: build logistic ε’(x), compute sKK ε’’(x) via derivative→HT→integrate
+    e_re = logistic(xx, k, nb, sx)
+    e_im = ht_derivative(xx, e_re)
 
-    # 1) pick asymptotic constants from the ends (robustly)
-    eL = np.mean(e_re[:max(4, N//100)])      # left asymptote ~ ZnS
-    eR = np.mean(e_re[-max(4, N//100):])     # right asymptote ~ air
-
-    # 2) pad with constants (make it much longer than the transition)
-    pad = 4*N   # start with 2–6x N; bigger if needed
-    e_pad = np.r_[np.full(pad, eL), e_re, np.full(pad, eR)]
-
-    # 3) apply a gentle taper only at the *outer* ends so the periodic join is smooth
-    #    (keep the interior essentially untouched)
-    w = np.ones_like(e_pad)
-    M = len(e_pad)
-    taper_frac = 0.05  # 5% at each end; tune 0.02–0.1
-    taper = tukey(M, alpha=2*taper_frac)    # Tukey is 1 in middle, cosine at ends
-    # tukey() tapers BOTH ends; we want the same: suppress only outer ends
-    w *= taper
-
-    # taper around constant baselines so you don’t distort the interior step:
-    # (this makes ends smoothly go to their constants in a way compatible with FFT wrap)
-    e_pad2 = eL + (e_pad - eL)*w  # uses nL baseline; alternatively do piecewise baseline, see note below
-
-    # 4) Hilbert transform and crop back to original region
-    z = hilbert(e_pad2)
-    e_im = np.imag(z)[pad:pad+N] 
-
+    # Step 2: optional scaling / gating
     if alpha is not None:
-        e_im = alpha*e_im
+        e_im = alpha * e_im
     if sigma is not None:
-        e_im = e_im*smooth_gate_by_epsprime(e_re, n0**2, sigma)
+        e_im = e_im * smooth_gate(e_re, n0**2, sigma)
 
-    ee = e_re + 1j*e_im
-
+    ee = e_re + 1j * e_im
     nk = np.sqrt(ee)
 
-    e_scale = np.max(abs(ee-nb**2))
-    x_scale = xx[-1] - xx[0]
+    # Step 3: discretize continuous profile into TMM layers
+    n_list, d_list = discretize_profile(xx, ee, delta)
 
-    #discretizing algorithm for dielectric function
-    count = 0
-    xq, eq = [xx[0]], [ee[0]]
-    for k in range(1, len(xx)):
-        dx = (xx[k] - xq[-1]) / x_scale
-        de = abs(ee[k] - eq[-1]) / e_scale
-        ds = np.sqrt(dx**2 + de**2)
-        
-        if ds > delta:
-            xq.append(xx[k])
-            eq.append(ee[k])
-            count = count + 1
-
-    xq = np.append(xq, xmax)
-    eq = np.append(eq, ee[-1])
-    d_list = np.diff(xq)
-    e_list = (eq[:-1] + eq[1:]) / 2
-    n_list = np.sqrt(e_list)
-    # plot imaginary and real part of refractive index
-    if (plot_flag):
-        nk_plot(xx, ee, nk, xq, n_list, 0.01, 10, nb, zoomed)
+    # Step 4: plot (optional)
+    if plot_flag:
+        e_list = np.array(n_list)**2
+        xq = np.concatenate([[xx[0]], xx[0] + np.cumsum(d_list)])
+        nk_plot(xx, ee, nk, xq, np.array(n_list), 0.01, 10, nb, zoomed)
         eps_plot(xx, ee, xq, e_list, 0.01, 10, nb, zoomed)
-    
-    return (n_list.tolist(), d_list.tolist()) 
+
+    return (n_list, d_list)
 
 
-def generate_n_and_d_v6_symmetry(gam, a, nb, delta=0.02, domain_factor=200, plot_flag=False, zoomed=True):
+def generate_n_and_d_v6_symmetry(gam, a, nb, delta=0.02, M=2000, plot_flag=False, zoomed=True):
+    """Generate symmetric Lorentzian sKK stack and discretize into TMM layers.
 
-    dx      = gam/100             # Step size in 'continuous' Lorentzian
-    xmax    = gam * domain_factor  # Limits of Lorentzian
+    Parameters
+    ----------
+    gam   : Lorentzian half-width (μm)
+    a     : Lorentzian amplitude
+    nb    : background refractive index
+    delta : arc-length discretization threshold
+    M     : domain half-width in units of gam (default 2000)
+    """
+    dx   = gam / 100
+    xmax = gam * M
 
-    nx      = 1 + int(np.floor(xmax / dx))
-    xx      = np.linspace(0.0, xmax, nx)
-    ee      = eps(xx,a,gam,nb)                    # Smooth Lorentzian curve
-    nk      = np.sqrt(ee)
+    # Build symmetric continuous profile
+    nx     = 1 + int(np.floor(xmax / dx))
+    xx     = np.linspace(0.0, xmax, nx)
+    xx_sym = np.concatenate([-xx[:0:-1], xx])
+    ee_sym = eps(xx_sym, a, gam, nb)
 
-    e_scale   = np.max(abs(ee-nb**2))
-    x_scale = xmax
+    # Discretize
+    n_list, d_list = discretize_profile(xx_sym, ee_sym, delta)
 
-    xq, eq = [xx[0]], [ee[0]]
-    for k in range(1, len(xx)):
-        dx = (xx[k] - xq[-1]) / x_scale
-        de = np.abs(ee[k] - eq[-1]) / e_scale
-        ds = np.sqrt(dx**2 + de**2)
-        if ds > delta:
-            xq.append(xx[k])
-            eq.append(ee[k])
-
-    xq = np.append(xq, xmax)
-    eq = np.append(eq, ee[-1])
-
-    xq_sym = np.concatenate([-xq[:0:-1], xq])  # mirror to full symmetric profile
-
-    d_list = np.diff(xq_sym)
-    log_term = np.log(xq_sym[1:] + 1j*gam) - np.log(xq_sym[:-1] + 1j*gam)
-    e_list = nb**2 - a*gam * log_term / d_list
-    n_list = np.sqrt(e_list)
-
-    # plot imaginary and real part of refractive index
-    if (plot_flag):
-        xx_sym = np.concatenate([-xx[:0:-1], xx])
-        ee_sym     = eps(xx_sym,a,gam,nb)
-        nk_sym      = np.sqrt(ee_sym)
-        nk_plot(xx_sym, ee_sym, nk_sym, xq_sym, n_list, gam, a, nb, zoomed)
+    # Plot (optional)
+    if plot_flag:
+        nk_sym = np.sqrt(ee_sym)
+        e_list = np.array(n_list)**2
+        xq_sym = np.concatenate([[xx_sym[0]], xx_sym[0] + np.cumsum(d_list)])
+        nk_plot(xx_sym, ee_sym, nk_sym, xq_sym, np.array(n_list), gam, a, nb, zoomed)
         eps_plot(xx_sym, ee_sym, xq_sym, e_list, gam, a, nb, zoomed)
-    
-    return (n_list.tolist(), d_list.tolist())
+
+    return (n_list, d_list)
 
 def _make_c_list(n_list, d_list, lamb, angle=0, threshold=5):
     """Auto-generate coherent/incoherent classification for each layer.

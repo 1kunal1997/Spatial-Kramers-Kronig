@@ -5,8 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 This is a nanophotonics computational research project investigating the
-**spatial Kramers-Kronig (sKK) relations** originally developed by Horsley et al. (2015). The broad goal is to either extend the theory (for example, zero and unit transmission cases by King, Horsley, Philbin in 2017), or find applications of this phenomena, such as anti-reflection (AR) coatings, thermal emission/absorption asymmetry, perfect absorbers, etc. Currently, the focus is AR coatings (found in coating_Hilbert_transform.py), specifically
-targeting backside reflection suppression in **mid-IR ellipsometry** on sapphire substrates. The calculations of the transmission, absorption and reflection of multilayer materials/coatings are performed using Transfer Matrix Method (TMM) simulations.
+**spatial Kramers-Kronig (sKK) relations** originally developed by Horsley et al. (2015). The broad goal is to either extend the theory (for example, zero and unit transmission cases by King, Horsley, Philbin in 2017), or find applications of this phenomena, such as anti-reflection (AR) coatings, thermal emission/absorption asymmetry, perfect absorbers, etc. Currently, the focus is AR coatings (found in coating_Hilbert_transform.py), specifically targeting backside reflection suppression in **mid-IR ellipsometry** on sapphire substrates. The calculations of the transmission, absorption and reflection of multilayer materials/coatings are performed using Transfer Matrix Method (TMM) simulations.
 
 ## Running Code
 
@@ -25,11 +24,18 @@ For interactive work, use VS Code interactive mode (#%%) .
 ### Key Modules
 
 - **`tmm_helper.py`** — primary module imported as `tmm_h`. Contains:
-  - `generate_n_and_d_v6_symmetry()` — the only discretization function (legacy versions archived)
+  - `eps(x, a, gam, nb)` — complex Lorentzian ε(x) profile
+  - `logistic(x, k, nb, sx=1)` — logistic GRIN ε'(x) profile
+  - `ht_derivative(xx, e_re)` — derivative→HT→integrate method for sKK ε''(x) (paper's main contribution)
+  - `smooth_gate(eps_re, eps0, sigma)` — smooth tanh gate on ε'(x) to remove lossy-air region
+  - `discretize_profile(xx, ee, delta)` — arc-length adaptive discretization of continuous ε(x) into TMM layers
+  - `generate_n_and_d_v6_symmetry(gam, a, nb, delta, M)` — symmetric Lorentzian stack (uses `discretize_profile`; `M` controls domain half-width in units of gam, default 2000)
+  - `HT_help(k, nb, ..., M)` — logistic sKK stack via derivative→HT→integrate + `discretize_profile` (replaces old Tukey-taper method; `M` controls domain, default 2000)
+  - `skk_spectral_fom(x, u, v)` — spectral one-sidedness FoM via derivative→FFT→÷ik method; returns `(fom, k, pwr)` where `pwr = |ε̂(k)|²`; no padding, no normalization
+  - `hilbert_fom_derivative(x, u, v)` — real-space Hilbert FoM (derivative-space correlation)
+  - `plot_spectral_fom(ax, k, pwr, fom, klim)` — green/red shaded FoM spectrum plot (log scale)
   - `TRA()`, `TRA_wavelength()`, `TRA_angle()` — unified TMM functions with auto-coherence classification (see below)
   - `_make_c_list()` — auto-generates coherent/incoherent layer classification per wavelength/angle
-  - `hilbert_fom_derivative()`, `skk_spectral_fom()` — Spatial-KK Figure of Merit calculations
-  - `HT_help()` — Hilbert transform-based logistic profile generation
   - `plot_tra_curves()`, `plot_param_sweep()` — domain-specific plotting helpers
 - **`plot_functions.py`** — matplotlib wrappers: `plot_setup()`, `plot()`, `legend()`, `set_size()`
 - **`colors.py`** — custom color palette for consistent scientific figures
@@ -111,7 +117,7 @@ File paths to `RI/` and `Data/` use `os.path.join(_PROJECT_ROOT, 'RI', ...)` so 
 ## Active Scripts
 
 ### Theory Track (`theory/`)
-- **`skk_analysis_consolidated.py`** — self-contained script generating all 10 paper figures. Re-implements profile generation and FoM functions locally for reproducibility, but uses `tmm_helper.TRA()` for all TMM calculations (auto-coherence).
+- **`skk_analysis_consolidated.py`** — generates all paper figures (10 main + loss shape + width sweep batches). All physics functions call `tmm_helper` directly — no local copies. Uses `tmm_helper.TRA()` for TMM, `tmm_h.skk_spectral_fom()` for FoM, `tmm_h.discretize_profile()` for layer generation.
 - **`coating_Hilbert_transform.py`** — applies sKK coating to real sapphire substrate for mid-IR ellipsometry
 - **`bulk_window_vs_sKK_coating_truncated_2025Dec17.py`** — ellipsometry benchmark: bulk sapphire vs sKK coating (wavelength + angle sweeps)
 - **`sKK_coating_thermal_emission_2025Dec17.py`** — thermal emission: sKK coating in front of sapphire bulk (wavelength + angle sweeps, bulk vs coated comparison)

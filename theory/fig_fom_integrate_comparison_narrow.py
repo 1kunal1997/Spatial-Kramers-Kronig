@@ -22,7 +22,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import tmm_helper as tmm_h
 from scipy.signal import hilbert
-from scipy.integrate import cumulative_trapezoid
+try:
+    from scipy.integrate import cumulative_trapezoid
+except ImportError:
+    from scipy.integrate import cumtrapz as cumulative_trapezoid
 
 plt.rcParams.update({
     'font.family': 'serif', 'font.size': 12,
@@ -125,20 +128,15 @@ configs = [
 ]
 
 for ax, k, pwr, fom, title in configs:
-    mask_norm = np.abs(k) > 1.0
-    pmax = pwr[mask_norm].max() if pwr[mask_norm].any() else 1.0
-    pwr_n = pwr / pmax
-
-    ax.fill_between(k[k >= 0], pwr_n[k >= 0], alpha=0.35, color=GREEN,
+    ax.fill_between(k[k >= 0], pwr[k >= 0], alpha=0.35, color=GREEN,
                     label=r'$k > 0$ (allowed)')
-    ax.fill_between(k[k <= 0], pwr_n[k <= 0], alpha=0.35, color=RED,
+    ax.fill_between(k[k <= 0], pwr[k <= 0], alpha=0.35, color=RED,
                     label=r'$k < 0$ (forbidden)')
-    ax.plot(k, pwr_n, 'k-', lw=0.5, alpha=0.5)
+    ax.plot(k, pwr, 'k-', lw=0.5, alpha=0.5)
     ax.set_yscale('log')
-    ax.set_ylim(1e-8, 1e4)
     ax.set_xlim(-KLIM, KLIM)
     ax.set_xlabel(r'Spatial frequency $k$ ($\mu$m$^{-1}$)')
-    ax.set_ylabel(r'$|\hat{\varepsilon}(k)|^2$ (normalized)')
+    ax.set_ylabel(r'$|\hat{\varepsilon}(k)|^2$')
     ax.set_title(f'{title}\nFoM = {fom:.2f}%', fontsize=12)
     ax.legend(loc='upper right', fontsize=9)
 
@@ -152,7 +150,7 @@ plt.tight_layout(rect=[0, 0, 1, 0.96])
 
 FIGDIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figures')
 os.makedirs(FIGDIR, exist_ok=True)
-outpath = os.path.join(FIGDIR, 'fig_fom_integrate_comparison_narrow.png')
+outpath = os.path.join(FIGDIR, 'fig_fom_integrate_comparison_narrow_unnorm.png')
 plt.savefig(outpath)
 plt.close()
 print(f"\nSaved: {outpath}")
