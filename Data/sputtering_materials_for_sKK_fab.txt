@@ -1,0 +1,197 @@
+Aluminum Copper, Al/Cu
+Aluminum Nitride, AlN
+Aluminum Oxide, Al2O3
+Aluminum Silicon Copper, Al/Si/Cu
+Aluminum Silicon, Al/Si
+Aluminum, Al
+Antimony Telluride, Sb2Te3
+Antimony, Sb
+Barium Cerium Yttrium Zirconate, BaCe(1-x-y)Y(x)Zr(y)O3
+Barium Ferrite, BaFe12O19
+Barium Fluoride, BaF2
+Barium Strontium Titanate, Ba(1-x)Sr(x)TiO3
+Barium Strontium Titanate, Ba0.5Sr0.5TiO3
+Barium Titanate, BaTiO3
+Barium Zirconate, BaZrO3
+Barium, Ba
+Bismuth Calcium Ferrite, Bi0.9Ca0.1FeO3
+Bismuth Ferrite (Garnet), Bi3Fe5O12
+Bismuth Ferrite, BiFeO3
+Bismuth Oxide, Bi2O3
+Bismuth Selenide, Bi2Se3
+Bismuth Telluride, Bi2Te3
+Bismuth Titanate, Bi4Ti3O12
+Bismuth, Bi
+Boron Carbide, B4C
+Boron Nitride, BN
+Boron, B
+Cadmium Selenide, CdSe
+Cadmium Sulfide, CdS
+Cadmium Telluride, CdTe
+Cadmium, Cd
+Calcium Manganate, CaMnO3
+Calcium Titanate, CaTiO3
+Calcium, Ca
+Carbon, C (graphite)
+Carbon, C (pyrolytic graphite)
+Cerium Bismuth Ferrite, Ce2.2Bi0.8Fe5O12
+Cerium Fluoride, CeF3
+Cerium Oxide, CeO2
+Cerium Yttrium Ferrite, Ce2.5Y0.5Fe5O12
+Cerium, Ce
+Chromium Oxide, Cr2O3
+Chromium Silicide, CrSi2
+Chromium, Cr
+Cobalt Ferrite, CoFe2O4
+Cobalt Iron Boron, Co/Fe/B 60/20/20 AT%
+Cobalt, Co
+Cobalt, Oxide, CoO
+Copper Oxide, CuO
+Copper, Cu
+Dysprosium, Dy
+Erbium Oxide, Er2O3
+Erbium, Er
+Europium Nickel Oxide, EuNiO3
+Europium Titanate, EuTiO3
+Europium, Eu
+Gadolinium Cerium Oxide, Gd0.2Ce0.8O2
+Gadolinium, Gd
+Germanium Antimony Telluride, Ge2Sb2Te5
+Germanium Telluride, GeTe
+Germanium, Ge
+Gold, Au
+Hafnium Carbide, HfC
+Hafnium Nitride, HfN
+Hafnium Oxide, HfO2
+Hafnium, Hf
+Holmium, Ho
+Indium Zinc Oxide, IZO, In2O3/ZnO, 90/10 wt%
+Indium Aluminum Zinc Oxide, In2O3/Al2O3/ZnO 65/16/19 wt%
+Indium Gallium Zinc Oxide, InGaZnOx
+Indium Iron Oxide, InFe2O4
+Indium Molybdenum Oxide, In2O3/Mo 98/2 wt%
+Indium Oxide, In2O3
+Indium Tin Oxide, ITO, In2O3/SnO2, 90/10 wt%
+Indium, In
+Iridium, Ir
+Iron Manganese (Fe/Mn 50/50 AT%)
+Iron Oxide, Fe2O3
+Iron, Fe
+Lanthanum Aluminate, LaAlO3
+Lanthanum Hexaboride, LaB6
+Lanthanum Manganate, LaMnO3
+Lanthanum Strontium Manganate, La0.9Sr0.1MnO3
+Lanthanum Titanate, La2Ti2O7
+Lanthanum Titanate, LaTiO3
+Lanthanum Vanadium Oxide
+Lanthanum, La
+Lead Lanthanum Zirconium Titanate, PLZT, Pb1-xLax(ZryTi1-y)1-0.25xO3
+Lead Oxide, PbO
+Lead Telluride, PbTe
+Lead Titanate, PbTiO3
+Lead Zirconate, PbZrO3
+Lead Zirconium Titanate, PZT, (Various Compositions)
+Lead Zirconium Titanate, PZT, PbZr0.52Ti0.48O3
+Lead, Pb
+Lithium Cobalt Oxide, LiCoO2
+Lithium Niobate, LiNbO3
+Lithium Phosphate, Li3PO4
+Lithium Titanate, Li4Ti5O12
+Magnesium Fluoride, MgF2
+Magnesium Oxide, MgO
+Magnesium Silicide, Mg2Si
+Magnesium, Mg
+Manganese Iridium (Mn/Ir (Various Compositions))
+Manganese Oxide, MnO
+Manganese, Mn
+Molybdenum Carbide, Mo2C
+Molybdenum Disilicide, MoSi2
+Molybdenum Disulfide, MoS2
+Molybdenum Oxide, MoO3
+Molybdenum, Mo
+Molybdenum/Rhenium, Mo/Re, (Various Compositions)
+Neodymium Aluminate, NdAlO3
+Neodymium Copper Oxide, Nd2CuO4
+Neodymium Nickel Oxide, NdNiO3
+Neodymium, Nd
+Nickel Ferrite, NiFe2O4
+Nickel Iron, Ni/Fe
+Nickel Oxide, NiO
+Nickel Vanadium, Ni/V
+Nickel, Ni
+Nickel/Chromium, Ni/Cr (Nichrome)
+Niobium Carbide, NbC
+Niobium Nitride, NbN
+Niobium Oxide, Nb2O5
+Niobium Stannide, Nb3Sn
+Niobium, Nb
+Palladium, Pd
+Permalloy, Ni/Fe/Mo/Mn
+Platinum, Pt
+Praseodymium Calcium Manganate, Pr0.7Ca0.3MnO3
+Rhenium, Re
+Rhodium, Rh
+Ruthenium, Ru
+Samarium Oxide, Sm2O3
+Samarium, Sm
+Selenium, Se
+Silicon Carbide, SiC
+Silicon Dioxide, SiO2 (Fused Quartz)
+Silicon Monoxide, SiO
+Silicon Nitride, Si3N4
+Silicon, Si (N-type)
+Silicon, Si (P-type)
+Silicon, Si (undoped)
+Silver, Ag
+Sodium Niobate, NaNbO3
+Strontium Manganate, SrMnO3
+Strontium Titanate, SrTiO3
+Strontium Zirconate, SrZrO3
+Strontium, Sr
+Tantalum Carbide, TaC
+Tantalum Nitride, TaN
+Tantalum Oxide, Ta2O5
+Tantalum Silicide, TaSi2
+Tantalum, Ta
+Tellurium, Te
+Terbium, Tb
+Thulium, Tm
+Tin Oxide, SnO2
+Tin, Sn
+Titanium Boride, TiB2
+Titanium Carbide, TiC
+Titanium Dioxide, TiO2
+Titanium Disilicide, TiSi2
+Titanium Ferrite, TiFe2O4
+Titanium Monoxide, TiO
+Titanium Nitride, TiN
+Titanium, Ti
+Tungsten Carbide, WC
+Tungsten Disilicide, WSi2
+Tungsten Disulfide, WS2
+Tungsten Oxide, WO3
+Tungsten Titanium, W/Ti
+Tungsten, W
+Vanadium Carbide, VC
+Vanadium Oxide, V2O5
+Vanadium, V
+Ytterbium Oxide, Yb2O3
+Ytterbium, Yb
+Yttrium Ferrite, Y3Fe5O12
+Yttrium Oxide, Y2O3
+Yttrium Titanate, YTiO3
+Yttrium, Y
+Zinc Oxide Alumina, ZnO/Al2O3 (98/2 WT%)
+Zinc Oxide doped with Gallium Oxide, ZnO/Ga2O3 95/05 wt%
+Zinc Oxide doped with Magnesium, Zn0.9Mg0.1O
+Zinc Oxide doped with Sodium, Zn0.99Na0.01O
+Zinc Oxide, ZnO
+Zinc Selenide, ZnSe
+Zinc Sulfide, ZnS
+Zinc Telluride, ZnTe
+Zinc, Zn
+Zirconium Carbide, ZrC
+Zirconium Nitride, ZrN
+Zirconium Oxide, ZrO2 (fully stabilized - Y2O3)
+Zirconium Oxide, ZrO2, Partially stabilized ~5% Y2O3
+Zirconium, Zr

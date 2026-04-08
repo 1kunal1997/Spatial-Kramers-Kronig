@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 This is a nanophotonics computational research project investigating the
-**spatial Kramers-Kronig (sKK) relations** originally developed by Horsley et al. (2015). The broad goal is to either extend the theory (for example, zero and unit transmission cases by King, Horsley, Philbin in 2017), or find applications of this phenomena, such as anti-reflection (AR) coatings, thermal emission/absorption asymmetry, perfect absorbers, etc. Currently, the focus is AR coatings (found in coating_Hilbert_transform.py), specifically targeting backside reflection suppression in **mid-IR ellipsometry** on sapphire substrates. The calculations of the transmission, absorption and reflection of multilayer materials/coatings are performed using Transfer Matrix Method (TMM) simulations.
+**spatial Kramers-Kronig (sKK) relations** originally developed by Horsley et al. (2015). The broad goal is to either extend the theory (for example, zero and unit transmission cases by King, Horsley, Philbin in 2017), or find applications of this phenomena, such as anti-reflection (AR) coatings, thermal emission/absorption asymmetry, perfect absorbers, etc. The calculations of the transmission, absorption and reflection of multilayer materials/coatings are performed using Transfer Matrix Method (TMM) simulations.
 
 ## Running Code
 
@@ -18,6 +18,28 @@ python -m pytest module_test_tmm_helper.py   # run tests
 ```
 
 For interactive work, use VS Code interactive mode (#%%) .
+
+### Running consolidated paper figures individually
+
+`theory/skk_analysis_consolidated.py` supports selective figure generation via CLI args. Each figure is a standalone function that takes a shared setup namespace `S`.
+
+```bash
+# Run all figures:
+python theory/skk_analysis_consolidated.py
+
+# Run specific figures by name:
+python theory/skk_analysis_consolidated.py fig1 fig6 task1
+
+# List available figure names:
+python theory/skk_analysis_consolidated.py --list
+
+# Save to a custom output directory (e.g. Overleaf):
+python theory/skk_analysis_consolidated.py --outdir sKK-Paper-Overleaf/figures fig6 fig7
+```
+
+Available figure names: `fig1`–`fig10`, `loss_shapes`, `width_amplitude`, `thick_shapes`, `task1`, `task2`, `task3`.
+
+For VS Code interactive mode: run `S = setup()` first, then call any figure function directly (e.g. `fig_alpha_tradeoff(S)`).
 
 ## Core Architecture
 
@@ -113,28 +135,6 @@ plot(fig, ax, lambda_list, T, color=colors.blue)
 ```
 
 File paths to `RI/` and `Data/` use `os.path.join(_PROJECT_ROOT, 'RI', ...)` so scripts work regardless of working directory.
-
-## Active Scripts
-
-### Theory Track (`theory/`)
-- **`skk_analysis_consolidated.py`** — generates all paper figures (10 main + loss shape + width sweep batches). All physics functions call `tmm_helper` directly — no local copies. Uses `tmm_helper.TRA()` for TMM, `tmm_h.skk_spectral_fom()` for FoM, `tmm_h.discretize_profile()` for layer generation.
-- **`coating_Hilbert_transform.py`** — applies sKK coating to real sapphire substrate for mid-IR ellipsometry
-- **`bulk_window_vs_sKK_coating_truncated_2025Dec17.py`** — ellipsometry benchmark: bulk sapphire vs sKK coating (wavelength + angle sweeps)
-- **`sKK_coating_thermal_emission_2025Dec17.py`** — thermal emission: sKK coating in front of sapphire bulk (wavelength + angle sweeps, bulk vs coated comparison)
-- **`stack_of_stacks_constant_losses.py`** — stacked sKK coatings with constant absorption
-- **`delta_sweep.py`** — effect of discretization step size on reflectance
-- **`modify_KK_losses.py`** — effect of loss (Im(n)) scaling on TRA spectra
-- **`fig_sinc_leakage.py`**, **`fig_forward_backward.py`**, **`fig_lorentzian_profile.py`** — standalone figure scripts
-- **`verify_lorentzian_spectral_fom.py`** — validates spectral FoM k=0 fix
-
-### Experimental Track (`experimental/`)
-- **`bruggeman_mixture_search.py`** — searches 2-material Bruggeman mixtures for target (n,k,d)
-- **`bruggeman_load_TMM.py`** — loads precomputed nk from mixture search, runs TMM
-- **`EMT_bruggeman_vs_stratified_vs_lamellar.py`** — compares 3 EMT methods (Bruggeman, stratified, lamellar) for graphite/sapphire on ZnS in mid-IR
-- **`stratified_fab_design_SiAu_visible.py`** — fab team's device: stratified graphite/sapphire on Si+Au in visible/near-IR, computes Ψ/Δ
-- **`key_mixed_layers_on_substrate_2025Oct30.py`** — specific Bruggeman mixture test on ZnS substrate
-
-Both tracks share `tmm_helper.py`, `plot_functions.py`, `colors.py` (in root) and the `RI/` data.
 
 ## File Relationships
 
