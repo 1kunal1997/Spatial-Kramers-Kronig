@@ -37,7 +37,7 @@ python theory/skk_analysis_consolidated.py --list
 python theory/skk_analysis_consolidated.py --outdir sKK-Paper-Overleaf/figures fig6 fig7
 ```
 
-Available figure names: `fig1`–`fig10`, `loss_shapes`, `width_amplitude`, `thick_shapes`, `task1`, `task2`, `task3`.
+Available figure names: `fig1`–`fig10`, `loss_shapes`, `thick_shapes`, `task1`, `task2`, `task3`, `crossover`, `fom_spectrum`, `fom_method`, `profiles`, `thick_colorplots`.
 
 For VS Code interactive mode: run `S = setup()` first, then call any figure function directly (e.g. `fig_alpha_tradeoff(S)`).
 

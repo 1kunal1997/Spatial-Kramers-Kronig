@@ -230,6 +230,46 @@ def _annotate_geomean(ax, data_2d):
                 bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.8))
 
 
+def _spectrum_physical(x, u, v):
+    """Derivative → FT → ÷ik with physical dx normalization.
+
+    Multiplies FFT by dx so |ε̂(k)|² has physical units matching exact
+    analytic curves (C/sinh², C·exp). Only needed for crossover overlay plots;
+    for FoM percentages use skk_spectral_fom() directly (normalization cancels).
+    Returns (k, pwr).
+    """
+    x = np.asarray(x, float)
+    ud = np.gradient(np.asarray(u, float), x)
+    vd = np.gradient(np.asarray(v, float), x)
+    z_d = ud + 1j * vd
+    dx = x[1] - x[0]
+    Z_d = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z_d))) * dx
+    k = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z_d), d=dx))
+    eps_hat = np.zeros_like(Z_d)
+    nonzero = k != 0
+    eps_hat[nonzero] = Z_d[nonzero] / (1j * k[nonzero])
+    eps_hat[~nonzero] = 0
+    return k, np.abs(eps_hat)**2
+
+
+def _direct_ft_fom(x, u, v):
+    """Plain FT of ε(x) = u+iv (no derivative, no ÷ik) → FoM, k, |ε̂(k)|².
+
+    Used to demonstrate why the derivative pre-processing is necessary:
+    without it the DC spike from non-zero endpoints contaminates the FoM.
+    """
+    x = np.asarray(x, float)
+    z = np.asarray(u, float) + 1j * np.asarray(v, float)
+    dx = x[1] - x[0]
+    Z = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(z)))
+    k = 2 * np.pi * np.fft.fftshift(np.fft.fftfreq(len(z), d=dx))
+    pwr = np.abs(Z)**2
+    E_pos = np.sum(pwr[k > 0])
+    E_neg = np.sum(pwr[k < 0])
+    fom = 100 * max(0.0, (E_pos - E_neg) / (E_pos + E_neg))
+    return fom, k, pwr
+
+
 # ============================================================================
 # Loss shape profile generators
 # ============================================================================
@@ -1348,6 +1388,376 @@ def fig_task3_losses_matched(S):
 
 
 # ============================================================================
+# Spectral FoM analysis figures (absorbed from standalone scripts)
+# ============================================================================
+
+def fig_crossover(S):
+    """Spectral crossover: logistic (1/k² → exp) and Lorentzian (pure exp)."""
+    print("\n=== SPECTRAL CROSSOVER ===")
+
+    # ---- Lorentzian M=2000 grid ----
+    a_l, gam_l, nb_l = 1.0, 0.01, 1.5
+    M_l = 2000
+    dx_l = gam_l / 100
+    xmin_l = -M_l * gam_l
+    xx_l = np.linspace(xmin_l, -xmin_l, 1 + int(np.floor(-2 * xmin_l / dx_l)))
+    ee_l = tmm_h.eps(xx_l, a_l, gam_l, nb_l)
+    u_l = np.real(ee_l)
+    v_l = np.imag(ee_l)
+
+    # ---- Figure 1: Logistic crossover ----
+    k_num_g, pwr_num_g = _spectrum_physical(S.xx_fom, S.e_re_fom, S.e_im_fom)
+    mask_g = k_num_g > 0.5
+    k_pos_g = k_num_g[mask_g]
+    pwr_pos_g = pwr_num_g[mask_g]
+
+    k_an = np.linspace(0.5, 250, 2000)
+    Delta = S.nb**2 - 1
+    C_exact_g = 4 * np.pi**2 * Delta**2 / S.k_steep**2
+    pwr_sinh = C_exact_g / np.sinh(np.pi * k_an / S.k_steep)**2
+    pwr_1overk2 = 4 * Delta**2 / k_an**2
+    pwr_exp_g = 4 * C_exact_g * np.exp(-2 * np.pi * k_an / S.k_steep)
+    k_cross = S.k_steep / np.pi
+
+    fig, (ax_prof, ax_spec) = plt.subplots(1, 2, figsize=(15, 7))
+    zoom = (S.xx_fom >= -0.05) & (S.xx_fom <= 0.05)
+    ax2 = ax_prof.twinx()
+    ax_prof.plot(S.xx_fom[zoom], S.e_re_fom[zoom], color=BLUE, lw=2.0)
+    ax2.plot(S.xx_fom[zoom], S.e_im_fom[zoom], color=RED, lw=2.0)
+    ax_prof.set_xlabel(r'$x$ ($\mu$m)')
+    ax_prof.set_ylabel(r"$\varepsilon'(x)$", color=BLUE)
+    ax2.set_ylabel(r"$\varepsilon''(x)$", color=RED)
+    ax_prof.tick_params(axis='y', labelcolor=BLUE)
+    ax2.tick_params(axis='y', labelcolor=RED)
+    ax_prof.set_title(r'Logistic profile ($k_s=100\ \mu$m$^{-1}$, $n_b=1.7$)')
+    ax_prof.set_xlim(-0.05, 0.05)
+
+    ax_spec.semilogy(k_pos_g, pwr_pos_g, '-', color=GREEN, lw=2.0,
+                     label=f'Numerical (M={2000})')
+    ax_spec.semilogy(k_an, pwr_sinh, '--', color='black', lw=1.5,
+                     label=r'$C/\sinh^2(\pi k / k_s)$')
+    ax_spec.semilogy(k_an, pwr_1overk2, ':', color='#d62728', lw=2.0,
+                     label=r'$1/k^2$ (small $k$)')
+    ax_spec.semilogy(k_an, pwr_exp_g, ':', color=BLUE, lw=2.0,
+                     label=r'$\exp(-2\pi k/k_s)$ (large $k$)')
+    ax_spec.axvline(k_cross, color='gray', ls='--', lw=1.0, alpha=0.7)
+    ax_spec.text(k_cross + 3, 1e-7, f'$k = k_s/\\pi \\approx {k_cross:.0f}$',
+                 fontsize=11, color='gray')
+    ax_spec.set_xlabel(r'Spatial frequency $k$ ($\mu$m$^{-1}$)')
+    ax_spec.set_ylabel(r'$|\hat{\varepsilon}(k)|^2$')
+    ax_spec.set_title(r'Logistic spectrum: $1/k^2 \to \exp(-2\pi k/k_s)$ crossover at $k \approx k_s/\pi$')
+    ax_spec.set_xlim(0.5, 250)
+    ax_spec.set_ylim(1e-9, 1e3)
+    ax_spec.legend(loc='upper right', fontsize=11)
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig_logistic_sinh_crossover_unnorm.png')
+    plt.close()
+    print("  Saved fig_logistic_sinh_crossover_unnorm.png")
+
+    # ---- Figure 2: Lorentzian crossover ----
+    k_num_l, pwr_num_l = _spectrum_physical(xx_l, u_l, v_l)
+    mask_l = k_num_l > 0.5
+    k_pos_l = k_num_l[mask_l]
+    pwr_pos_l = pwr_num_l[mask_l]
+
+    C_exact_l = 4 * np.pi**2 * a_l**2 * gam_l**2
+    pwr_exp_an = C_exact_l * np.exp(-2 * gam_l * k_an)
+
+    fig, (ax_prof, ax_spec) = plt.subplots(1, 2, figsize=(15, 7))
+    zoom_l = (xx_l >= -0.05) & (xx_l <= 0.05)
+    ax2 = ax_prof.twinx()
+    ax_prof.plot(xx_l[zoom_l], u_l[zoom_l], color=BLUE, lw=2.0)
+    ax2.plot(xx_l[zoom_l], v_l[zoom_l], color=RED, lw=2.0)
+    ax_prof.set_xlabel(r'$x$ ($\mu$m)')
+    ax_prof.set_ylabel(r"$\varepsilon'(x)$", color=BLUE)
+    ax2.set_ylabel(r"$\varepsilon''(x)$", color=RED)
+    ax_prof.tick_params(axis='y', labelcolor=BLUE)
+    ax2.tick_params(axis='y', labelcolor=RED)
+    ax_prof.set_title(r'Lorentzian profile ($\gamma=0.01\ \mu$m, $n_b=1.5$, $a=1$)')
+    ax_prof.set_xlim(-0.05, 0.05)
+
+    ax_spec.semilogy(k_pos_l, pwr_pos_l, '-', color=GREEN, lw=2.0,
+                     label=f'Numerical (M={M_l})')
+    ax_spec.semilogy(k_an, pwr_exp_an, '--', color='black', lw=1.8,
+                     label=r'$4\pi^2 a^2\gamma^2\,\exp(-2\gamma k)$  [exact]')
+    ax_spec.set_xlabel(r'Spatial frequency $k$ ($\mu$m$^{-1}$)')
+    ax_spec.set_ylabel(r'$|\hat{\varepsilon}(k)|^2$')
+    ax_spec.set_title(r'Lorentzian spectrum: pure $\exp(-2\gamma k)$, no crossover'
+                      '\n' + r'(pole at $x=-i\gamma$ in lower half-plane)')
+    ax_spec.set_xlim(0.5, 250)
+    ax_spec.set_ylim(1e-6, 1e-2)
+    ax_spec.legend(loc='upper right', fontsize=11)
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig_lorentzian_crossover_M2000_unnorm.png')
+    plt.close()
+    print("  Saved fig_lorentzian_crossover_M2000_unnorm.png")
+
+
+def fig_fom_spectrum(S):
+    """Spectral FoM (green/red fill): logistic M=2000 and Lorentzian M=2000."""
+    print("\n=== SPECTRAL FOM SPECTRUM ===")
+
+    KLIM = 400
+
+    # ---- Lorentzian M=2000 grid ----
+    a_l, gam_l, nb_l = 1.0, 0.01, 1.5
+    M_l = 2000
+    dx_l = gam_l / 100
+    xmin_l = -M_l * gam_l
+    xx_l = np.linspace(xmin_l, -xmin_l, 1 + int(np.floor(-2 * xmin_l / dx_l)))
+    ee_l = tmm_h.eps(xx_l, a_l, gam_l, nb_l)
+    u_l = np.real(ee_l)
+    v_l = np.imag(ee_l)
+
+    # ---- Figure 1: Logistic FoM spectrum ----
+    fom_g, k_g, pwr_g = tmm_h.skk_spectral_fom(S.xx_fom, S.e_re_fom, S.e_im_fom)
+    print(f"  Logistic (M=2000): FoM = {fom_g:.2f}%")
+
+    fig, (ax_prof, ax_fom) = plt.subplots(1, 2, figsize=(15, 7))
+    zoom = (S.xx_fom >= -0.05) & (S.xx_fom <= 0.05)
+    ax2 = ax_prof.twinx()
+    ax_prof.plot(S.xx_fom[zoom], S.e_re_fom[zoom], color=BLUE, lw=2.0)
+    ax2.plot(S.xx_fom[zoom], S.e_im_fom[zoom], color=RED, lw=2.0)
+    ax_prof.set_xlabel(r'$x$ ($\mu$m)')
+    ax_prof.set_ylabel(r"$\varepsilon'(x)$", color=BLUE)
+    ax2.set_ylabel(r"$\varepsilon''(x)$", color=RED)
+    ax_prof.tick_params(axis='y', labelcolor=BLUE)
+    ax2.tick_params(axis='y', labelcolor=RED)
+    ax_prof.set_title(r'Logistic profile ($k_s=100\ \mu$m$^{-1}$, $n_b=1.7$)')
+    ax_prof.set_xlim(-0.05, 0.05)
+    tmm_h.plot_spectral_fom(ax_fom, k_g, pwr_g, fom_g, klim=KLIM,
+                            title=(r'Logistic ($M=2000$) — $d\varepsilon/dx \to$ FT $\to \div\, ik$'
+                                   + f'\nFoM = {fom_g:.2f}%'))
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig_logistic_fom_M2000_unnorm.png')
+    plt.close()
+    print("  Saved fig_logistic_fom_M2000_unnorm.png")
+
+    # ---- Figure 2: Lorentzian FoM spectrum ----
+    fom_l, k_l, pwr_l = tmm_h.skk_spectral_fom(xx_l, u_l, v_l)
+    print(f"  Lorentzian (gam={gam_l}, M={M_l}): FoM = {fom_l:.2f}%")
+
+    fig, (ax_prof, ax_fom) = plt.subplots(1, 2, figsize=(15, 7))
+    zoom_l = (xx_l >= -0.05) & (xx_l <= 0.05)
+    ax2 = ax_prof.twinx()
+    ax_prof.plot(xx_l[zoom_l], u_l[zoom_l], color=BLUE, lw=2.0)
+    ax2.plot(xx_l[zoom_l], v_l[zoom_l], color=RED, lw=2.0)
+    ax_prof.set_xlabel(r'$x$ ($\mu$m)')
+    ax_prof.set_ylabel(r"$\varepsilon'(x)$", color=BLUE)
+    ax2.set_ylabel(r"$\varepsilon''(x)$", color=RED)
+    ax_prof.tick_params(axis='y', labelcolor=BLUE)
+    ax2.tick_params(axis='y', labelcolor=RED)
+    ax_prof.set_title(r'Lorentzian profile ($\gamma=0.01\ \mu$m, $n_b=1.5$, $a=1$)')
+    ax_prof.set_xlim(-0.05, 0.05)
+    tmm_h.plot_spectral_fom(ax_fom, k_l, pwr_l, fom_l, klim=KLIM,
+                            title=(r'Lorentzian ($\gamma=0.01\ \mu$m, $M=2000$) — $d\varepsilon/dx \to$ FT $\to \div\, ik$'
+                                   + f'\nFoM = {fom_l:.2f}%'))
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig_lorentzian_fom_M2000_unnorm.png')
+    plt.close()
+    print("  Saved fig_lorentzian_fom_M2000_unnorm.png")
+
+
+def fig_fom_method(S):
+    """2x2 comparison: direct FT vs derivative→FT→÷ik for Lorentzian and logistic."""
+    print("\n=== FOM METHOD COMPARISON ===")
+
+    KLIM = 400
+
+    # ---- Lorentzian M=200 (gam=0.01, domain ±2 um) ----
+    a_l, gam_l, nb_l = 1.0, 0.01, 1.5
+    dx_l = gam_l / 100
+    xmin_l = -gam_l * 200
+    xx_l = np.linspace(xmin_l, -xmin_l, 1 + int(np.floor(-2 * xmin_l / dx_l)))
+    ee_l = tmm_h.eps(xx_l, a_l, gam_l, nb_l)
+    u_l = np.real(ee_l)
+    v_l = np.imag(ee_l)
+
+    # ---- Logistic M=20 (k_steep=100, domain ±0.2 um) ----
+    k_steep_m = 100; nb_g = 1.7
+    dx_g = 1 / (100 * k_steep_m)
+    xmin_g = -20 / k_steep_m
+    xx_g = np.linspace(xmin_g, -xmin_g, 1 + int(np.floor(-2 * xmin_g / dx_g)))
+    u_g = (nb_g**2 - 1) / (1 + np.exp(k_steep_m * xx_g)) + 1
+    v_g = tmm_h.ht_derivative(xx_g, u_g)
+
+    # ---- Compute all 4 cases ----
+    fom_a, k_a, pwr_a = _direct_ft_fom(xx_l, u_l, v_l)
+    fom_b, k_b, pwr_b = tmm_h.skk_spectral_fom(xx_l, u_l, v_l)
+    fom_c, k_c, pwr_c = _direct_ft_fom(xx_g, u_g, v_g)
+    fom_d, k_d, pwr_d = tmm_h.skk_spectral_fom(xx_g, u_g, v_g)
+
+    print(f"  (a) Lorentzian direct FT:          FoM = {fom_a:.2f}%")
+    print(f"  (b) Lorentzian deriv-FT-integrate: FoM = {fom_b:.2f}%")
+    print(f"  (c) Logistic direct FT:            FoM = {fom_c:.2f}%")
+    print(f"  (d) Logistic deriv-FT-integrate:   FoM = {fom_d:.2f}%")
+
+    fig, axes = plt.subplots(2, 2, figsize=(13, 10))
+    configs = [
+        (axes[0, 0], k_a, pwr_a, fom_a,
+         r'(a) Lorentzian ($\gamma=0.01\ \mu$m) — direct FT of $\varepsilon(x)$'),
+        (axes[0, 1], k_b, pwr_b, fom_b,
+         r'(b) Lorentzian ($\gamma=0.01\ \mu$m) — $d\varepsilon/dx \to$ FT $\to \div\, ik$'),
+        (axes[1, 0], k_c, pwr_c, fom_c,
+         r'(c) Logistic — direct FT of $\varepsilon(x)$'),
+        (axes[1, 1], k_d, pwr_d, fom_d,
+         r'(d) Logistic — $d\varepsilon/dx \to$ FT $\to \div\, ik$'),
+    ]
+    for ax, k, pwr, fom, title in configs:
+        tmm_h.plot_spectral_fom(ax, k, pwr, fom, klim=KLIM,
+                                title=f'{title}\nFoM = {fom:.2f}%')
+        ax.legend(loc='upper right', fontsize=9)
+
+    fig.text(0.28, 0.98, r'Direct FT of $\varepsilon(x)$',
+             fontsize=14, ha='center', va='top', fontweight='bold')
+    fig.text(0.74, 0.98, r'Derivative $\to$ FT $\to$ integrate',
+             fontsize=14, ha='center', va='top', fontweight='bold')
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(f'{S.FIGDIR}/fig_fom_integrate_comparison_narrow_unnorm.png')
+    plt.close()
+    print("  Saved fig_fom_integrate_comparison_narrow_unnorm.png")
+
+
+def fig_profiles(S):
+    """Dielectric profile gallery: 4 full-domain dual-axis plots."""
+    print("\n=== DIELECTRIC PROFILE GALLERY ===")
+
+    a_l, gam_l, nb_l = 1.0, 0.01, 1.5
+    k_steep_p = 100; nb_g = 1.7
+    dx_l = gam_l / 100
+    dx_g = 1 / (100 * k_steep_p)
+
+    def _save_profile(xx, u, v, title, fname):
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax2 = ax.twinx()
+        ax.plot(xx, u, color=BLUE, lw=2.0)
+        ax2.plot(xx, v, color=RED, lw=2.0)
+        ax.set_xlabel(r'$x$ ($\mu$m)')
+        ax.set_ylabel(r"$\varepsilon'(x)$", color=BLUE)
+        ax2.set_ylabel(r"$\varepsilon''(x)$", color=RED)
+        ax.tick_params(axis='y', labelcolor=BLUE)
+        ax2.tick_params(axis='y', labelcolor=RED)
+        ax.set_title(title)
+        ax.set_xlim(xx[0], xx[-1])
+        plt.tight_layout()
+        plt.savefig(f'{S.FIGDIR}/{fname}')
+        plt.close()
+        print(f"  Saved {fname}")
+
+    # 1. Lorentzian M=200 (domain ±2 um)
+    xmin_l200 = -gam_l * 200
+    xx_l200 = np.linspace(xmin_l200, -xmin_l200, 1 + int(np.floor(-2 * xmin_l200 / dx_l)))
+    ee_l200 = tmm_h.eps(xx_l200, a_l, gam_l, nb_l)
+    _save_profile(xx_l200, np.real(ee_l200), np.imag(ee_l200),
+                  r'Lorentzian profile ($\gamma=0.01\ \mu$m, $n_b=1.5$, $M=200$, domain $\pm 2\ \mu$m)',
+                  'fig_profile_lorentzian_M200.png')
+
+    # 2. Logistic M=20 (domain ±0.20 um)
+    xmin_g20 = -20 / k_steep_p
+    xx_g20 = np.linspace(xmin_g20, -xmin_g20, 1 + int(np.floor(-2 * xmin_g20 / dx_g)))
+    u_g20 = (nb_g**2 - 1) / (1 + np.exp(k_steep_p * xx_g20)) + 1
+    v_g20 = tmm_h.ht_derivative(xx_g20, u_g20)
+    _save_profile(xx_g20, u_g20, v_g20,
+                  r'Logistic profile ($k_s=100\ \mu$m$^{-1}$, $n_b=1.7$, $M=20$, domain $\pm 0.20\ \mu$m)',
+                  'fig_profile_logistic_M20.png')
+
+    # 3. Logistic M=2000 (domain ±20 um) — reuse S.xx_fom grid
+    _save_profile(S.xx_fom, S.e_re_fom, S.e_im_fom,
+                  r'Logistic profile ($k_s=100\ \mu$m$^{-1}$, $n_b=1.7$, $M=2000$, domain $\pm 20\ \mu$m)',
+                  'fig_profile_logistic_M2000.png')
+
+    # 4. Lorentzian M=2000 (domain ±20 um)
+    xmin_l2000 = -2000 * gam_l
+    xx_l2000 = np.linspace(xmin_l2000, -xmin_l2000, 1 + int(np.floor(-2 * xmin_l2000 / dx_l)))
+    ee_l2000 = tmm_h.eps(xx_l2000, a_l, gam_l, nb_l)
+    _save_profile(xx_l2000, np.real(ee_l2000), np.imag(ee_l2000),
+                  r'Lorentzian profile ($\gamma=0.01\ \mu$m, $n_b=1.5$, $M=2000$, domain $\pm 20\ \mu$m)',
+                  'fig_profile_lorentzian_M2000.png')
+
+
+def fig_thick_colorplots(S):
+    """Thick coating colorplots (50 µm and 100 µm): GRIN/sKK and bulk/GRIN ratios."""
+    print("\n=== THICK COATING COLORPLOTS (50/100 um) ===")
+
+    color_angle_list = np.arange(0, 90, 1)
+    color_pols = ['s', 'p']
+    k_vals = [0.8, 0.4]   # k=0.8 → 50 µm,  k=0.4 → 100 µm
+
+    # ---- Bulk (coating-independent) ----
+    Rb_bulk_2D_d = {}
+    for pol_c in color_pols:
+        print(f"  Computing bulk 2D ({pol_c}-pol)...")
+        Rb_bulk_2D_d[pol_c] = Rback_bulk_2D(S.ndata, S.kdata, S.lamdata,
+                                              color_angle_list, pol_c)
+
+    # ---- sKK and GRIN for each thickness ----
+    Rb_skk_2D = {pol_c: [] for pol_c in color_pols}
+    Rb_grin_2D = {pol_c: [] for pol_c in color_pols}
+    thicknesses = []
+
+    for k_c in k_vals:
+        dx_c = 1 / (100 * k_c)
+        xmin_c = -20 / k_c
+        nx_c = 1 + int(np.floor(-2 * xmin_c / dx_c))
+        xx_c = np.linspace(xmin_c, -xmin_c, nx_c)
+        e_re_c = tmm_h.logistic(xx_c, k_c, S.nb)
+        e_im_c = tmm_h.ht_derivative(xx_c, e_re_c)
+        thicknesses.append(-2 * xmin_c)
+
+        nc_skk_c, dc_skk_c = tmm_h.discretize_profile(xx_c, e_re_c + 1j * e_im_c,
+                                                        delta=S.delta)
+        nc_grin_c, dc_grin_c = tmm_h.discretize_profile(xx_c, e_re_c + 0j,
+                                                          delta=S.delta)
+        for pol_c in color_pols:
+            print(f"  k={k_c} ({-2*xmin_c:.0f} µm), {pol_c}-pol: sKK 2D...")
+            Rb_s, _ = Rback_2D(nc_skk_c, dc_skk_c, S.ndata, S.kdata, S.lamdata,
+                               color_angle_list, pol_c)
+            Rb_skk_2D[pol_c].append(Rb_s)
+            print(f"  k={k_c} ({-2*xmin_c:.0f} µm), {pol_c}-pol: GRIN 2D...")
+            Rb_g, _ = Rback_2D(nc_grin_c, dc_grin_c, S.ndata, S.kdata, S.lamdata,
+                               color_angle_list, pol_c)
+            Rb_grin_2D[pol_c].append(Rb_g)
+
+    # ---- Figure 1: GRIN/sKK ratio (2×2) ----
+    fig1, axes1 = plt.subplots(2, 2, figsize=(12, 8))
+    for col, (k_c, thick_c) in enumerate(zip(k_vals, thicknesses)):
+        for row, pol_c in enumerate(color_pols):
+            ax = axes1[row, col]
+            ratio = Rb_grin_2D[pol_c][col] / np.clip(Rb_skk_2D[pol_c][col], 1e-10, None)
+            im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
+                               norm=matplotlib.colors.LogNorm(vmin=1, vmax=1e4),
+                               cmap='viridis', shading='auto')
+            plt.colorbar(im, ax=ax)
+            ax.set_xlabel('AoI (degrees)')
+            ax.set_ylabel(r'Wavelength ($\mu$m)')
+            ax.set_title(f'R_GRIN/R_sKK — {thick_c:.0f} µm, {pol_c}-pol')
+            _annotate_geomean(ax, ratio)
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig_colorplot_ratio_GRIN_over_sKK_thick.png', dpi=150)
+    plt.close()
+    print("  Saved fig_colorplot_ratio_GRIN_over_sKK_thick.png")
+
+    # ---- Figure 2: bulk/GRIN ratio (2×2) ----
+    fig2, axes2 = plt.subplots(2, 2, figsize=(12, 8))
+    for col, (k_c, thick_c) in enumerate(zip(k_vals, thicknesses)):
+        for row, pol_c in enumerate(color_pols):
+            ax = axes2[row, col]
+            ratio = Rb_bulk_2D_d[pol_c] / np.clip(Rb_grin_2D[pol_c][col], 1e-10, None)
+            im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
+                               norm=matplotlib.colors.LogNorm(vmin=1, vmax=1e4),
+                               cmap='viridis', shading='auto')
+            plt.colorbar(im, ax=ax)
+            ax.set_xlabel('AoI (degrees)')
+            ax.set_ylabel(r'Wavelength ($\mu$m)')
+            ax.set_title(f'R_bulk/R_GRIN — {thick_c:.0f} µm, {pol_c}-pol')
+            _annotate_geomean(ax, ratio)
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig_colorplot_ratio_bulk_over_GRIN_thick.png', dpi=150)
+    plt.close()
+    print("  Saved fig_colorplot_ratio_bulk_over_GRIN_thick.png")
+
+
+# ============================================================================
 # Figure registry
 # ============================================================================
 FIGURE_MAP = {
@@ -1366,6 +1776,11 @@ FIGURE_MAP = {
     'task1': ('2D colorplots',               fig_task1_colorplots),
     'task2': ('Thickness sweep all shapes',  fig_task2_thickness_sweep),
     'task3': ('Losses-matched comparison',   fig_task3_losses_matched),
+    'crossover':      ('Spectral crossover (logistic + Lorentzian)',  fig_crossover),
+    'fom_spectrum':   ('Spectral FoM plots (logistic + Lorentzian)',  fig_fom_spectrum),
+    'fom_method':     ('Direct FT vs derivative method comparison',   fig_fom_method),
+    'profiles':       ('Dielectric profile gallery (4 panels)',       fig_profiles),
+    'thick_colorplots': ('Thick coating colorplots (50/100 um)',      fig_thick_colorplots),
 }
 
 
