@@ -414,6 +414,23 @@ def setup(figdir=None):
                                                S.lamdata, S.angle_test, S.pol_test)
     S.Rb_bulk, S.A_bulk = Rback_bulk_wl(S.ndata, S.kdata, S.lamdata, S.angle_test, S.pol_test)
 
+    # ---- Thick coating (k_steep=4, [-2.5, 2.5] um = 5 um total; shared by fig1b-d and fig3a-d) ----
+    S.xx_thick_fig = np.linspace(-2.5, 2.5, 5001)
+    S.e_re_thick_fig = (S.nb**2 - 1) / (1 + np.exp(4 * S.xx_thick_fig)) + 1
+    S.e_im_thick_fig = tmm_h.ht_derivative(S.xx_thick_fig, S.e_re_thick_fig)
+    S.nc_full_thick, S.dc_full_thick = tmm_h.discretize_profile(S.xx_thick_fig, S.e_re_thick_fig + 1j * S.e_im_thick_fig, delta=S.delta)
+    S.nc_grin_thick, S.dc_grin_thick = tmm_h.discretize_profile(S.xx_thick_fig, S.e_re_thick_fig + 0j, delta=S.delta)
+    S.Rb_full_thick, S.A_full_thick = Rback_vs_wavelength(S.nc_full_thick, S.dc_full_thick, S.ndata, S.kdata, S.lamdata, S.angle_test, S.pol_test)
+    S.Rb_grin_thick, S.A_grin_thick = Rback_vs_wavelength(S.nc_grin_thick, S.dc_grin_thick, S.ndata, S.kdata, S.lamdata, S.angle_test, S.pol_test)
+    _lam3 = 3.0; _idx3 = np.argmin(np.abs(S.lamdata - _lam3))
+    _n_sub3 = complex(S.ndata[_idx3], S.kdata[_idx3]); S.angle_list_3um = np.arange(0, 90, 1)
+    S.Rb_bulk_3um_s = Rback_bulk_angle(_n_sub3, S.angle_list_3um, _lam3, 's')
+    S.Rb_bulk_3um_p = Rback_bulk_angle(_n_sub3, S.angle_list_3um, _lam3, 'p')
+    S.Rb_grin_thick_3um_s, _ = Rback_vs_angle(S.nc_grin_thick, S.dc_grin_thick, _n_sub3, S.angle_list_3um, _lam3, 's')
+    S.Rb_grin_thick_3um_p, _ = Rback_vs_angle(S.nc_grin_thick, S.dc_grin_thick, _n_sub3, S.angle_list_3um, _lam3, 'p')
+    S.Rb_full_thick_3um_s, _ = Rback_vs_angle(S.nc_full_thick, S.dc_full_thick, _n_sub3, S.angle_list_3um, _lam3, 's')
+    S.Rb_full_thick_3um_p, _ = Rback_vs_angle(S.nc_full_thick, S.dc_full_thick, _n_sub3, S.angle_list_3um, _lam3, 'p')
+
     S.nk_d = np.sqrt(S.e_re + 1j * S.e_im_deriv)
     S.mask_lossy = (np.real(S.nk_d) < 1.15) & (np.imag(S.nk_d) > 0.01)
 
@@ -464,168 +481,162 @@ def setup(figdir=None):
 # ============================================================================
 
 def fig_lorentz_vs_grin(S):
-    """Figure 1: Lorentzian HT + GRIN periodic continuation (2-panel)."""
-    A_lor = 0.5; x0_lor = 0.05
-    dx_l = x0_lor / 50; xmax_l = x0_lor * 100
-    nx_l = 1 + int(np.floor(2 * xmax_l / dx_l))
-    xx_l = np.linspace(-xmax_l, xmax_l, nx_l)
-    ee_l = tmm_h.eps(xx_l, A_lor, x0_lor, S.nb)
+    """Figure 1a: Lorentzian sKK profile (single panel).
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+    Parameters: A=0.5, gamma=0.25 um, nb=1.7, domain [-2.5, 2.5] um.
+    """
+    A_lor = 0.5; gam_lor = 0.05
+    xx_l = np.linspace(-2.5, 2.5, 5001)
+    ee_l = tmm_h.eps(xx_l, A_lor, gam_lor, S.nb)
 
-    # (a) Lorentzian profile
-    ax1b = ax1.twinx()
-    ax1.plot(xx_l, ee_l.real, color=BLUE, lw=2.5)
-    ax1b.plot(xx_l, ee_l.imag, color=RED, lw=2.5)
-    ax1.set_xlabel(r'$x$ ($\mu$m)'); ax1.set_ylabel(r"$\epsilon'$", color=BLUE)
-    ax1b.set_ylabel(r"$\epsilon''$", color=RED)
-    ax1.set_title(r'(a) Lorentzian: $\epsilon(x) = n_b^2 - \frac{A \cdot x_0}{x + i \cdot x_0}$')
-    ax1.tick_params(axis='y', labelcolor=BLUE)
-    ax1b.tick_params(axis='y', labelcolor=RED)
-    ax1.text(0.03, 0.70, 'Same endpoints:\n'
-             + r"$\epsilon'(-\infty) = \epsilon'(+\infty) = n_b^2$" + '\n'
-             + r'$\Rightarrow$ FFT works perfectly',
-             transform=ax1.transAxes, fontsize=10,
-             bbox=dict(facecolor='lightgreen', alpha=0.3, boxstyle='round'))
-
-    # (b) GRIN periodic continuation -> jump discontinuity
-    e_tiled = np.tile(S.e_re, 3)
-    xx_tiled = np.concatenate([S.xx - (S.xmax-S.xmin), S.xx, S.xx + (S.xmax-S.xmin)])
-    ax2.plot(xx_tiled, e_tiled, color=BLUE, lw=2)
-    ax2.axvline(S.xmin, color='gray', lw=1, ls='--', alpha=0.5)
-    ax2.axvline(S.xmax, color='gray', lw=1, ls='--', alpha=0.5)
-    ax2.axvspan(S.xmin, S.xmax, alpha=0.06, color='blue')
-    ax2.text((S.xmin+S.xmax)/2, 2.4, 'One period', fontsize=10, ha='center', color=BLUE,
-             bbox=dict(facecolor='white', alpha=0.7, edgecolor=BLUE, boxstyle='round'))
-    ax2.annotate('Jump\ndiscontinuity', xy=(S.xmax, 1.5),
-                 xytext=(S.xmax + 0.12, 2.0), fontsize=10, ha='center',
-                 arrowprops=dict(arrowstyle='->', color=RED, lw=1.5),
-                 color=RED, bbox=dict(facecolor='lightyellow', alpha=0.8, boxstyle='round'))
-    ax2.set_xlabel(r'$x$ ($\mu$m)'); ax2.set_ylabel(r"$\epsilon'(x)$")
-    ax2.set_title(r"(b) GRIN: FFT periodic continuation $\to$ jump discontinuity")
-    ax2.set_xlim(S.xmin - 0.25, S.xmax + 0.35)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax_r = ax.twinx()
+    ax.plot(xx_l, ee_l.real, color=BLUE, lw=2.5)
+    ax_r.plot(xx_l, ee_l.imag, color=RED, lw=2.5)
+    ax.set_xlabel(r'$x$ ($\mu$m)')
+    ax.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax_r.set_ylabel(r"$\epsilon''(x)$", color=RED)
+    ax.tick_params(axis='y', labelcolor=BLUE)
+    ax_r.tick_params(axis='y', labelcolor=RED)
+    ax.set_xlim(-2.5, 2.5)
+    ax.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
 
     plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/fig_new1_lorentz_vs_grin.png')
+    plt.savefig(f'{S.FIGDIR}/fig1a_lorentzian.png')
     plt.close()
-    print("Saved fig 1: Lorentzian vs GRIN")
+    print("Saved fig1a: Lorentzian profile")
 
 
 def fig_endpoint_problem(S):
-    """Figure 2: Asymmetric endpoint problem — single curve."""
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    """Figure 1b: Logistic GRIN profile with naive HT artifacts (single panel).
 
-    # (a) GRIN profile with endpoint labels
-    ax = axes[0]
-    ax.plot(S.xx, S.e_re, color=BLUE, lw=2.5)
-    ax.axhline(S.nb**2, color='gray', lw=1, ls=':', alpha=0.5)
-    ax.axhline(1.0, color='gray', lw=1, ls=':', alpha=0.5)
-    ax.annotate(r'$\epsilon_b = n_b^2 = %.2f$' % S.nb**2, xy=(S.xmin, S.nb**2),
-                xytext=(S.xmin + 0.02, S.nb**2 + 0.08), fontsize=11, color='gray')
-    ax.annotate(r'$\epsilon_{\rm air} = 1$', xy=(S.xmax, 1.0),
-                xytext=(S.xmax - 0.08, 1.15), fontsize=11, color='gray')
-    ax.annotate('', xy=(0.15, 1.0), xytext=(0.15, S.nb**2),
-                arrowprops=dict(arrowstyle='<->', color=RED, lw=2))
-    ax.text(0.165, (1 + S.nb**2)/2, r'$\Delta\epsilon = %.2f$' % (S.nb**2 - 1),
-            fontsize=12, color=RED, va='center')
-    ax.set_xlabel(r'$x$ ($\mu$m)'); ax.set_ylabel(r"$\epsilon'(x)$")
-    ax.set_title(r"(a) GRIN profile: different endpoints ($\epsilon_b \neq \epsilon_{\rm air}$)")
+    Parameters: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
+    """
+    k_fig = 4; nb = S.nb
+    xx = np.linspace(-2.5, 2.5, 5001)
+    e_re = (nb**2 - 1) / (1 + np.exp(k_fig * xx)) + 1
+    e_im_naive = np.imag(hilbert(e_re))
 
-    # (b) Direct FFT HT — single orange curve only
-    ax = axes[1]
-    z_naive = hilbert(S.e_re)
-    e_im_naive = np.imag(z_naive)
-    ax.plot(S.xx, e_im_naive, color=ORANGE, lw=2, label='No padding (direct FFT)')
-    ax.axhline(0, color='gray', lw=0.5, ls=':')
-    ax.annotate('Edge artifacts from\nendpoint mismatch',
-                xy=(S.xmin + 0.02, e_im_naive[10]), xytext=(0.0, max(e_im_naive)*0.8),
-                fontsize=10, arrowprops=dict(arrowstyle='->', color='gray'),
-                bbox=dict(facecolor='lightyellow', alpha=0.8, boxstyle='round'))
-    ax.set_xlabel(r'$x$ ($\mu$m)'); ax.set_ylabel(r"$\epsilon''(x)$")
-    ax.set_title(r"(b) Naive Hilbert transform — endpoint artifacts")
-    ax.legend(fontsize=9)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax_r = ax.twinx()
+    ax.plot(xx, e_re, color=BLUE, lw=2.5)
+    ax_r.plot(xx, e_im_naive, color=RED, lw=2.5)
+    ax.set_xlabel(r'$x$ ($\mu$m)')
+    ax.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax_r.set_ylabel(r"$\mathcal{H}[\epsilon'(x)]$", color=RED)
+    ax.tick_params(axis='y', labelcolor=BLUE)
+    ax_r.tick_params(axis='y', labelcolor=RED)
+    ax.set_xlim(-2.5, 2.5)
+    ax.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
 
     plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/fig0a_ht_problem.png')
+    plt.savefig(f'{S.FIGDIR}/fig1b_logistic_naive_ht.png')
     plt.close()
-    print("Saved fig 2: Asymmetric endpoint problem")
+    print("Saved fig1b: Logistic + naive HT")
 
 
 def fig_derivative_result(S):
-    """Figure 3: Derivative-then-integrate result."""
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    """Figure 1c: Derivative-then-integrate method — eps' and derivatives.
 
-    # (a) Key insight: derivatives -> 0 at both ends
-    ax = axes[0]; ax_twin = ax.twinx()
-    u_deriv = np.gradient(S.e_re, S.xx)
-    pad_n = 8 * len(S.xx)
-    v_deriv_ht = np.imag(hilbert(np.pad(u_deriv, (pad_n, pad_n),
-                                         mode='constant')))[pad_n:pad_n+len(S.xx)]
-    ax.plot(S.xx, S.e_re, color=BLUE, lw=2.5, label=r"$\epsilon'(x)$")
-    ax.plot(S.xx, u_deriv, color=ORANGE, lw=2, label=r"$d\epsilon'/dx$")
-    ax_twin.plot(S.xx, v_deriv_ht, color=RED, lw=2, label=r"$\mathcal{H}[d\epsilon'/dx]$")
+    Parameters: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
+    Left axis (blue): eps'(x).  Right axis (orange): d(eps')/dx (solid) and H[d(eps')/dx] (dashed).
+    """
+    k_fig = 4; nb = S.nb
+    xx = np.linspace(-2.5, 2.5, 5001)
+    e_re = (nb**2 - 1) / (1 + np.exp(k_fig * xx)) + 1
+    u_deriv = np.gradient(e_re, xx)
+    v_deriv_ht = np.imag(hilbert(u_deriv))
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax_r = ax.twinx()
+    ax.plot(xx, e_re, color=BLUE, lw=2.5, label=r"$\epsilon'(x)$")
+    ax_r.plot(xx, u_deriv, color=ORANGE, lw=2, label=r"$d\epsilon'/dx$")
+    ax_r.plot(xx, v_deriv_ht, color=ORANGE, lw=2, ls='--',
+              label=r"$\mathcal{H}[d\epsilon'/dx]$")
     ax.set_xlabel(r'$x$ ($\mu$m)')
-    ax.set_ylabel(r"$\epsilon'$, $d\epsilon'/dx$", color=BLUE)
-    ax_twin.set_ylabel(r"$\mathcal{H}[d\epsilon'/dx]$", color=RED)
-    ax.set_title(r"(a) Key insight: $d\epsilon'/dx \to 0$ at both ends")
+    ax.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax_r.set_ylabel(r"$d\epsilon'/dx$,  $\mathcal{H}[d\epsilon'/dx]$", color=ORANGE)
     ax.tick_params(axis='y', labelcolor=BLUE)
-    ax_twin.tick_params(axis='y', labelcolor=RED)
+    ax_r.tick_params(axis='y', labelcolor=ORANGE)
+    ax.set_xlim(-2.5, 2.5)
+    ax.text(-0.14, 1.0, r'$\mathbf{c}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     lines1, labels1 = ax.get_legend_handles_labels()
-    lines2, labels2 = ax_twin.get_legend_handles_labels()
+    lines2, labels2 = ax_r.get_legend_handles_labels()
     ax.legend(lines1 + lines2, labels1 + labels2, loc='lower left', fontsize=9)
 
-    # (b) Result: epsilon' and epsilon'' with lossy air shaded
-    ax = axes[1]; ax2 = ax.twinx()
-    ax.plot(S.xx, S.e_re, color=BLUE, lw=2.5)
-    ax2.plot(S.xx, S.e_im_deriv, color=RED, lw=2.5)
-    ax.set_xlabel(r'$x$ ($\mu$m)')
-    ax.set_ylabel(r"$\epsilon'$", color=BLUE)
-    ax2.set_ylabel(r"$\epsilon''$", color=RED)
-    ax.set_title(r"(b) Result: $\epsilon(x) = \epsilon' + i\epsilon''$ (derivative method)")
-    ax.tick_params(axis='y', labelcolor=BLUE)
-    ax2.tick_params(axis='y', labelcolor=RED)
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig1c_derivative_method.png')
+    plt.close()
+    print("Saved fig1c: Derivative method")
 
-    lossy_mask_b = (S.e_re < 1.1) & (S.e_im_deriv > 0.01)
-    if np.any(lossy_mask_b):
-        idx_start = np.where(lossy_mask_b)[0][0]
-        idx_end = np.where(lossy_mask_b)[0][-1]
-        ax.axvspan(S.xx[idx_start], S.xx[idx_end], alpha=0.15, color='orange', zorder=0)
+
+def fig_final_profile(S):
+    """Figure 1d: Final eps'(x) + eps''(x) from derivative method with lossy air.
+
+    Parameters: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
+    """
+    k_fig = 4; nb = S.nb
+    xx = np.linspace(-2.5, 2.5, 5001)
+    e_re = (nb**2 - 1) / (1 + np.exp(k_fig * xx)) + 1
+    e_im = tmm_h.ht_derivative(xx, e_re)
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax_r = ax.twinx()
+    ax.plot(xx, e_re, color=BLUE, lw=2.5)
+    ax_r.plot(xx, e_im, color=RED, lw=2.5)
+    ax.set_xlabel(r'$x$ ($\mu$m)')
+    ax.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax_r.set_ylabel(r"$\epsilon''(x)$", color=RED)
+    ax.tick_params(axis='y', labelcolor=BLUE)
+    ax_r.tick_params(axis='y', labelcolor=RED)
+    ax.set_xlim(-2.5, 2.5)
+    ax.text(-0.14, 1.0, r'$\mathbf{d}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+
+    # Lossy air shading
+    nk = np.sqrt(e_re + 1j * e_im)
+    lossy_mask = (np.real(nk) < 1.15) & (np.imag(nk) > 0.01)
+    if np.any(lossy_mask):
+        idx_s = np.where(lossy_mask)[0][0]
+        idx_e = np.where(lossy_mask)[0][-1]
+        ax.axvspan(xx[idx_s], xx[idx_e], alpha=0.15, color='orange', zorder=0)
         y_mid = 0.75 * ax.get_ylim()[1] + 0.25 * ax.get_ylim()[0]
-        x_mid = 0.5 * (S.xx[idx_start] + S.xx[idx_end])
-        ax.text(x_mid, y_mid, '"Lossy air"\n' + r'$n \approx 1, k > 0$',
+        x_mid = 0.5 * (xx[idx_s] + xx[idx_e])
+        ax.text(x_mid, y_mid, '"Lossy air"\n' + r'$n \approx 1,\; \kappa > 0$',
                 fontsize=10, ha='center', va='center',
                 bbox=dict(facecolor='wheat', alpha=0.8, boxstyle='round'))
 
     plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/fig_new3_derivative_result.png')
+    plt.savefig(f'{S.FIGDIR}/fig1d_final_result.png')
     plt.close()
-    print("Saved fig 3: Derivative result")
+    print("Saved fig1d: Final profile")
 
 
-def fig_reflection_wavelength(S):
-    """Figure 4: Backside reflection comparison."""
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-
-    ax = axes[0]
-    ax.plot(S.lamdata, S.Rb_bulk, color='gray', lw=2, label='Bulk sapphire')
-    ax.plot(S.lamdata, S.Rb_grin, '--', color=BLUE, lw=2, label='GRIN coating')
-    ax.plot(S.lamdata, S.Rb_full, color=GREEN, lw=2.5, label='sKK coating')
+def fig3a_reflection_spol_80(S):
+    """Fig 3a: R_back vs wavelength, s-pol 80°, k_steep=4 (5 um thick coating). Log scale."""
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.semilogy(S.lamdata, S.Rb_bulk, color='gray', lw=2, label='Bulk sapphire')
+    ax.semilogy(S.lamdata, S.Rb_grin_thick, '--', color=BLUE, lw=2, label='GRIN coating')
+    ax.semilogy(S.lamdata, S.Rb_full_thick, color=GREEN, lw=2.5, label='sKK coating')
     ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel(r'$R_{\rm back}$')
-    ax.set_title(f'(a) Backside reflection ({S.pol_test}-pol, {S.angle_test}\u00b0)')
     ax.legend(fontsize=10)
-
-    ax = axes[1]
-    ax.plot(S.lamdata, S.A_bulk, color='gray', lw=2, label='Bulk sapphire')
-    ax.plot(S.lamdata, S.A_grin, '--', color=BLUE, lw=2, label='GRIN coating')
-    ax.plot(S.lamdata, S.A_full, color=RED, lw=2.5, label='sKK coating')
-    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel('Absorbance')
-    ax.set_title(f'(b) Absorption ({S.pol_test}-pol, {S.angle_test}\u00b0)')
-    ax.legend(fontsize=10, loc='center left')
-
+    ax.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/fig3_reflection_wavelength.png')
-    plt.close()
-    print("Saved fig 4: Backside reflection")
+    plt.savefig(f'{S.FIGDIR}/fig3a_ksteep4_M2500_Rback_spol_80deg.png', dpi=150)
+    plt.close(); print("Saved fig3a: R_back vs wavelength (log)")
+
+
+def fig3b_absorption_spol_80(S):
+    """Fig 3b: Absorption vs wavelength, s-pol 80°, k_steep=4 (5 um thick coating)."""
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.plot(S.lamdata, S.A_bulk, color='gray', lw=2, label='Bulk sapphire')
+    ax.plot(S.lamdata, S.A_grin_thick, '--', color=BLUE, lw=2, label='GRIN coating')
+    ax.plot(S.lamdata, S.A_full_thick, color=RED, lw=2.5, label='sKK coating')
+    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel('Absorbance')
+    ax.legend(fontsize=10, loc='center left')
+    ax.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig3b_ksteep4_M2500_Abs_spol_80deg.png', dpi=150)
+    plt.close(); print("Saved fig3b: Absorption vs wavelength")
 
 
 def fig_fom_intro(S):
@@ -753,30 +764,32 @@ def fig_fom_comparison(S):
     print("Saved fig 8: FoM comparison")
 
 
-def fig_angle_resolved(S):
-    """Figure 9: Angle-resolved backside reflection."""
-    angle_list = np.arange(0, 90, 1)
-    lam_test = 3.0
-    idx_lam = np.argmin(np.abs(S.lamdata - lam_test))
-    n_sub = complex(S.ndata[idx_lam], S.kdata[idx_lam])
-
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-    for pidx, pol in enumerate(['s', 'p']):
-        ax = axes[pidx]
-        Rb_bulk_a = Rback_bulk_angle(n_sub, angle_list, lam_test, pol)
-        Rb_grin_a, _ = Rback_vs_angle(S.nc_grin, S.dc_grin, n_sub, angle_list, lam_test, pol)
-        Rb_skk_a, _ = Rback_vs_angle(S.nc_full, S.dc_full, n_sub, angle_list, lam_test, pol)
-        ax.plot(angle_list, Rb_bulk_a, color='gray', lw=2, label='Bulk sapphire')
-        ax.plot(angle_list, Rb_grin_a, '--', color=BLUE, lw=2, label='GRIN coating')
-        ax.plot(angle_list, Rb_skk_a, color=GREEN, lw=2.5, label='sKK coating')
-        ax.set_xlabel('Angle of Incidence (\u00b0)')
-        ax.set_ylabel(r'$R_{\rm back}$')
-        ax.set_title(f'{pol}-polarization, $\\lambda$ = {lam_test} $\\mu$m')
-        ax.legend(fontsize=10); ax.set_xlim(0, 89)
+def fig3c_angle_spol(S):
+    """Fig 3c: R_back vs angle, s-pol, λ=3 um, k_steep=4 (5 um thick coating). Log scale."""
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.semilogy(S.angle_list_3um, S.Rb_bulk_3um_s, color='gray', lw=2, label='Bulk sapphire')
+    ax.semilogy(S.angle_list_3um, S.Rb_grin_thick_3um_s, '--', color=BLUE, lw=2, label='GRIN coating')
+    ax.semilogy(S.angle_list_3um, S.Rb_full_thick_3um_s, color=GREEN, lw=2.5, label='sKK coating')
+    ax.set_xlabel('Angle of Incidence (\u00b0)'); ax.set_ylabel(r'$R_{\rm back}$')
+    ax.set_xlim(0, 89); ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{c}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/fig6_angle_resolved.png')
-    plt.close()
-    print("Saved fig 9: Angle-resolved")
+    plt.savefig(f'{S.FIGDIR}/fig3c_ksteep4_M2500_Rback_spol_angle.png', dpi=150)
+    plt.close(); print("Saved fig3c: R_back vs angle, s-pol (log)")
+
+
+def fig3d_angle_ppol(S):
+    """Fig 3d: R_back vs angle, p-pol, λ=3 um, k_steep=4 (5 um thick coating). Log scale."""
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.semilogy(S.angle_list_3um, S.Rb_bulk_3um_p, color='gray', lw=2, label='Bulk sapphire')
+    ax.semilogy(S.angle_list_3um, S.Rb_grin_thick_3um_p, '--', color=BLUE, lw=2, label='GRIN coating')
+    ax.semilogy(S.angle_list_3um, S.Rb_full_thick_3um_p, color=GREEN, lw=2.5, label='sKK coating')
+    ax.set_xlabel('Angle of Incidence (\u00b0)'); ax.set_ylabel(r'$R_{\rm back}$')
+    ax.set_xlim(0, 89); ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{d}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig3d_ksteep4_M2500_Rback_ppol_angle.png', dpi=150)
+    plt.close(); print("Saved fig3d: R_back vs angle, p-pol (log)")
 
 
 def fig_thickness_single(S):
@@ -1761,15 +1774,18 @@ def fig_thick_colorplots(S):
 # Figure registry
 # ============================================================================
 FIGURE_MAP = {
-    'fig1':  ('Lorentzian vs GRIN',           fig_lorentz_vs_grin),
-    'fig2':  ('Endpoint problem',             fig_endpoint_problem),
-    'fig3':  ('Derivative result',            fig_derivative_result),
-    'fig4':  ('Backside reflection',          fig_reflection_wavelength),
+    'fig1':  ('Lorentzian profile',            fig_lorentz_vs_grin),
+    'fig2':  ('Logistic + naive HT',          fig_endpoint_problem),
+    'fig3':  ('Derivative method',            fig_derivative_result),
+    'fig1d': ('Final profile (eps\' + eps\'\')', fig_final_profile),
+    'fig3a': ('R_back vs wavelength, s-pol 80°',  fig3a_reflection_spol_80),
+    'fig3b': ('Absorption vs wavelength, s-pol 80°', fig3b_absorption_spol_80),
+    'fig3c': ('R_back vs angle, s-pol, λ=3um',  fig3c_angle_spol),
+    'fig3d': ('R_back vs angle, p-pol, λ=3um',  fig3d_angle_ppol),
     'fig5':  ('FoM intro',                    fig_fom_intro),
     'fig6':  ('Alpha tradeoff',              fig_alpha_tradeoff),
     'fig7':  ('Sigma gating',                fig_sigma_gating),
     'fig8':  ('FoM comparison',              fig_fom_comparison),
-    'fig9':  ('Angle-resolved',              fig_angle_resolved),
     'fig10': ('Thickness design space',      fig_thickness_single),
     'loss_shapes':     ('Loss shape comparison',      fig_loss_shapes),
     'thick_shapes':    ('Thick coating shapes',       fig_thick_shapes),
