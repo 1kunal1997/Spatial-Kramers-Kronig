@@ -39,6 +39,8 @@ python theory/skk_analysis_consolidated.py --outdir sKK-Paper-Overleaf/figures f
 
 Available figure names: `fig1`–`fig10`, `loss_shapes`, `thick_shapes`, `task1`, `task2`, `task3`, `crossover`, `fom_spectrum`, `fom_method`, `profiles`, `thick_colorplots`.
 
+Fig 1 (panels a–d) and Fig 3 (panels a–d) both use a 5 μm thick logistic coating (`k_steep=4`, domain `[-2.5, 2.5]` μm). Fig 1 shows the profile construction; Fig 3 shows the resulting TMM performance (`S.Rb_full_thick`, `S.Rb_grin_thick`, etc. from `setup()`).
+
 For VS Code interactive mode: run `S = setup()` first, then call any figure function directly (e.g. `fig_alpha_tradeoff(S)`).
 
 ## Core Architecture
@@ -147,6 +149,37 @@ When giving physics explanations, use Unicode math symbols (epsilon, gamma, lamb
 ## Git Workflow
 
 Push to the GitHub repo after big changes or at the end of a session. No need to push after every small edit — use judgment.
+
+## Figure Conventions (for paper figures)
+
+All paper figures are generated via `theory/skk_analysis_consolidated.py`. Each figure is a standalone function; run them modularly:
+
+```bash
+python theory/skk_analysis_consolidated.py fig1 fig2   # specific figures
+python theory/skk_analysis_consolidated.py --list       # see all names
+```
+
+**Do not create new code blocks unless unavoidable** (e.g., splitting a 2-panel function into two single-panel functions). Justify any additions in a comment.
+
+### Subplot label placement
+Bold letter outside the axes box, left-aligned with the y-axis label — **not inside the plot**:
+```python
+ax.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+```
+No parentheses. No titles on individual panels — all description goes in the LaTeX caption.
+
+### Color conventions
+- Blue (`#1f77b4`) — ε'(x), real part
+- Red (`#8B0000`) — ε''(x), imaginary part
+- Orange (`#ff7f0e`) — derivative quantities (dε'/dx, ℋ[dε'/dx])
+
+### Annotation guidelines
+- Keep only brief feature labels (e.g., "Lossy air") — no explanatory sentences on the figure
+- Remove gray endpoint annotations (ε_b, ε_air), Δε arrows, verbose textboxes
+- Axis labels and tick colors should match the curve color on dual-axis plots
+
+### Multi-panel layout
+Individual panels are saved as separate PNGs for now. Multi-panel composition (subplot_mosaic) is deferred until the paper structure is finalized after advisor review.
 
 ## Dependencies
 
