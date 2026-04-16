@@ -24,7 +24,12 @@
       "Bash(/opt/miniconda3/envs/env/bin/python -c \"import tmm_helper as tmm_h; print\\(''OK''\\)\")",
       "Bash(/Users/kunal/opt/anaconda3/bin/python -c \"import numpy; print\\(''anaconda OK''\\)\")",
       "Bash(/opt/miniconda3/envs/env/bin/python -c \":*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(ccburn)",
+      "Bash(pip show *)",
+      "Bash(pip install *)",
+      "Bash(ccburn --help)",
+      "Bash(python -c ' *)"
     ]
   }
 }

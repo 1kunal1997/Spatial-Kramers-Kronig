@@ -1,0 +1,7 @@
+# Claude Code ignore file
+# Files/folders Claude doesn't need to read
+
+archive/
+Comsol Files/
+__pycache__/
+2-Pochi Yeh - Optical Waves in Layered Media (2005, Wiley-Interscience).pdf

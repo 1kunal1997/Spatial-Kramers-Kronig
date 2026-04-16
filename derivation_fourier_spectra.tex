@@ -1,0 +1,364 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{parskip}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\title{Analytical Fourier Power Spectra of\\
+       the Lorentzian and Logistic Dielectric Profiles}
+\author{Spatial Kramers--Kronig Project}
+\date{}
+
+\newcommand{\kk}{k_s}
+\newcommand{\gam}{\gamma}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\epsh}{\hat{\varepsilon}}
+\DeclareMathOperator{\Res}{Res}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\bigskip
+
+\noindent
+These notes derive, from first principles, the analytical forms of the Fourier
+power spectra $|\epsh(k)|^2$ for two dielectric profiles that appear in the
+spatial Kramers--Kronig (sKK) framework:
+
+\begin{enumerate}
+    \item A \textbf{Lorentzian} complex profile $\eps(x) = \eps' + i\eps''$
+          analytic in the upper half complex $x$-plane.
+    \item A \textbf{logistic} profile whose imaginary part is the Hilbert
+          transform of the real part.
+\end{enumerate}
+
+\noindent
+Throughout, the Fourier transform convention is
+\begin{equation}\label{eq:ft_convention}
+    \epsh(k) = \int_{-\infty}^{\infty} \eps(x)\, e^{-ikx}\, dx,
+    \qquad
+    \eps(x) = \frac{1}{2\pi}\int_{-\infty}^{\infty} \epsh(k)\, e^{ikx}\, dk,
+\end{equation}
+where $k$ is the \emph{angular} spatial frequency ($\mathrm{rad\,\mu m^{-1}}$),
+consistent with NumPy's FFT convention \texttt{k = 2*pi*fftfreq(...)}.
+
+% ============================================================
+\section{The Lorentzian Complex Profile}
+% ============================================================
+
+\subsection{Profile definition}
+
+The Lorentzian dielectric profile is
+\begin{equation}\label{eq:lor_profile}
+    \eps(x) = n_b^2 - \frac{a\gam}{x + i\gam},
+    \qquad a,\gam > 0,
+\end{equation}
+with real part $\eps'(x)$ and imaginary part $\eps''(x)$ given by
+\begin{equation}
+    \eps'(x)  = n_b^2 - \frac{a\gam x}{x^2+\gam^2},
+    \qquad
+    \eps''(x) = \frac{a\gam^2}{x^2+\gam^2}.
+\end{equation}
+The profile is constructed so that $\eps(z)$ is analytic in the upper
+half $z$-plane $(\mathrm{Im}(z)>0)$; the single pole lies at
+$z = -i\gam$, strictly in the \emph{lower} half-plane.
+
+\subsection{Fourier transform via contour integration}
+
+Because $n_b^2$ contributes only a $\delta(k)$ term to $\epsh(k)$, we focus on
+the non-trivial part
+\begin{equation}
+    \epsh(k) = -a\gam \int_{-\infty}^{\infty}
+        \frac{e^{-ikx}}{x + i\gam}\, dx, \qquad k \neq 0.
+\end{equation}
+Promote $x$ to a complex variable $z = x + iy$ and close the real-axis
+integral with a large semicircular arc of radius $R \to \infty$.
+
+\paragraph{Choosing the contour.}
+On the arc $z = Re^{i\theta} = R\cos\theta + iR\sin\theta$, the exponent in
+the integrand is
+\begin{equation}
+    -ikz = -ik(R\cos\theta + iR\sin\theta)
+         = \underbrace{kR\sin\theta}_{\mathrm{Re}(-ikz)} \;-\; ikR\cos\theta,
+\end{equation}
+so $\left|e^{-ikz}\right| = e^{\mathrm{Re}(-ikz)} = e^{k\,\mathrm{Im}(z)} = e^{kR\sin\theta}$.
+\begin{itemize}
+    \item \textbf{Lower half-plane} (LHP, $\theta\in(-\pi,0)$, $\sin\theta < 0$):
+          $|e^{-ikz}| = e^{kR\sin\theta} \to 0$ for $k > 0$.
+    \item \textbf{Upper half-plane} (UHP, $\theta\in(0,\pi)$, $\sin\theta > 0$):
+          $|e^{-ikz}| = e^{kR\sin\theta} \to 0$ for $k < 0$.
+\end{itemize}
+Hence the arc integral vanishes by Jordan's lemma in the appropriate half-plane.
+
+\paragraph{Case $k > 0$ (close in the LHP).}
+The contour is traversed \emph{clockwise}, enclosing the pole at $z_0 = -i\gam$:
+\begin{equation}
+    \epsh(k) = -a\gam \cdot (-2\pi i)\,
+        \underbrace{\Res_{z=-i\gam}\!\frac{e^{-ikz}}{z+i\gam}}_{\displaystyle= e^{-ik(-i\gam)} = e^{-k\gam}}.
+\end{equation}
+The residue of $e^{-ikz}/(z+i\gam)$ at $z=-i\gam$ is found by noting that
+$(z+i\gam)$ has a simple zero there:
+\begin{equation}
+    \Res_{z=-i\gam}\frac{e^{-ikz}}{z+i\gam}
+    = \lim_{z\to -i\gam}(z+i\gam)\cdot\frac{e^{-ikz}}{z+i\gam}
+    = e^{-ik(-i\gam)} = e^{-k\gam}.
+\end{equation}
+Therefore
+\begin{equation}\label{eq:lor_epsh_pos}
+    \boxed{\epsh(k) = 2\pi i\, a\gam\, e^{-k\gam}, \qquad k > 0.}
+\end{equation}
+
+\paragraph{Case $k < 0$ (close in the UHP).}
+The contour is traversed \emph{counter-clockwise}. There are \emph{no} poles
+in the UHP (the only pole is $z_0=-i\gam$ in the LHP), so by the residue
+theorem
+\begin{equation}
+    \epsh(k) = 0, \qquad k < 0.
+\end{equation}
+This confirms that the Lorentzian profile is an analytic signal: all spectral
+weight lies at positive spatial frequencies, consistent with $\eps(z)$ being
+analytic above the real axis.
+
+\subsection{Power spectrum}
+
+From Eq.~\eqref{eq:lor_epsh_pos},
+\begin{equation}\label{eq:lor_power}
+    \boxed{|\epsh(k)|^2 = 4\pi^2 a^2 \gam^2\, e^{-2\gam k}, \qquad k > 0.}
+\end{equation}
+The decay rate $2\gam$ is set by the imaginary distance from the real axis to
+the nearest pole. In the numerical scripts this exact formula is implemented as:
+\begin{verbatim}
+    C_exact = 4 * np.pi**2 * a**2 * gam**2
+    pwr_exp_an = C_exact * np.exp(-2 * gam * k_an)
+\end{verbatim}
+with parameters $a=1$, $\gam=0.01\,\mu\mathrm{m}$, $n_b=1.5$.
+
+% ============================================================
+\section{The Logistic Profile}
+% ============================================================
+
+\subsection{Profile definition}
+
+The logistic dielectric profile is
+\begin{equation}\label{eq:log_profile}
+    \eps'(x) = 1 + \frac{\Delta}{1 + e^{\kk x}},
+    \qquad \Delta = n_b^2 - 1,\; \kk > 0,
+\end{equation}
+which interpolates smoothly from $\eps'(-\infty)=1+\Delta=n_b^2$ to
+$\eps'(+\infty)=1$ over a characteristic width $1/\kk$.
+Unlike the Lorentzian, $\eps'(x)$ is real-valued and is \emph{not} by itself
+a valid sKK profile.  The imaginary part $\eps''(x)$ must be added as the
+Hilbert transform of $\eps'(x)$.
+
+\subsection{Analytic signal: eliminating \texorpdfstring{$k<0$}{k<0} components}
+
+\paragraph{Hilbert transform in Fourier space.}
+For any real-valued $f(x)$, the Hilbert transform $g = \mathcal{H}[f]$ has the
+Fourier representation
+\begin{equation}
+    \hat{g}(k) = -i\,\mathrm{sgn}(k)\,\hat{f}(k).
+\end{equation}
+Form the \emph{analytic signal} $\eps(x) = \eps'(x) + i\eps''(x)$ where
+$\eps'' = \mathcal{H}[\eps']$.  Its Fourier transform is
+\begin{equation}
+    \epsh(k)
+    = \hat{\eps}'(k) + i\hat{\eps}''(k)
+    = \hat{\eps}'(k) + i\bigl(-i\,\mathrm{sgn}(k)\bigr)\hat{\eps}'(k)
+    = \hat{\eps}'(k)\bigl(1 + \mathrm{sgn}(k)\bigr).
+\end{equation}
+Evaluating the factor $(1+\mathrm{sgn}(k))$ case by case:
+\begin{equation}\label{eq:analytic_signal}
+    \epsh(k) =
+    \begin{cases}
+        2\hat{\eps}'(k), & k > 0, \\
+        0,               & k < 0.
+    \end{cases}
+\end{equation}
+\textbf{Key conclusion}: the $k<0$ sector is identically zero regardless of whether
+the complex profile $\eps'(z)$ has poles in the UHP or LHP.  The sKK condition
+is enforced by the construction $\eps'' = \mathcal{H}[\eps']$, not by analytic
+continuation of $\eps'$ alone.  Therefore we need only compute $\hat{\eps}'(k)$
+for $k>0$.
+
+\subsection{Fourier transform of \texorpdfstring{$\eps'(x)$}{eps'(x)} for \texorpdfstring{$k>0$}{k>0}}
+
+Again discarding the constant (which contributes only at $k=0$), we need
+\begin{equation}
+    \hat{\eps}'(k) = \Delta\int_{-\infty}^{\infty}
+        \frac{e^{-ikx}}{1 + e^{\kk x}}\, dx, \qquad k > 0.
+\end{equation}
+
+\paragraph{Poles of the integrand.}
+The denominator $1+e^{\kk z}=0$ when $e^{\kk z} = -1 = e^{i\pi(2m-1)}$
+for $m\in\mathbb{Z}$, giving
+\begin{equation}\label{eq:log_poles}
+    z_m = \frac{i\pi(2m-1)}{\kk}, \qquad m \in \mathbb{Z}.
+\end{equation}
+All poles lie on the imaginary axis.  For $k>0$ we close in the LHP
+($\mathrm{Im}(z)<0$), which contains the poles with $2m-1<0$, i.e.,
+$m\leq 0$:
+\begin{equation}
+    z_m = -\frac{i\pi(2n-1)}{\kk}, \quad n = 1,2,3,\ldots
+    \quad (n \equiv 1-m).
+\end{equation}
+The nearest LHP pole to the real axis is $z_1 = -i\pi/\kk$, at distance
+$\pi/\kk$ (not $1/\kk$); the extra factor of $\pi$ arises from solving
+$e^{\kk z}=-1 \Rightarrow \kk z = \ln(-1) = i\pi$.
+
+\paragraph{Residues.}
+Each pole $z_m$ is simple.  Using the residue formula for $f(z)/g(z)$ at a
+simple zero $z_0$ of $g$:
+\begin{equation}
+    \Res_{z=z_0}\frac{f(z)}{g(z)} = \frac{f(z_0)}{g'(z_0)}.
+\end{equation}
+With $f(z)=\Delta e^{-ikz}$ and $g(z)=1+e^{\kk z}$, $g'(z)=\kk e^{\kk z}$:
+\begin{equation}
+    \Res_{z=z_m}\frac{\Delta e^{-ikz}}{1+e^{\kk z}}
+    = \frac{\Delta e^{-ikz_m}}{\kk e^{\kk z_m}}
+    = \frac{\Delta e^{-ikz_m}}{\kk \cdot (-1)}
+    = -\frac{\Delta}{\kk}\,e^{-ikz_m},
+\end{equation}
+where we used $e^{\kk z_m}=-1$ at the pole.
+
+\paragraph{Summing residues (CW contour).}
+For $m \leq 0$ (LHP poles, relabeled as $n=1,2,\ldots$):
+\begin{equation}
+    \hat{\eps}'(k) = (-2\pi i)
+        \sum_{n=1}^{\infty}
+        \left(-\frac{\Delta}{\kk}\right)
+        e^{-ik\cdot\left(-i\pi(2n-1)/\kk\right)}.
+\end{equation}
+The exponent becomes
+\begin{equation}
+    -ik\cdot\left(-\frac{i\pi(2n-1)}{\kk}\right)
+    = -\frac{\pi k(2n-1)}{\kk}.
+\end{equation}
+Therefore
+\begin{equation}
+    \hat{\eps}'(k) = \frac{2\pi i\,\Delta}{\kk}
+        \sum_{n=1}^{\infty} e^{-\pi k(2n-1)/\kk}.
+\end{equation}
+
+\paragraph{Evaluating the geometric series.}
+Let $\beta \equiv \pi k/\kk > 0$.  Then
+\begin{align}
+    \sum_{n=1}^{\infty} e^{-\beta(2n-1)}
+    &= e^{-\beta} + e^{-3\beta} + e^{-5\beta} + \cdots \notag\\
+    &= e^{-\beta}\bigl(1 + e^{-2\beta} + e^{-4\beta}+\cdots\bigr) \notag\\
+    &= \frac{e^{-\beta}}{1 - e^{-2\beta}}
+     = \frac{1}{e^{\beta} - e^{-\beta}}
+     = \frac{1}{2\sinh\beta}
+     = \frac{1}{2\sinh(\pi k/\kk)}.
+\end{align}
+Hence
+\begin{equation}
+    \hat{\eps}'(k) = \frac{2\pi i\,\Delta}{\kk}
+        \cdot\frac{1}{2\sinh(\pi k/\kk)}
+    = \frac{\pi i\,\Delta}{\kk\sinh(\pi k/\kk)}.
+\end{equation}
+Using Eq.~\eqref{eq:analytic_signal}, the full spectrum for $k>0$ is
+\begin{equation}\label{eq:log_epsh}
+    \epsh(k) = 2\hat{\eps}'(k) = \frac{2\pi i\,\Delta}{\kk\sinh(\pi k/\kk)}.
+\end{equation}
+
+\subsection{Power spectrum}
+
+\begin{equation}\label{eq:log_power}
+    \boxed{|\epsh(k)|^2 = \frac{C}{\sinh^2(\pi k/\kk)},
+    \qquad
+    C = \frac{4\pi^2\Delta^2}{\kk^2},
+    \qquad k>0,}
+\end{equation}
+with no free fitting parameters.  In the numerical scripts this exact formula
+appears as:
+\begin{verbatim}
+    Delta = nb_g**2 - 1
+    C_exact = 4 * np.pi**2 * Delta**2 / k_steep**2
+    pwr_sinh = C_exact / np.sinh(np.pi * k_an / k_steep)**2
+\end{verbatim}
+with $\kk = k_{\text{steep}} = 100\,\mu\mathrm{m}^{-1}$, $n_b=1.7$.
+
+\subsection{Asymptotic regimes}
+
+The two limiting behaviors of $\sinh(\pi k/\kk)$ yield distinct power-law
+and exponential regimes.
+
+\paragraph{Small $k$ (algebraic regime, $k \ll \kk/\pi$).}
+Use the Taylor series $\sinh(x)\approx x$ for $x\ll 1$:
+\begin{equation}
+    \sinh\!\left(\frac{\pi k}{\kk}\right) \approx \frac{\pi k}{\kk},
+    \qquad k \ll \frac{\kk}{\pi}.
+\end{equation}
+Substituting into Eq.~\eqref{eq:log_power}:
+\begin{equation}
+    |\epsh(k)|^2 \approx
+        \frac{4\pi^2\Delta^2/\kk^2}{(\pi k/\kk)^2}
+    = \frac{4\Delta^2}{k^2}.
+\end{equation}
+This $1/k^2$ power law is characteristic of a profile with a finite step
+discontinuity (the logistic step of height $\Delta$).
+
+\paragraph{Large $k$ (exponential regime, $k \gg \kk/\pi$).}
+For $x\gg 1$, $\sinh(x)\approx e^x/2$:
+\begin{equation}
+    \sinh\!\left(\frac{\pi k}{\kk}\right) \approx \frac{1}{2}e^{\pi k/\kk},
+    \qquad k \gg \frac{\kk}{\pi}.
+\end{equation}
+Therefore
+\begin{equation}
+    |\epsh(k)|^2 \approx
+        \frac{4\pi^2\Delta^2/\kk^2}{\tfrac{1}{4}e^{2\pi k/\kk}}
+    = \frac{16\pi^2\Delta^2}{\kk^2}\,e^{-2\pi k/\kk}
+    = 4C\,e^{-2\pi k/\kk}.
+\end{equation}
+The exponential decay rate is $2\pi/\kk$ — a factor of $\pi$ larger
+than the naive estimate $2/\kk$, because the nearest LHP pole of the
+logistic is at $\mathrm{Im}(z_1) = -\pi/\kk$, not $-1/\kk$.
+
+\paragraph{Crossover.}
+The two asymptotes are equal when
+\begin{equation}
+    \frac{4\Delta^2}{k^2} = 4C\,e^{-2\pi k/\kk},
+\end{equation}
+which to leading order gives $k_{\times} \approx \kk/\pi$.
+For $\kk=100\,\mu\mathrm{m}^{-1}$ this is $k_{\times}\approx 32\,\mu\mathrm{m}^{-1}$.
+
+% ============================================================
+\section{Comparison: Lorentzian vs.\ Logistic}
+% ============================================================
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Property & Lorentzian & Logistic \\
+\midrule
+Profile & $\eps = n_b^2 - a\gam/(x+i\gam)$ & $\eps' = 1 + \Delta/(1+e^{\kk x})$ \\
+Imaginary part & Intrinsic (analytic) & $\eps'' = \mathcal{H}[\eps']$ (imposed) \\
+Poles & Single: $z_0 = -i\gam$ & Infinite: $z_n = -i\pi(2n-1)/\kk$ \\
+Nearest LHP pole & $\gam$ below real axis & $\pi/\kk$ below real axis \\
+Spectrum & $4\pi^2 a^2\gam^2\,e^{-2\gam k}$ & $C/\sinh^2(\pi k/\kk)$ \\
+Large-$k$ slope & $-2\gam$ (exp. decay) & $-2\pi/\kk$ \\
+Small-$k$ behavior & exponential (no crossover) & $1/k^2$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+If the transition widths are matched, $\gam = 1/\kk$, the large-$k$ decay
+rates differ by $\pi$:
+\begin{equation}
+    \text{Lorentzian: } -2\gam = -2/\kk,
+    \qquad
+    \text{Logistic: } -2\pi/\kk.
+\end{equation}
+The factor of $\pi$ reflects the geometry: the Lorentzian pole sits at
+distance $\gam=1/\kk$ from the real axis, whereas the nearest logistic pole
+sits at $\pi/\kk$ — a consequence of $\ln(-1)=i\pi$.
+
+\end{document}

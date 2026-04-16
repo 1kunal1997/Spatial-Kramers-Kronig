@@ -24,9 +24,20 @@ Thumbs.db
 *.pdf
 
 # Large image outputs (regenerable from scripts)
-# Keeping figures/ directory tracked since those are paper figures
+# Keeping figures/ and theory/figures/ tracked since those are paper figures
 *.png
 !figures/*.png
+!theory/figures/**/*.png
+
+# LaTeX build artifacts (keep .tex, ignore compile outputs)
+*.aux
+*.log
+*.out
+*.toc
+
+# Scratch notes
+temp_notes_spectral_fom.rtf
+Rule List.rtf
 
 # Empty submodule (files moved to root)
 modules/

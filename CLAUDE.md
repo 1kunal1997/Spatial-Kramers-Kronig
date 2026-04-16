@@ -146,6 +146,25 @@ Do not infer supersession, redundancy, or status from filenames. Suffixes like `
 
 When giving physics explanations, use Unicode math symbols (epsilon, gamma, lambda, etc.) instead of LaTeX syntax. LaTeX does not render in the terminal and is hard to read raw.
 
+## Exploratory Scripts
+
+- **`theory/constant_loss_different_shape.py`** — thickness sweep explorer comparing different ε''(x) shapes (sKK, constant, Gaussian, double-peak, random) with matched total losses. Three callable functions:
+  - `sweep_wavelength_averaged(angle_deg, pol, lam_min, lam_max)` — ⟨R⟩ over wavelengths
+  - `sweep_angle_averaged(wavelength, pol, angle_min, angle_max)` — ⟨R⟩ over angles
+  - `sweep_single(wavelength, angle_deg, pol)` — R at one (λ, θ), no averaging
+  - Geometry: `n_b (semi-inf) | coating | air (semi-inf)` — no bulk substrate
+  - Angles are specified in air and converted internally via Snell's law (to avoid TIR at the n_b|air interface)
+  - Output figures saved to `theory/figures/April10/`
+
+## TODO — Paper Direction
+
+**If the paper is reframed to be general (not sapphire-specific):** all consolidated.py calculations will need to be redone with the substrate-free geometry: `n_b (semi-inf) | coating | air`. This means:
+- Remove the 5 mm bulk sapphire slab from all TMM stacks
+- Drop the Fresnel subtraction (R_back = R_total − R_Fresnel) — just use R directly
+- No material data files needed; wavelength range is unlimited
+- Angles specified in air, converted to angle in n_b internally via Snell
+- `constant_loss_different_shape.py` already implements this geometry and can serve as the template
+
 ## Git Workflow
 
 Push to the GitHub repo after big changes or at the end of a session. No need to push after every small edit — use judgment.
