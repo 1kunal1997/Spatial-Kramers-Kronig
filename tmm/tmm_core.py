@@ -359,7 +359,6 @@ def coh_tmm_reverse(pol, n_list, d_list, th_0, lam_vac):
     Reverses the order of the stack then runs coh_tmm.
     """
     th_f = snell(n_list[0], n_list[-1], th_0)
-    print(f"th_0 is {th_0} and th_f is: {th_f} ")
     return coh_tmm(pol, n_list[::-1], d_list[::-1], th_f, lam_vac)
 
 def ellips(n_list, d_list, th_0, lam_vac):
