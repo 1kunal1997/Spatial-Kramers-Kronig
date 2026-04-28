@@ -507,6 +507,57 @@ def fig_lorentz_vs_grin(S):
     print("Saved fig1a: Lorentzian profile")
 
 
+def fig_lorentz_ht_check(S):
+    """Validation: apply deriv→HT→integ to Re(ε) of a Lorentzian and recover Im(ε).
+
+    Two panels: left = domain ±15 μm, right = domain ±100 μm (same point density).
+    Each panel: ε'(x) on left axis (blue), ε''(x) exact and reconstructed on right axis (red).
+    Textbox shows NRMSE = 100 * RMS(recon − exact) / peak(exact).
+    """
+    A_lor = 5.0; gam_lor = 0.5; nb = S.nb
+    # ~0.001 um per point to resolve the gam=0.5 peak well
+    dx = 0.001
+    domains = [(-15, 15), (-100, 100)]
+    panel_labels = [r'$\mathbf{a}$', r'$\mathbf{b}$']
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+    for ax, (xlo, xhi), label in zip(axes, domains, panel_labels):
+        xx = np.arange(xlo, xhi + dx, dx)
+        ee = tmm_h.eps(xx, A_lor, gam_lor, nb)
+        e_re = ee.real
+        e_im_exact = ee.imag
+        e_im_recon = tmm_h.ht_derivative(xx, e_re)
+
+        nrmse = 100 * np.sqrt(np.mean((e_im_recon - e_im_exact)**2)) / np.max(e_im_exact)
+
+        ax_r = ax.twinx()
+        ax.plot(xx, e_re, color=BLUE, lw=1.5, label=r"$\epsilon'(x)$")
+        ax_r.plot(xx, e_im_exact, color=RED, lw=2, label=r"$\epsilon''(x)$")
+        ax_r.plot(xx, e_im_recon, color=ORANGE, lw=1.5, ls='--', label='HT')
+
+        ax.set_xlabel(r'$x$ ($\mu$m)')
+        ax.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+        ax_r.set_ylabel(r"$\epsilon''(x)$", color=RED)
+        ax.tick_params(axis='y', labelcolor=BLUE)
+        ax_r.tick_params(axis='y', labelcolor=RED)
+        ax.set_xlim(xlo, xhi)
+
+        ax.text(0.97, 0.97, f'NRMSE = {nrmse:.3f}%',
+                transform=ax.transAxes, fontsize=9, va='top', ha='right',
+                bbox=dict(boxstyle='round,pad=0.3', fc='white', ec='gray', alpha=0.8))
+        ax.text(-0.12, 1.0, label, transform=ax.transAxes, fontsize=14, va='top', ha='right')
+
+        lines1, labels1 = ax.get_legend_handles_labels()
+        lines2, labels2 = ax_r.get_legend_handles_labels()
+        ax.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/lorentz_ht_check.png', dpi=300)
+    plt.close()
+    print("Saved lorentz_ht_check: 2-panel Lorentzian deriv→HT→integ validation")
+
+
 def fig_endpoint_problem(S):
     """Figure 1b: Logistic GRIN profile with naive HT artifacts (single panel).
 
@@ -533,6 +584,42 @@ def fig_endpoint_problem(S):
     plt.savefig(f'{S.FIGDIR}/fig1b_logistic_naive_ht.png')
     plt.close()
     print("Saved fig1b: Logistic + naive HT")
+
+
+def fig_naive_ht_TMM(S):
+    """Validation: TMM on the naive HT profile from Fig 1b — confirms nonzero R (and possible gain).
+
+    Same profile as fig1b: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
+    Geometry: nb (semi-inf) | naive-HT coating | air (semi-inf), normal incidence.
+    A = 1-T-R; negative A indicates net gain from the coating.
+    """
+    k_fig = 4; nb = S.nb
+    xx = np.linspace(-2.5, 2.5, 5001)
+    e_re = (nb**2 - 1) / (1 + np.exp(k_fig * xx)) + 1
+    e_im_naive = np.imag(hilbert(e_re))
+    eps_naive = e_re + 1j * e_im_naive
+
+    nc_naive, dc_naive = tmm_h.discretize_profile(xx, eps_naive, delta=S.delta)
+    n_list = [nb] + list(nc_naive) + [1.0]
+    d_list = [np.inf] + list(dc_naive) + [np.inf]
+
+    lambda_list = np.linspace(1, 10, 300)
+    T, R, A = tmm_h.TRA_wavelength(n_list, d_list, lambda_list, angle=0, pol='s')
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.plot(lambda_list, T, color=BLUE, lw=2, label='T')
+    ax.plot(lambda_list, R, color=RED, lw=2, label='R')
+    ax.plot(lambda_list, A, color=ORANGE, lw=2, label=r'$A = 1 - T - R$')
+    ax.axhline(0, color='gray', lw=0.8, ls='--')
+    ax.set_xlabel(r'Wavelength ($\mu$m)')
+    ax.set_ylabel('Fraction')
+    ax.set_xlim(lambda_list[0], lambda_list[-1])
+    ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/fig1b_naive_ht_TMM.png', dpi=150)
+    plt.close()
+    print("Saved fig1b_naive_ht_TMM: naive HT profile T/R/A vs wavelength")
 
 
 def fig_derivative_result(S):
@@ -1775,7 +1862,9 @@ def fig_thick_colorplots(S):
 # ============================================================================
 FIGURE_MAP = {
     'fig1':  ('Lorentzian profile',            fig_lorentz_vs_grin),
+    'lorentz_ht_check': ('Lorentzian deriv→HT→integ validation', fig_lorentz_ht_check),
     'fig2':  ('Logistic + naive HT',          fig_endpoint_problem),
+    'fig2_tmm': ('Naive HT — TMM validation (T/R/A)', fig_naive_ht_TMM),
     'fig3':  ('Derivative method',            fig_derivative_result),
     'fig1d': ('Final profile (eps\' + eps\'\')', fig_final_profile),
     'fig3a': ('R_back vs wavelength, s-pol 80°',  fig3a_reflection_spol_80),
