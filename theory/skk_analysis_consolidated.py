@@ -558,6 +558,57 @@ def fig_lorentz_ht_check(S):
     print("Saved lorentz_ht_check: 2-panel Lorentzian deriv→HT→integ validation")
 
 
+def fig_supp_lorentzian(S):
+    """Supplemental: Lorentzian sKK profile + TMM TRA (2 panels).
+
+    Canonical example of sKK reflectionlessness for symmetric endpoints.
+    Panel (a): eps'(x) and eps''(x) for Lorentzian (both endpoints -> nb^2).
+    Panel (b): T/R/A vs wavelength, same sweep as fig1_4panel (1-10 um, 300 pts, s-pol, normal).
+    Geometry: nb (semi-inf) | Lorentzian layers | nb (semi-inf).
+    Parameters: A=0.5, gam=0.05 um, nb=S.nb, domain [-2.5, 2.5] um.
+    Saves to theory/figures/2026Apr27/fig_S7_lorentzian_2panel.png.
+    """
+    A_lor = 0.5; gam_lor = 0.05; nb = S.nb
+    xx_l = np.linspace(-2.5, 2.5, 5001)
+    ee_l = tmm_h.eps(xx_l, A_lor, gam_lor, nb)
+
+    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(13, 4.5))
+
+    ax_ar = ax_a.twinx()
+    ax_a.plot(xx_l, ee_l.real, color=BLUE, lw=2.5)
+    ax_ar.plot(xx_l, ee_l.imag, color=RED, lw=2.5)
+    ax_a.set_xlabel(r'$x$ ($\mu$m)')
+    ax_a.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax_ar.set_ylabel(r"$\epsilon''(x)$", color=RED)
+    ax_a.tick_params(axis='y', labelcolor=BLUE)
+    ax_ar.tick_params(axis='y', labelcolor=RED)
+    ax_a.set_xlim(-2.5, 2.5)
+    ax_a.text(-0.12, 1.0, r'$\mathbf{a}$', transform=ax_a.transAxes, fontsize=14, va='top', ha='right')
+
+    nc_l, dc_l = tmm_h.discretize_profile(xx_l, ee_l, delta=S.delta)
+    n_list = [nb] + list(nc_l) + [nb]
+    d_list = [np.inf] + list(dc_l) + [np.inf]
+    lambda_list = np.linspace(1, 10, 300)
+    T, R, A = tmm_h.TRA_wavelength(n_list, d_list, lambda_list, angle=0, pol='s')
+
+    ax_b.plot(lambda_list, T, color=BLUE, lw=2, label='$T$')
+    ax_b.plot(lambda_list, R, color=RED, lw=2, label='$R$')
+    ax_b.plot(lambda_list, A, color=ORANGE, lw=2, label=r'$A = 1 - T - R$')
+    ax_b.axhline(0, color='gray', lw=0.8, ls='--')
+    ax_b.set_xlabel(r'Wavelength ($\mu$m)')
+    ax_b.set_ylabel('Fraction')
+    ax_b.set_xlim(lambda_list[0], lambda_list[-1])
+    ax_b.legend(fontsize=10)
+    ax_b.text(-0.12, 1.0, r'$\mathbf{b}$', transform=ax_b.transAxes, fontsize=14, va='top', ha='right')
+
+    plt.tight_layout()
+    apr27 = os.path.join(S.FIGDIR, '2026Apr27')
+    os.makedirs(apr27, exist_ok=True)
+    plt.savefig(os.path.join(apr27, 'fig_S7_lorentzian_2panel.png'), dpi=150)
+    plt.close()
+    print("Saved fig_S7_lorentzian_2panel: Lorentzian profile + TRA")
+
+
 def fig_endpoint_problem(S):
     """Figure 1b: Logistic GRIN profile with naive HT artifacts (single panel).
 
@@ -653,8 +704,11 @@ def fig_derivative_result(S):
 
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/fig1c_derivative_method.png')
+    apr27 = os.path.join(S.FIGDIR, '2026Apr27')
+    os.makedirs(apr27, exist_ok=True)
+    plt.savefig(os.path.join(apr27, 'fig_S8_derivative_method.png'))
     plt.close()
-    print("Saved fig1c: Derivative method")
+    print("Saved fig1c: Derivative method (also saved to 2026Apr27/fig_S8_derivative_method.png)")
 
 
 def fig_final_profile(S):
@@ -696,6 +750,95 @@ def fig_final_profile(S):
     plt.savefig(f'{S.FIGDIR}/fig1d_final_result.png')
     plt.close()
     print("Saved fig1d: Final profile")
+
+
+def fig1_4panel(S):
+    """Figure 1 (main paper): 4-panel endpoint problem and solution.
+
+    (a) Logistic GRIN profile with naive HT eps'' — gain artifacts visible.
+    (b) TMM TRA of naive HT profile — T > 1, A < 0 confirm unphysical gain.
+    (c) Corrected eps'(x) + eps''(x) from derivative-then-integrate method.
+    (d) TMM TRA of corrected profile — T + A = 1, R ≈ 0.
+    Parameters: k_steep=4, nb=S.nb, domain [-2.5, 2.5] um, delta=S.delta.
+    Lambda sweep: 1-10 um, 300 pts, s-pol, normal incidence.
+    Geometry: nb (semi-inf) | coating | air (semi-inf).
+    Saves to S.FIGDIR/fig1_4panel.png and theory/figures/2026Apr27/fig1_4panel.png.
+    """
+    k_fig = 4; nb = S.nb
+    xx = np.linspace(-2.5, 2.5, 5001)
+    e_re = (nb**2 - 1) / (1 + np.exp(k_fig * xx)) + 1
+    e_im_naive = np.imag(hilbert(e_re))
+    e_im_corr = tmm_h.ht_derivative(xx, e_re)
+    lambda_list = np.linspace(1, 10, 300)
+
+    eps_naive = e_re + 1j * e_im_naive
+    nc_naive, dc_naive = tmm_h.discretize_profile(xx, eps_naive, delta=S.delta)
+    T_naive, R_naive, A_naive = tmm_h.TRA_wavelength(
+        [nb] + list(nc_naive) + [1.0], [np.inf] + list(dc_naive) + [np.inf],
+        lambda_list, angle=0, pol='s')
+
+    eps_corr = e_re + 1j * e_im_corr
+    nc_corr, dc_corr = tmm_h.discretize_profile(xx, eps_corr, delta=S.delta)
+    T_corr, R_corr, A_corr = tmm_h.TRA_wavelength(
+        [nb] + list(nc_corr) + [1.0], [np.inf] + list(dc_corr) + [np.inf],
+        lambda_list, angle=0, pol='s')
+
+    fig, axes = plt.subplots(2, 2, figsize=(13, 9))
+    (ax_a, ax_b), (ax_c, ax_d) = axes
+
+    # (a) naive HT profile
+    ax_ar = ax_a.twinx()
+    ax_a.plot(xx, e_re, color=BLUE, lw=2.5)
+    ax_ar.plot(xx, e_im_naive, color=RED, lw=2.5)
+    ax_a.set_xlabel(r'$x$ ($\mu$m)')
+    ax_a.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax_ar.set_ylabel(r"$\mathcal{H}[\epsilon'(x)]$", color=RED)
+    ax_a.tick_params(axis='y', labelcolor=BLUE)
+    ax_ar.tick_params(axis='y', labelcolor=RED)
+    ax_a.set_xlim(-2.5, 2.5)
+    ax_a.text(-0.12, 1.0, r'$\mathbf{a}$', transform=ax_a.transAxes, fontsize=14, va='top', ha='right')
+
+    # (b) TRA of naive HT
+    ax_b.plot(lambda_list, T_naive, color=BLUE, lw=2, label='$T$')
+    ax_b.plot(lambda_list, R_naive, color=RED, lw=2, label='$R$')
+    ax_b.plot(lambda_list, A_naive, color=ORANGE, lw=2, label=r'$A = 1 - T - R$')
+    ax_b.axhline(0, color='gray', lw=0.8, ls='--')
+    ax_b.set_xlabel(r'Wavelength ($\mu$m)')
+    ax_b.set_ylabel('Fraction')
+    ax_b.set_xlim(lambda_list[0], lambda_list[-1])
+    ax_b.legend(fontsize=10)
+    ax_b.text(-0.12, 1.0, r'$\mathbf{b}$', transform=ax_b.transAxes, fontsize=14, va='top', ha='right')
+
+    # (c) corrected profile
+    ax_cr = ax_c.twinx()
+    ax_c.plot(xx, e_re, color=BLUE, lw=2.5)
+    ax_cr.plot(xx, e_im_corr, color=RED, lw=2.5)
+    ax_c.set_xlabel(r'$x$ ($\mu$m)')
+    ax_c.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax_cr.set_ylabel(r"$\epsilon''(x)$", color=RED)
+    ax_c.tick_params(axis='y', labelcolor=BLUE)
+    ax_cr.tick_params(axis='y', labelcolor=RED)
+    ax_c.set_xlim(-2.5, 2.5)
+    ax_c.text(-0.12, 1.0, r'$\mathbf{c}$', transform=ax_c.transAxes, fontsize=14, va='top', ha='right')
+
+    # (d) TRA of corrected profile
+    ax_d.plot(lambda_list, T_corr, color=BLUE, lw=2, label='$T$')
+    ax_d.plot(lambda_list, R_corr, color=RED, lw=2, label='$R$')
+    ax_d.plot(lambda_list, A_corr, color=ORANGE, lw=2, label=r'$A = 1 - T - R$')
+    ax_d.axhline(0, color='gray', lw=0.8, ls='--')
+    ax_d.set_xlabel(r'Wavelength ($\mu$m)')
+    ax_d.set_ylabel('Fraction')
+    ax_d.set_xlim(lambda_list[0], lambda_list[-1])
+    ax_d.legend(fontsize=10)
+    ax_d.text(-0.12, 1.0, r'$\mathbf{d}$', transform=ax_d.transAxes, fontsize=14, va='top', ha='right')
+
+    plt.tight_layout()
+    apr27 = os.path.join(S.FIGDIR, '2026Apr27')
+    os.makedirs(apr27, exist_ok=True)
+    plt.savefig(os.path.join(apr27, 'fig1_4panel.png'), dpi=150)
+    plt.savefig(os.path.join(S.FIGDIR, 'fig1_4panel.png'), dpi=150)
+    plt.close()
+    print("Saved fig1_4panel: 4-panel main Figure 1")
 
 
 def fig3a_reflection_spol_80(S):
@@ -1861,12 +2004,15 @@ def fig_thick_colorplots(S):
 # Figure registry
 # ============================================================================
 FIGURE_MAP = {
-    'fig1':  ('Lorentzian profile',            fig_lorentz_vs_grin),
-    'lorentz_ht_check': ('Lorentzian deriv→HT→integ validation', fig_lorentz_ht_check),
-    'fig2':  ('Logistic + naive HT',          fig_endpoint_problem),
-    'fig2_tmm': ('Naive HT — TMM validation (T/R/A)', fig_naive_ht_TMM),
-    'fig3':  ('Derivative method',            fig_derivative_result),
-    'fig1d': ('Final profile (eps\' + eps\'\')', fig_final_profile),
+    'fig1':  ('Main Fig 1 — 4-panel endpoint problem + solution', fig1_4panel),
+    'supp_lorentz': ('Supp: Lorentzian profile + TRA (S7)',       fig_supp_lorentzian),
+    'supp_deriv':   ('Supp: Derivative method panel (S8)',         fig_derivative_result),
+    'lorentz_profile': ('Lorentzian profile (single panel)',       fig_lorentz_vs_grin),
+    'lorentz_ht_check': ('Lorentzian deriv→HT→integ validation',  fig_lorentz_ht_check),
+    'fig2':  ('Logistic + naive HT (single panel)',               fig_endpoint_problem),
+    'fig2_tmm': ('Naive HT — TMM validation (T/R/A)',             fig_naive_ht_TMM),
+    'fig3':  ('Derivative method (single panel)',                  fig_derivative_result),
+    'fig1d': ('Final profile (eps\' + eps\'\')',                   fig_final_profile),
     'fig3a': ('R_back vs wavelength, s-pol 80°',  fig3a_reflection_spol_80),
     'fig3b': ('Absorption vs wavelength, s-pol 80°', fig3b_absorption_spol_80),
     'fig3c': ('R_back vs angle, s-pol, λ=3um',  fig3c_angle_spol),
