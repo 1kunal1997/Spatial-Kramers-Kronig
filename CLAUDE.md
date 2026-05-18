@@ -34,12 +34,12 @@ python theory/skk_analysis_consolidated.py fig1 fig6 task1
 python theory/skk_analysis_consolidated.py --list
 
 # Save to a custom output directory (e.g. Overleaf):
-python theory/skk_analysis_consolidated.py --outdir sKK-Paper-Overleaf/figures fig6 fig7
+python theory/skk_analysis_consolidated.py --outdir sKK-Paper-Overleaf/figures alpha_tradeoff sigma_gating
 ```
 
-Available figure names: `fig1`–`fig10`, `loss_shapes`, `thick_shapes`, `task1`, `task2`, `task3`, `crossover`, `fom_spectrum`, `fom_method`, `profiles`, `thick_colorplots`.
+Available figure names: `profile_4panel`, `reflection_spol_80`, `absorption_spol_80`, `reflection_spol_angle`, `reflection_ppol_angle`, `alpha_tradeoff`, `sigma_gating`, `fom_intro`, `fom_comparison`, `fom_method`, `fom_spectrum`, `thickness_sweep`, `colorplots`, `thick_colorplots`, `loss_shapes`, `thick_shapes`, `thickness_sweep_shapes`, `losses_matched`, `crossover`, `profiles`, `naive_ht`, `naive_ht_tmm`, `derivative_method`, `final_profile`, `alt_geometry`, `lorentz_profile`, `lorentz_ht_check`, `supp_lorentz`, `supp_deriv`.
 
-Fig 1 (panels a–d) and Fig 3 (panels a–d) both use a 5 μm thick logistic coating (`k_steep=4`, domain `[-2.5, 2.5]` μm). Fig 1 shows the profile construction; Fig 3 shows the resulting TMM performance (`S.Rb_full_thick`, `S.Rb_grin_thick`, etc. from `setup()`).
+The `profile_4panel` and reflection panels (`reflection_spol_80`, etc.) both use a 5 μm thick logistic coating (`k_steep=4`, domain `[-2.5, 2.5]` μm). The profile_4panel shows the construction; the reflection panels show the resulting TMM performance (`S.Rb_full_thick`, `S.Rb_grin_thick`, etc. from `setup()`).
 
 For VS Code interactive mode: run `S = setup()` first, then call any figure function directly (e.g. `fig_alpha_tradeoff(S)`).
 
