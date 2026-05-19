@@ -48,7 +48,7 @@ TMM calculations use tmm_helper.TRA() for automatic coherent/incoherent
 layer classification.
 """
 
-import sys, os
+import sys, os, json
 from types import SimpleNamespace
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _PROJECT_ROOT)
@@ -1374,18 +1374,57 @@ def fig_thick_shapes(S):
         print(f"  {s_val:5.2f}  {R_vs_s_thick[idx]:10.5f}  {A_vs_s_thick[idx]:10.5f}")
 
 
-def fig_task1_colorplots(S):
-    """Fig.3: R_GRIN/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
-    print("\n=== FIG.3: GRIN/sKK COLORPLOTS ===")
+def _colorplot_cache_dir():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Data', 'colorplots')
 
-    k_color_vals = [80, 8, 1.6, 0.8]  # \u2192 0.5, 5, 25, 50 \u00b5m
-    color_angle_list = np.arange(0, 90, 1)
+
+def _colorplot_metadata(nb, delta, angle_list, lamdata, k_vals):
+    return dict(nb=nb, delta=delta,
+                angle_min=float(angle_list[0]), angle_max=float(angle_list[-1]),
+                angle_step=float(angle_list[1] - angle_list[0]),
+                lam_min=float(lamdata[0]), lam_max=float(lamdata[-1]),
+                n_lam=len(lamdata), k_vals=[float(k) for k in k_vals])
+
+
+def _colorplot_compute_and_cache(S, k_color_vals, color_angle_list, compute_grin=True,
+                                  compute_bulk=True):
+    """Compute sKK/GRIN/bulk 2D arrays with per-thickness caching.
+
+    Returns (Rb_skk_2D, Rb_grin_2D, Rb_bulk_2D, thicknesses) where
+    Rb_grin_2D/Rb_bulk_2D are None if not requested.
+    """
+    cache_dir = _colorplot_cache_dir()
+    os.makedirs(cache_dir, exist_ok=True)
     color_pols = ['s', 'p']
-    pol_labels = [r'$s$-polarization', r'$p$-polarization']
 
-    Rb_skk_2D = {pol_c: [] for pol_c in color_pols}
-    Rb_grin_2D = {pol_c: [] for pol_c in color_pols}
-    color_thicknesses = []
+    meta = _colorplot_metadata(S.nb, S.delta, color_angle_list, S.lamdata, k_color_vals)
+    meta_path = os.path.join(cache_dir, 'metadata.json')
+    if os.path.exists(meta_path):
+        with open(meta_path) as f:
+            old_meta = json.load(f)
+    else:
+        old_meta = {}
+    meta_match = (old_meta == meta)
+    with open(meta_path, 'w') as f:
+        json.dump(meta, f, indent=2)
+
+    Rb_skk_2D = {p: [] for p in color_pols}
+    Rb_grin_2D = {p: [] for p in color_pols} if compute_grin else None
+    Rb_bulk_2D = None
+    thicknesses = []
+
+    if compute_bulk:
+        Rb_bulk_2D = {}
+        for pol_c in color_pols:
+            cache_f = os.path.join(cache_dir, f'bulk_{pol_c}.npy')
+            if meta_match and os.path.exists(cache_f):
+                print(f"  [cache hit] bulk {pol_c}-pol")
+                Rb_bulk_2D[pol_c] = np.load(cache_f)
+            else:
+                print(f"  Computing bulk 2D ({pol_c}-pol)...")
+                Rb_bulk_2D[pol_c] = Rback_bulk_2D(S.ndata, S.kdata, S.lamdata,
+                                                   color_angle_list, pol_c)
+                np.save(cache_f, Rb_bulk_2D[pol_c])
 
     for k_c in k_color_vals:
         dx_c = 1 / (100 * k_c); xmin_c = -20 / k_c; xmax_c = -xmin_c
@@ -1394,20 +1433,53 @@ def fig_task1_colorplots(S):
         e_re_c = tmm_h.logistic(xx_c, k_c, S.nb)
         e_im_c = tmm_h.ht_derivative(xx_c, e_re_c)
         thickness_c = xmax_c - xmin_c
-        color_thicknesses.append(thickness_c)
+        thicknesses.append(thickness_c)
+        thick_tag = f'{thickness_c:.1f}um'
 
         nc_skk_c, dc_skk_c = tmm_h.discretize_profile(xx_c, e_re_c + 1j * e_im_c, delta=S.delta)
-        nc_grin_c, dc_grin_c = tmm_h.discretize_profile(xx_c, e_re_c + 0j, delta=S.delta)
+        if compute_grin:
+            nc_grin_c, dc_grin_c = tmm_h.discretize_profile(xx_c, e_re_c + 0j, delta=S.delta)
 
         for pol_c in color_pols:
-            print(f"  k={k_c} ({thickness_c:.1f} um), {pol_c}-pol: computing sKK 2D...")
-            Rb_s, _ = Rback_2D(nc_skk_c, dc_skk_c, S.ndata, S.kdata, S.lamdata,
-                               color_angle_list, pol_c)
-            Rb_skk_2D[pol_c].append(Rb_s)
-            print(f"  k={k_c} ({thickness_c:.1f} um), {pol_c}-pol: computing GRIN 2D...")
-            Rb_g, _ = Rback_2D(nc_grin_c, dc_grin_c, S.ndata, S.kdata, S.lamdata,
-                               color_angle_list, pol_c)
-            Rb_grin_2D[pol_c].append(Rb_g)
+            # sKK
+            cache_skk = os.path.join(cache_dir, f'skk_{pol_c}_{thick_tag}.npy')
+            if meta_match and os.path.exists(cache_skk):
+                print(f"  [cache hit] sKK {pol_c}-pol {thick_tag}")
+                Rb_skk_2D[pol_c].append(np.load(cache_skk))
+            else:
+                print(f"  k={k_c} ({thick_tag}), {pol_c}-pol: computing sKK 2D...")
+                Rb_s, _ = Rback_2D(nc_skk_c, dc_skk_c, S.ndata, S.kdata, S.lamdata,
+                                   color_angle_list, pol_c)
+                np.save(cache_skk, Rb_s)
+                Rb_skk_2D[pol_c].append(Rb_s)
+
+            # GRIN
+            if compute_grin:
+                cache_grin = os.path.join(cache_dir, f'grin_{pol_c}_{thick_tag}.npy')
+                if meta_match and os.path.exists(cache_grin):
+                    print(f"  [cache hit] GRIN {pol_c}-pol {thick_tag}")
+                    Rb_grin_2D[pol_c].append(np.load(cache_grin))
+                else:
+                    print(f"  k={k_c} ({thick_tag}), {pol_c}-pol: computing GRIN 2D...")
+                    Rb_g, _ = Rback_2D(nc_grin_c, dc_grin_c, S.ndata, S.kdata, S.lamdata,
+                                       color_angle_list, pol_c)
+                    np.save(cache_grin, Rb_g)
+                    Rb_grin_2D[pol_c].append(Rb_g)
+
+    return Rb_skk_2D, Rb_grin_2D, Rb_bulk_2D, thicknesses
+
+
+def fig_task1_colorplots(S):
+    """Fig.3: R_GRIN/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
+    print("\n=== FIG.3: GRIN/sKK COLORPLOTS ===")
+
+    k_color_vals = [80, 8, 40/15, 0.8]  # \u2192 0.5, 5, 15, 50 \u00b5m
+    color_angle_list = np.arange(0, 90, 1)
+    color_pols = ['s', 'p']
+    pol_labels = [r'$s$-polarization', r'$p$-polarization']
+
+    Rb_skk_2D, Rb_grin_2D, _, color_thicknesses = _colorplot_compute_and_cache(
+        S, k_color_vals, color_angle_list, compute_grin=True, compute_bulk=False)
 
     # ---- Single figure: R_GRIN / R_sKK ratio (2 rows x 4 cols) ----
     fig, axes = plt.subplots(2, 4, figsize=(14, 6))
@@ -1420,7 +1492,7 @@ def fig_task1_colorplots(S):
             im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
                                norm=norm, cmap='inferno', shading='auto')
             if row == 0:
-                ax.set_title(f'{thick_c:.1f} \u00b5m', fontsize=11)
+                ax.set_title(f'{thick_c:.1f} \u00b5m', fontsize=11, pad=4)
             if row < 1:
                 ax.set_xticklabels([])
             if col > 0:
@@ -1428,6 +1500,8 @@ def fig_task1_colorplots(S):
             if col == 0:
                 ax.set_ylabel(pol_labels[row], fontsize=10)
 
+    fig.text(0.45, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
+             fontweight='bold')
     fig.supxlabel('Angle of Incidence (degrees)', fontsize=12)
     fig.supylabel(r'Wavelength ($\mu$m)', fontsize=12)
     cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
@@ -1925,36 +1999,13 @@ def fig_thick_colorplots(S):
     """Fig.S5: R_bare/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
     print("\n=== FIG.S5: BARE/sKK COLORPLOTS ===")
 
-    k_color_vals = [80, 8, 1.6, 0.8]  # → 0.5, 5, 25, 50 µm
+    k_color_vals = [80, 8, 40/15, 0.8]  # → 0.5, 5, 15, 50 µm
     color_angle_list = np.arange(0, 90, 1)
     color_pols = ['s', 'p']
     pol_labels = [r'$s$-polarization', r'$p$-polarization']
 
-    Rb_bulk_2D = {}
-    for pol_c in color_pols:
-        print(f"  Computing bulk 2D ({pol_c}-pol)...")
-        Rb_bulk_2D[pol_c] = Rback_bulk_2D(S.ndata, S.kdata, S.lamdata,
-                                           color_angle_list, pol_c)
-
-    Rb_skk_2D = {pol_c: [] for pol_c in color_pols}
-    color_thicknesses = []
-
-    for k_c in k_color_vals:
-        dx_c = 1 / (100 * k_c); xmin_c = -20 / k_c; xmax_c = -xmin_c
-        nx_c = 1 + int(np.floor((xmax_c - xmin_c) / dx_c))
-        xx_c = np.linspace(xmin_c, xmax_c, nx_c)
-        e_re_c = tmm_h.logistic(xx_c, k_c, S.nb)
-        e_im_c = tmm_h.ht_derivative(xx_c, e_re_c)
-        thickness_c = xmax_c - xmin_c
-        color_thicknesses.append(thickness_c)
-
-        nc_skk_c, dc_skk_c = tmm_h.discretize_profile(xx_c, e_re_c + 1j * e_im_c, delta=S.delta)
-
-        for pol_c in color_pols:
-            print(f"  k={k_c} ({thickness_c:.1f} um), {pol_c}-pol: computing sKK 2D...")
-            Rb_s, _ = Rback_2D(nc_skk_c, dc_skk_c, S.ndata, S.kdata, S.lamdata,
-                               color_angle_list, pol_c)
-            Rb_skk_2D[pol_c].append(Rb_s)
+    Rb_skk_2D, _, Rb_bulk_2D, color_thicknesses = _colorplot_compute_and_cache(
+        S, k_color_vals, color_angle_list, compute_grin=False, compute_bulk=True)
 
     # ---- Single figure: R_bare / R_sKK ratio (2 rows x 4 cols) ----
     fig, axes = plt.subplots(2, 4, figsize=(14, 6))
@@ -1967,7 +2018,7 @@ def fig_thick_colorplots(S):
             im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
                                norm=norm, cmap='inferno', shading='auto')
             if row == 0:
-                ax.set_title(f'{thick_c:.1f} µm', fontsize=11)
+                ax.set_title(f'{thick_c:.1f} µm', fontsize=11, pad=4)
             if row < 1:
                 ax.set_xticklabels([])
             if col > 0:
@@ -1975,6 +2026,8 @@ def fig_thick_colorplots(S):
             if col == 0:
                 ax.set_ylabel(pol_labels[row], fontsize=10)
 
+    fig.text(0.45, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
+             fontweight='bold')
     fig.supxlabel('Angle of Incidence (degrees)', fontsize=12)
     fig.supylabel(r'Wavelength ($\mu$m)', fontsize=12)
     cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
