@@ -1375,20 +1375,14 @@ def fig_thick_shapes(S):
 
 
 def fig_task1_colorplots(S):
-    """Task 1: R_back 2D colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
-    print("\n=== TASK 1: 2D COLORPLOTS ===")
+    """Fig.3: R_GRIN/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
+    print("\n=== FIG.3: GRIN/sKK COLORPLOTS ===")
 
-    k_color_vals = [80, 40, 8, 4]
+    k_color_vals = [80, 8, 1.6, 0.8]  # \u2192 0.5, 5, 25, 50 \u00b5m
     color_angle_list = np.arange(0, 90, 1)
     color_pols = ['s', 'p']
+    pol_labels = [r'$s$-polarization', r'$p$-polarization']
 
-    # Pre-compute bulk reference (pol-dependent but coating-independent)
-    Rb_bulk_2D = {}
-    for pol_c in color_pols:
-        print(f"  Computing bulk 2D ({pol_c}-pol)...")
-        Rb_bulk_2D[pol_c] = Rback_bulk_2D(S.ndata, S.kdata, S.lamdata, color_angle_list, pol_c)
-
-    # For each thickness, compute sKK and GRIN 2D arrays
     Rb_skk_2D = {pol_c: [] for pol_c in color_pols}
     Rb_grin_2D = {pol_c: [] for pol_c in color_pols}
     color_thicknesses = []
@@ -1415,118 +1409,33 @@ def fig_task1_colorplots(S):
                                color_angle_list, pol_c)
             Rb_grin_2D[pol_c].append(Rb_g)
 
-    # ---- Figure A: R_back sKK colorplots (2 pols x 4 thicknesses) ----
-    fig_A, axes_A = plt.subplots(2, 4, figsize=(20, 8))
-    for col, (k_c, thick_c) in enumerate(zip(k_color_vals, color_thicknesses)):
-        for row, pol_c in enumerate(color_pols):
-            ax = axes_A[row, col]
-            data = Rb_skk_2D[pol_c][col]
-            im = ax.pcolormesh(color_angle_list, S.lamdata, data.T,
-                               norm=matplotlib.colors.LogNorm(vmin=1e-5, vmax=0.2),
-                               cmap='viridis', shading='auto')
-            plt.colorbar(im, ax=ax)
-            ax.set_xlabel('AoI (degrees)')
-            ax.set_ylabel(r'Wavelength ($\mu$m)')
-            ax.set_title(f'R_back,sKK \u2014 {thick_c:.1f} \u03bcm, {pol_c}-pol')
-            _annotate_geomean(ax, data)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_Rback_sKK.png', dpi=150)
-    plt.close()
-    print("  Saved fig_colorplot_Rback_sKK.png")
+    # ---- Single figure: R_GRIN / R_sKK ratio (2 rows x 4 cols) ----
+    fig, axes = plt.subplots(2, 4, figsize=(14, 6))
+    norm = matplotlib.colors.LogNorm(vmin=1, vmax=1e4)
 
-    # ---- Figure B: R_back GRIN colorplots ----
-    fig_B, axes_B = plt.subplots(2, 4, figsize=(20, 8))
-    for col, (k_c, thick_c) in enumerate(zip(k_color_vals, color_thicknesses)):
+    for col, thick_c in enumerate(color_thicknesses):
         for row, pol_c in enumerate(color_pols):
-            ax = axes_B[row, col]
-            data = Rb_grin_2D[pol_c][col]
-            im = ax.pcolormesh(color_angle_list, S.lamdata, data.T,
-                               norm=matplotlib.colors.LogNorm(vmin=1e-5, vmax=0.2),
-                               cmap='viridis', shading='auto')
-            plt.colorbar(im, ax=ax)
-            ax.set_xlabel('AoI (degrees)')
-            ax.set_ylabel(r'Wavelength ($\mu$m)')
-            ax.set_title(f'R_back,GRIN \u2014 {thick_c:.1f} \u03bcm, {pol_c}-pol')
-            _annotate_geomean(ax, data)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_Rback_GRIN.png', dpi=150)
-    plt.close()
-    print("  Saved fig_colorplot_Rback_GRIN.png")
-
-    # ---- Figure C: R_bulk / R_sKK ratio ----
-    fig_C, axes_C = plt.subplots(2, 4, figsize=(20, 8))
-    for col, (k_c, thick_c) in enumerate(zip(k_color_vals, color_thicknesses)):
-        for row, pol_c in enumerate(color_pols):
-            ax = axes_C[row, col]
-            ratio = Rb_bulk_2D[pol_c] / np.clip(Rb_skk_2D[pol_c][col], 1e-10, None)
-            im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
-                               norm=matplotlib.colors.LogNorm(vmin=1, vmax=1e4),
-                               cmap='viridis', shading='auto')
-            plt.colorbar(im, ax=ax)
-            ax.set_xlabel('AoI (degrees)')
-            ax.set_ylabel(r'Wavelength ($\mu$m)')
-            ax.set_title(f'R_bulk/R_sKK \u2014 {thick_c:.1f} \u03bcm, {pol_c}-pol')
-            _annotate_geomean(ax, ratio)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_ratio_bare_over_sKK.png', dpi=150)
-    plt.close()
-    print("  Saved fig_colorplot_ratio_bulk_over_sKK.png")
-
-    # ---- Figure D: R_GRIN / R_sKK ratio ----
-    fig_D, axes_D = plt.subplots(2, 4, figsize=(20, 8))
-    for col, (k_c, thick_c) in enumerate(zip(k_color_vals, color_thicknesses)):
-        for row, pol_c in enumerate(color_pols):
-            ax = axes_D[row, col]
+            ax = axes[row, col]
             ratio = Rb_grin_2D[pol_c][col] / np.clip(Rb_skk_2D[pol_c][col], 1e-10, None)
             im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
-                               norm=matplotlib.colors.LogNorm(vmin=1, vmax=1e4),
-                               cmap='viridis', shading='auto')
-            plt.colorbar(im, ax=ax)
-            ax.set_xlabel('AoI (degrees)')
-            ax.set_ylabel(r'Wavelength ($\mu$m)')
-            ax.set_title(f'R_GRIN/R_sKK \u2014 {thick_c:.1f} \u03bcm, {pol_c}-pol')
-            _annotate_geomean(ax, ratio)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_ratio_GRIN_over_sKK.png', dpi=150)
-    plt.close()
-    print("  Saved fig_colorplot_ratio_GRIN_over_sKK.png")
+                               norm=norm, cmap='inferno', shading='auto')
+            if row == 0:
+                ax.set_title(f'{thick_c:.1f} \u00b5m', fontsize=11)
+            if row < 1:
+                ax.set_xticklabels([])
+            if col > 0:
+                ax.set_yticklabels([])
+            if col == 0:
+                ax.set_ylabel(pol_labels[row], fontsize=10)
 
-    # ---- Figure E: R_bulk (no coating) colorplots ----
-    fig_E, axes_E = plt.subplots(1, 2, figsize=(12, 4))
-    for col, pol_c in enumerate(color_pols):
-        ax = axes_E[col]
-        data = Rb_bulk_2D[pol_c]
-        im = ax.pcolormesh(color_angle_list, S.lamdata, data.T,
-                           norm=matplotlib.colors.LogNorm(vmin=1e-5, vmax=0.2),
-                           cmap='viridis', shading='auto')
-        plt.colorbar(im, ax=ax)
-        ax.set_xlabel('AoI (degrees)')
-        ax.set_ylabel(r'Wavelength ($\mu$m)')
-        ax.set_title(f'R_bulk \u2014 {pol_c}-pol')
-        _annotate_geomean(ax, data)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_Rback_bulk.png', dpi=150)
+    fig.supxlabel('Angle of Incidence (degrees)', fontsize=12)
+    fig.supylabel(r'Wavelength ($\mu$m)', fontsize=12)
+    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
+    cbar.set_label(r'$R_{\mathrm{GRIN}} / R_{\mathrm{sKK}}$', fontsize=11)
+    plt.savefig(f'{S.FIGDIR}/colorplot_ratio_GRIN_over_sKK.png', dpi=150,
+                bbox_inches='tight')
     plt.close()
-    print("  Saved fig_colorplot_Rback_bulk.png")
-
-    # ---- Figure F: R_bulk / R_GRIN ratio ----
-    fig_F, axes_F = plt.subplots(2, 4, figsize=(20, 8))
-    for col, (k_c, thick_c) in enumerate(zip(k_color_vals, color_thicknesses)):
-        for row, pol_c in enumerate(color_pols):
-            ax = axes_F[row, col]
-            ratio = Rb_bulk_2D[pol_c] / np.clip(Rb_grin_2D[pol_c][col], 1e-10, None)
-            im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
-                               norm=matplotlib.colors.LogNorm(vmin=1, vmax=1e4),
-                               cmap='viridis', shading='auto')
-            plt.colorbar(im, ax=ax)
-            ax.set_xlabel('AoI (degrees)')
-            ax.set_ylabel(r'Wavelength ($\mu$m)')
-            ax.set_title(f'R_bulk/R_GRIN \u2014 {thick_c:.1f} \u03bcm, {pol_c}-pol')
-            _annotate_geomean(ax, ratio)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_ratio_bulk_over_GRIN.png', dpi=150)
-    plt.close()
-    print("  Saved fig_colorplot_ratio_bulk_over_GRIN.png")
+    print("  Saved colorplot_ratio_GRIN_over_sKK.png")
 
 
 def fig_task2_thickness_sweep(S):
@@ -2013,85 +1922,67 @@ def fig_profiles(S):
 
 
 def fig_thick_colorplots(S):
-    """Thick coating colorplots (50 µm and 100 µm): GRIN/sKK and bulk/GRIN ratios."""
-    print("\n=== THICK COATING COLORPLOTS (50/100 um) ===")
+    """Fig.S5: R_bare/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
+    print("\n=== FIG.S5: BARE/sKK COLORPLOTS ===")
 
+    k_color_vals = [80, 8, 1.6, 0.8]  # → 0.5, 5, 25, 50 µm
     color_angle_list = np.arange(0, 90, 1)
     color_pols = ['s', 'p']
-    k_vals = [0.8, 0.4]   # k=0.8 → 50 µm,  k=0.4 → 100 µm
+    pol_labels = [r'$s$-polarization', r'$p$-polarization']
 
-    # ---- Bulk (coating-independent) ----
-    Rb_bulk_2D_d = {}
+    Rb_bulk_2D = {}
     for pol_c in color_pols:
         print(f"  Computing bulk 2D ({pol_c}-pol)...")
-        Rb_bulk_2D_d[pol_c] = Rback_bulk_2D(S.ndata, S.kdata, S.lamdata,
-                                              color_angle_list, pol_c)
+        Rb_bulk_2D[pol_c] = Rback_bulk_2D(S.ndata, S.kdata, S.lamdata,
+                                           color_angle_list, pol_c)
 
-    # ---- sKK and GRIN for each thickness ----
     Rb_skk_2D = {pol_c: [] for pol_c in color_pols}
-    Rb_grin_2D = {pol_c: [] for pol_c in color_pols}
-    thicknesses = []
+    color_thicknesses = []
 
-    for k_c in k_vals:
-        dx_c = 1 / (100 * k_c)
-        xmin_c = -20 / k_c
-        nx_c = 1 + int(np.floor(-2 * xmin_c / dx_c))
-        xx_c = np.linspace(xmin_c, -xmin_c, nx_c)
+    for k_c in k_color_vals:
+        dx_c = 1 / (100 * k_c); xmin_c = -20 / k_c; xmax_c = -xmin_c
+        nx_c = 1 + int(np.floor((xmax_c - xmin_c) / dx_c))
+        xx_c = np.linspace(xmin_c, xmax_c, nx_c)
         e_re_c = tmm_h.logistic(xx_c, k_c, S.nb)
         e_im_c = tmm_h.ht_derivative(xx_c, e_re_c)
-        thicknesses.append(-2 * xmin_c)
+        thickness_c = xmax_c - xmin_c
+        color_thicknesses.append(thickness_c)
 
-        nc_skk_c, dc_skk_c = tmm_h.discretize_profile(xx_c, e_re_c + 1j * e_im_c,
-                                                        delta=S.delta)
-        nc_grin_c, dc_grin_c = tmm_h.discretize_profile(xx_c, e_re_c + 0j,
-                                                          delta=S.delta)
+        nc_skk_c, dc_skk_c = tmm_h.discretize_profile(xx_c, e_re_c + 1j * e_im_c, delta=S.delta)
+
         for pol_c in color_pols:
-            print(f"  k={k_c} ({-2*xmin_c:.0f} µm), {pol_c}-pol: sKK 2D...")
+            print(f"  k={k_c} ({thickness_c:.1f} um), {pol_c}-pol: computing sKK 2D...")
             Rb_s, _ = Rback_2D(nc_skk_c, dc_skk_c, S.ndata, S.kdata, S.lamdata,
                                color_angle_list, pol_c)
             Rb_skk_2D[pol_c].append(Rb_s)
-            print(f"  k={k_c} ({-2*xmin_c:.0f} µm), {pol_c}-pol: GRIN 2D...")
-            Rb_g, _ = Rback_2D(nc_grin_c, dc_grin_c, S.ndata, S.kdata, S.lamdata,
-                               color_angle_list, pol_c)
-            Rb_grin_2D[pol_c].append(Rb_g)
 
-    # ---- Figure 1: GRIN/sKK ratio (2×2) ----
-    fig1, axes1 = plt.subplots(2, 2, figsize=(12, 8))
-    for col, (k_c, thick_c) in enumerate(zip(k_vals, thicknesses)):
-        for row, pol_c in enumerate(color_pols):
-            ax = axes1[row, col]
-            ratio = Rb_grin_2D[pol_c][col] / np.clip(Rb_skk_2D[pol_c][col], 1e-10, None)
-            im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
-                               norm=matplotlib.colors.LogNorm(vmin=1, vmax=1e4),
-                               cmap='viridis', shading='auto')
-            plt.colorbar(im, ax=ax)
-            ax.set_xlabel('AoI (degrees)')
-            ax.set_ylabel(r'Wavelength ($\mu$m)')
-            ax.set_title(f'R_GRIN/R_sKK — {thick_c:.0f} µm, {pol_c}-pol')
-            _annotate_geomean(ax, ratio)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_ratio_GRIN_over_sKK_thick.png', dpi=150)
-    plt.close()
-    print("  Saved colorplot_ratio_GRIN_over_sKK_thick.png")
+    # ---- Single figure: R_bare / R_sKK ratio (2 rows x 4 cols) ----
+    fig, axes = plt.subplots(2, 4, figsize=(14, 6))
+    norm = matplotlib.colors.LogNorm(vmin=1, vmax=1e4)
 
-    # ---- Figure 2: bulk/GRIN ratio (2×2) ----
-    fig2, axes2 = plt.subplots(2, 2, figsize=(12, 8))
-    for col, (k_c, thick_c) in enumerate(zip(k_vals, thicknesses)):
+    for col, thick_c in enumerate(color_thicknesses):
         for row, pol_c in enumerate(color_pols):
-            ax = axes2[row, col]
-            ratio = Rb_bulk_2D_d[pol_c] / np.clip(Rb_grin_2D[pol_c][col], 1e-10, None)
+            ax = axes[row, col]
+            ratio = Rb_bulk_2D[pol_c] / np.clip(Rb_skk_2D[pol_c][col], 1e-10, None)
             im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
-                               norm=matplotlib.colors.LogNorm(vmin=1, vmax=1e4),
-                               cmap='viridis', shading='auto')
-            plt.colorbar(im, ax=ax)
-            ax.set_xlabel('AoI (degrees)')
-            ax.set_ylabel(r'Wavelength ($\mu$m)')
-            ax.set_title(f'R_bulk/R_GRIN — {thick_c:.0f} µm, {pol_c}-pol')
-            _annotate_geomean(ax, ratio)
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/colorplot_ratio_bulk_over_GRIN_thick.png', dpi=150)
+                               norm=norm, cmap='inferno', shading='auto')
+            if row == 0:
+                ax.set_title(f'{thick_c:.1f} µm', fontsize=11)
+            if row < 1:
+                ax.set_xticklabels([])
+            if col > 0:
+                ax.set_yticklabels([])
+            if col == 0:
+                ax.set_ylabel(pol_labels[row], fontsize=10)
+
+    fig.supxlabel('Angle of Incidence (degrees)', fontsize=12)
+    fig.supylabel(r'Wavelength ($\mu$m)', fontsize=12)
+    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
+    cbar.set_label(r'$R_{\mathrm{bare}} / R_{\mathrm{sKK}}$', fontsize=11)
+    plt.savefig(f'{S.FIGDIR}/colorplot_ratio_bare_over_sKK.png', dpi=150,
+                bbox_inches='tight')
     plt.close()
-    print("  Saved fig_colorplot_ratio_bulk_over_GRIN_thick.png")
+    print("  Saved colorplot_ratio_bare_over_sKK.png")
 
 
 # ============================================================================
@@ -2119,14 +2010,14 @@ FIGURE_MAP = {
     'thickness_sweep':   ('Thickness design space',                        fig_thickness_single),
     'loss_shapes':       ('Loss shape comparison',                         fig_loss_shapes),
     'thick_shapes':      ('Thick coating shapes',                          fig_thick_shapes),
-    'colorplots':        ('2D colorplots (angle × wavelength)',            fig_task1_colorplots),
+    'colorplots':        ('Fig.3: GRIN/sKK colorplots (4 thicknesses)',    fig_task1_colorplots),
     'thickness_sweep_shapes': ('Thickness sweep all shapes',               fig_task2_thickness_sweep),
     'losses_matched':    ('Losses-matched comparison',                     fig_task3_losses_matched),
     'crossover':         ('Spectral crossover (logistic + Lorentzian)',    fig_crossover),
     'fom_spectrum':      ('Spectral FoM plots (logistic + Lorentzian)',    fig_fom_spectrum),
     'fom_method':        ('Direct FT vs derivative method comparison',     fig_fom_method),
     'profiles':          ('Dielectric profile gallery (4 panels)',         fig_profiles),
-    'thick_colorplots':  ('Thick coating colorplots (50/100 um)',          fig_thick_colorplots),
+    'thick_colorplots':  ('Fig.S5: bare/sKK colorplots (4 thicknesses)',   fig_thick_colorplots),
 }
 
 
