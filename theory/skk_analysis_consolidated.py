@@ -1500,12 +1500,18 @@ def fig_task1_colorplots(S):
             if col == 0:
                 ax.set_ylabel(pol_labels[row], fontsize=10)
 
-    fig.text(0.45, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
-             fontweight='bold')
-    fig.supxlabel('Angle of Incidence (degrees)', fontsize=12)
-    fig.supylabel(r'Wavelength ($\mu$m)', fontsize=12)
     cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
     cbar.set_label(r'$R_{\mathrm{GRIN}} / R_{\mathrm{sKK}}$', fontsize=11)
+    fig.canvas.draw()
+    left = axes[0, 0].get_position().x0
+    right = axes[0, -1].get_position().x1
+    xc = (left + right) / 2
+    fig.text(xc, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
+             fontweight='bold')
+    fig.text(xc, 0.01, 'Angle of Incidence (degrees)', fontsize=12,
+             ha='center', va='bottom')
+    fig.text(left - 0.04, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
+             ha='center', va='center', rotation='vertical')
     plt.savefig(f'{S.FIGDIR}/colorplot_ratio_GRIN_over_sKK.png', dpi=150,
                 bbox_inches='tight')
     plt.close()
@@ -2026,12 +2032,18 @@ def fig_thick_colorplots(S):
             if col == 0:
                 ax.set_ylabel(pol_labels[row], fontsize=10)
 
-    fig.text(0.45, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
-             fontweight='bold')
-    fig.supxlabel('Angle of Incidence (degrees)', fontsize=12)
-    fig.supylabel(r'Wavelength ($\mu$m)', fontsize=12)
     cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
     cbar.set_label(r'$R_{\mathrm{bare}} / R_{\mathrm{sKK}}$', fontsize=11)
+    fig.canvas.draw()
+    left = axes[0, 0].get_position().x0
+    right = axes[0, -1].get_position().x1
+    xc = (left + right) / 2
+    fig.text(xc, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
+             fontweight='bold')
+    fig.text(xc, 0.01, 'Angle of Incidence (degrees)', fontsize=12,
+             ha='center', va='bottom')
+    fig.text(left - 0.04, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
+             ha='center', va='center', rotation='vertical')
     plt.savefig(f'{S.FIGDIR}/colorplot_ratio_bare_over_sKK.png', dpi=150,
                 bbox_inches='tight')
     plt.close()
