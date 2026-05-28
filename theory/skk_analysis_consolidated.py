@@ -4,38 +4,16 @@ Spatial KK Analysis — Consolidated Script
 All calculations and figure generation for the sKK AR coating paper.
 
 Usage:
-  # Run all figures:
-  python theory/skk_analysis_consolidated.py
-
-  # Run specific figures by name:
-  python theory/skk_analysis_consolidated.py fig1 fig6 task1
-
-  # List available figure names:
-  python theory/skk_analysis_consolidated.py --list
-
-  # Save to a custom output directory:
-  python theory/skk_analysis_consolidated.py --outdir sKK-Paper-Overleaf/figures fig6 fig7
+  python theory/skk_analysis_consolidated.py                     # run all
+  python theory/skk_analysis_consolidated.py profile_4panel colorplots  # specific figures
+  python theory/skk_analysis_consolidated.py --list              # list available names
+  python theory/skk_analysis_consolidated.py --outdir path/to/dir alpha_tradeoff
 
   # Interactive mode (VS Code #%% cells):
-  #   Run the "Setup" cell first, then run any individual figure cell.
+  #   Run S = setup() first, then call any figure function directly.
 
-Available figures:
-  fig1  — Lorentzian HT + GRIN periodic continuation (2-panel)
-  fig2  — Asymmetric endpoint problem (single curve: direct FFT)
-  fig3  — Derivative-then-integrate result (no textbox in a, lossy air in b)
-  fig4  — Backside reflection: sKK vs GRIN vs Bulk
-  fig5  — Spectral FoM introduction (single panel)
-  fig6  — R-A tradeoff with spectral FoM on twin axis
-  fig7  — Sigma gating: profiles + reflection (no bulk curve)
-  fig8  — FoM comparison: full sKK vs gated (both panels)
-  fig9  — Angle-resolved backside reflection
-  fig10 — Thickness design space (single panel)
-  loss_shapes       — Loss shape comparison (Batch 1 + Batch 2)
-  width_amplitude   — Width-amplitude tradeoff (thin coating)
-  thick_shapes      — Thick coating loss shapes + width-amplitude
-  task1 — R_back 2D colorplots (angle x wavelength, 4 thicknesses, 2 pols)
-  task2 — Thickness sweep for all loss shapes (4 parameter combos)
-  task3 — Losses-matched thin vs thick comparison
+Figure names are descriptive (no figure numbers — numbering lives only in the
+compiled LaTeX). Run --list to see available names and descriptions.
 
 Requirements:
   - numpy, scipy, matplotlib, tmm
@@ -60,7 +38,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import tmm
 import tmm_helper as tmm_h
-from scipy.signal import hilbert  # used directly in Figs 2-3 (naive HT demonstration)
+from scipy.signal import hilbert
 from scipy.ndimage import gaussian_filter1d
 from scipy.interpolate import interp1d
 
@@ -414,7 +392,7 @@ def setup(figdir=None):
                                                S.lamdata, S.angle_test, S.pol_test)
     S.Rb_bulk, S.A_bulk = Rback_bulk_wl(S.ndata, S.kdata, S.lamdata, S.angle_test, S.pol_test)
 
-    # ---- Thick coating (k_steep=4, [-2.5, 2.5] um = 5 um total; shared by fig1b-d and fig3a-d) ----
+    # ---- Thick coating (k_steep=4, [-2.5, 2.5] um = 5 um total; shared by profile_4panel and reflection panels) ----
     S.xx_thick_fig = np.linspace(-2.5, 2.5, 5001)
     S.e_re_thick_fig = (S.nb**2 - 1) / (1 + np.exp(4 * S.xx_thick_fig)) + 1
     S.e_im_thick_fig = tmm_h.ht_derivative(S.xx_thick_fig, S.e_re_thick_fig)
@@ -481,7 +459,7 @@ def setup(figdir=None):
 # ============================================================================
 
 def fig_lorentz_vs_grin(S):
-    """Figure 1a: Lorentzian sKK profile (single panel).
+    """Lorentzian sKK profile (single panel).
 
     Parameters: A=0.5, gamma=0.25 um, nb=1.7, domain [-2.5, 2.5] um.
     """
@@ -563,7 +541,7 @@ def fig_supp_lorentzian(S):
 
     Canonical example of sKK reflectionlessness for symmetric endpoints.
     Panel (a): eps'(x) and eps''(x) for Lorentzian (both endpoints -> nb^2).
-    Panel (b): T/R/A vs wavelength, same sweep as fig1_4panel (1-10 um, 300 pts, s-pol, normal).
+    Panel (b): T/R/A vs wavelength, same sweep as profile_4panel (1-10 um, 300 pts, s-pol, normal).
     Geometry: nb (semi-inf) | Lorentzian layers | nb (semi-inf).
     Parameters: A=0.5, gam=0.05 um, nb=S.nb, domain [-2.5, 2.5] um.
     Saves to theory/figures/2026Apr27/fig_S7_lorentzian_2panel.png.
@@ -610,7 +588,7 @@ def fig_supp_lorentzian(S):
 
 
 def fig_endpoint_problem(S):
-    """Figure 1b: Logistic GRIN profile with naive HT artifacts (single panel).
+    """Logistic GRIN profile with naive HT artifacts (single panel).
 
     Parameters: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
     """
@@ -634,13 +612,13 @@ def fig_endpoint_problem(S):
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/logistic_naive_ht.png')
     plt.close()
-    print("Saved fig1b: Logistic + naive HT")
+    print("Saved endpoint_problem: Logistic + naive HT")
 
 
 def fig_naive_ht_TMM(S):
-    """Validation: TMM on the naive HT profile from Fig 1b — confirms nonzero R (and possible gain).
+    """Validation: TMM on the naive HT profile — confirms nonzero R (and possible gain).
 
-    Same profile as fig1b: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
+    Same profile as endpoint_problem: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
     Geometry: nb (semi-inf) | naive-HT coating | air (semi-inf), normal incidence.
     A = 1-T-R; negative A indicates net gain from the coating.
     """
@@ -670,11 +648,11 @@ def fig_naive_ht_TMM(S):
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/naive_ht_TMM.png', dpi=150)
     plt.close()
-    print("Saved fig1b_naive_ht_TMM: naive HT profile T/R/A vs wavelength")
+    print("Saved naive_ht_tmm: naive HT profile T/R/A vs wavelength")
 
 
 def fig_derivative_result(S):
-    """Figure 1c: Derivative-then-integrate method — eps' and derivatives.
+    """Derivative-then-integrate method — eps' and derivatives.
 
     Parameters: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
     Left axis (blue): eps'(x).  Right axis (orange): d(eps')/dx (solid) and H[d(eps')/dx] (dashed).
@@ -711,7 +689,7 @@ def fig_derivative_result(S):
 
 
 def fig_final_profile(S):
-    """Figure 1d: Final eps'(x) + eps''(x) from derivative method with lossy air.
+    """Final eps'(x) + eps''(x) from derivative method with lossy air.
 
     Parameters: k_steep=4, nb=1.7, domain [-2.5, 2.5] um.
     """
@@ -748,11 +726,11 @@ def fig_final_profile(S):
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/final_profile.png')
     plt.close()
-    print("Saved fig1d: Final profile")
+    print("Saved final_profile")
 
 
-def fig1_4panel(S):
-    """Figure 1 (main paper): 4-panel endpoint problem and solution.
+def fig_profile_4panel(S):
+    """4-panel endpoint problem and solution.
 
     (a) Logistic GRIN profile with naive HT eps'' — gain artifacts visible.
     (b) TMM TRA of naive HT profile — T > 1, A < 0 confirm unphysical gain.
@@ -761,7 +739,6 @@ def fig1_4panel(S):
     Parameters: k_steep=4, nb=S.nb, domain [-2.5, 2.5] um, delta=S.delta.
     Lambda sweep: 1-10 um, 300 pts, s-pol, normal incidence.
     Geometry: nb (semi-inf) | coating | air (semi-inf).
-    Saves to S.FIGDIR/fig1_4panel.png and theory/figures/2026Apr27/fig1_4panel.png.
     """
     k_fig = 4; nb = S.nb
     xx = np.linspace(-2.5, 2.5, 5001)
@@ -837,12 +814,13 @@ def fig1_4panel(S):
     plt.savefig(os.path.join(apr27, 'profile_construction_4panel.png'), dpi=150)
     plt.savefig(os.path.join(S.FIGDIR, 'profile_construction_4panel.png'), dpi=150)
     plt.close()
-    print("Saved fig1_4panel: 4-panel main Figure 1")
+    print("Saved profile_construction_4panel")
 
 
-def fig3a_reflection_spol_80(S):
-    """R_back vs wavelength, s-pol 80°. Log scale.
-    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], M=2500, lam=2-5um, delta=0.1
+def fig_reflection_spol_80(S):
+    """R_back vs wavelength, s-pol 80°, log scale.
+    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=2-5um, delta=0.1.
+    Geometry: air | 5mm sapphire | coating | air.
     """
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
     ax.semilogy(S.lamdata, S.Rb_bulk, color='gray', lw=2, label='Bulk sapphire')
@@ -856,9 +834,10 @@ def fig3a_reflection_spol_80(S):
     plt.close(); print("Saved reflection_spol_80deg.png")
 
 
-def fig3b_absorption_spol_80(S):
+def fig_absorption_spol_80(S):
     """Absorption vs wavelength, s-pol 80°.
-    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], M=2500, lam=2-5um, delta=0.1
+    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=2-5um, delta=0.1.
+    Geometry: air | 5mm sapphire | coating | air.
     """
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
     ax.plot(S.lamdata, S.A_bulk, color='gray', lw=2, label='Bulk sapphire')
@@ -873,7 +852,7 @@ def fig3b_absorption_spol_80(S):
 
 
 def fig_fom_intro(S):
-    """Figure 5: Spectral FoM introduction — single panel."""
+    """Spectral FoM introduction — single panel."""
     fom_full, k_freq, power_d = tmm_h.skk_spectral_fom(
         S.xx_fom, S.e_re_fom, S.e_im_fom)
 
@@ -887,7 +866,9 @@ def fig_fom_intro(S):
 
 
 def fig_alpha_tradeoff(S):
-    """Figure 6: R-A tradeoff with spectral FoM on twin axis."""
+    """R-A tradeoff with spectral FoM on twin axis.
+    Geometry: air | 5mm sapphire | coating | air.
+    """
     alpha_list = np.linspace(0, 1, 40)
     R_vs_a = np.zeros(len(alpha_list))
     A_vs_a = np.zeros(len(alpha_list))
@@ -925,58 +906,86 @@ def fig_alpha_tradeoff(S):
 
 
 def fig_sigma_gating(S):
-    """Figure 7: Sigma gating — profiles + reflection (no bulk curve)."""
-    sigma_list = [None, 0.1, 0.01]
+    """Sigma gating — profiles + reflection.
+    Geometry: air | 5mm sapphire | coating | air.
+    Top row: single profile subplot with ε' and all three ε'' overlaid.
+    Bottom row: reflection subplot + absorption subplot, each with all 3 σ curves.
+    """
+    sigma_list = [None, 0.7, 0.1]
     n0_gate = 1.3
+    imag_colors = [RED, ORANGE, PURPLE]
 
-    fig, axes = plt.subplots(2, 3, figsize=(15, 7.5))
-    fig.subplots_adjust(hspace=0.35, wspace=0.45)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+    fig.subplots_adjust(wspace=0.45)
+
+    xx = S.xx_thick_fig
+    e_re = S.e_re_thick_fig
+    e_im_base = S.e_im_thick_fig.copy()
+
+    ax_prof = axes[0]
+    ax_prof2 = ax_prof.twinx()
+    ax_refl = axes[1]
+    ax_abs = axes[2]
+
+    ax_prof.plot(xx, e_re, color=BLUE, lw=2.5, label=r"$\epsilon'$")
+    ax_prof.set_xlabel(r'$x$ ($\mu$m)')
+    ax_prof.set_ylabel(r"$\epsilon'$", color=BLUE)
+    ax_prof.tick_params(axis='y', labelcolor=BLUE)
 
     for idx, sigma in enumerate(sigma_list):
-        e_im_base = S.e_im_deriv.copy()
         if sigma is not None:
-            gate = tmm_h.smooth_gate(S.e_re, n0_gate**2, sigma)
+            gate = tmm_h.smooth_gate(e_re, n0_gate**2, sigma)
             e_im_gated = e_im_base * gate
             label = f'$\\sigma$ = {sigma}'
         else:
-            e_im_gated = e_im_base
-            label = r'No gating ($\alpha=1$)'
+            e_im_gated = e_im_base.copy()
+            label = 'No gating'
 
-        # Top row: dielectric function
-        ax = axes[0, idx]; ax2t = ax.twinx()
-        ax.plot(S.xx, S.e_re, color=BLUE, lw=2.5)
-        ax2t.plot(S.xx, e_im_gated, color=RED, lw=2.5)
-        ax.set_xlabel(r'$x$ ($\mu$m)'); ax.set_ylabel(r"$\epsilon'$", color=BLUE)
-        ax2t.set_ylabel(r"$\epsilon''$", color=RED)
-        ax.set_title(label, fontsize=13, fontweight='bold')
-        ax.tick_params(axis='y', labelcolor=BLUE)
-        ax2t.tick_params(axis='y', labelcolor=RED)
-        sf = tmm_h.skk_spectral_fom(S.xx, S.e_re, e_im_gated)[0]
-        ax.text(0.97, 0.97, f'Spectral FoM:\n{sf:.1f}%',
-                transform=ax.transAxes, fontsize=9, va='top', ha='right',
-                bbox=dict(facecolor='wheat', alpha=0.7, boxstyle='round'))
+        col = imag_colors[idx]
 
-        # Bottom row: reflection (no bulk curve)
-        ax = axes[1, idx]
-        ee_g = S.e_re + 1j * e_im_gated
-        nc_g, dc_g = tmm_h.discretize_profile(S.xx, ee_g, delta=S.delta)
+        sf = tmm_h.skk_spectral_fom(xx, e_re, e_im_gated)[0]
+        ax_prof2.plot(xx, e_im_gated, color=col, lw=2, label=f"{label} (FoM {sf:.0f}%)")
+
+        ee_g = e_re + 1j * e_im_gated
+        nc_g, dc_g = tmm_h.discretize_profile(xx, ee_g, delta=S.delta)
         Rb_g, At_g = Rback_vs_wavelength(nc_g, dc_g, S.ndata, S.kdata, S.lamdata,
                                           S.angle_test, S.pol_test)
-        ax.plot(S.lamdata, Rb_g, color=GREEN, lw=2.5, label=r'$R_{\rm back}$')
-        ax.plot(S.lamdata, At_g, color=RED, lw=2.5, label='$A$')
-        ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel('Fraction of Power')
-        R_avg = np.trapezoid(Rb_g, S.lamdata)/(S.lamdata[-1]-S.lamdata[0])
-        A_avg = np.trapezoid(At_g, S.lamdata)/(S.lamdata[-1]-S.lamdata[0])
-        ax.set_title(f'$\\langle R \\rangle$={R_avg:.4f}, $\\langle A \\rangle$={A_avg:.4f}')
-        ax.legend(fontsize=9)
 
-    plt.savefig(f'{S.FIGDIR}/sigma_gating.png')
+        R_avg = np.trapezoid(Rb_g, S.lamdata) / (S.lamdata[-1] - S.lamdata[0])
+        A_avg = np.trapezoid(At_g, S.lamdata) / (S.lamdata[-1] - S.lamdata[0])
+
+        ax_refl.plot(S.lamdata, Rb_g, color=col, lw=2,
+                     label=f'{label} ($\\langle R \\rangle$={R_avg:.4f})')
+        ax_abs.plot(S.lamdata, At_g, color=col, lw=2,
+                    label=f'{label} ($\\langle A \\rangle$={A_avg:.4f})')
+
+    ax_prof2.set_ylabel(r"$\epsilon''$")
+    ax_prof2.legend(fontsize=9, loc='upper right')
+    ax_prof.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax_prof.transAxes,
+                 fontsize=14, va='top', ha='right')
+
+    ax_refl.set_xlabel(r'Wavelength ($\mu$m)')
+    ax_refl.set_ylabel('Fraction of Power')
+    ax_refl.set_title('Reflection')
+    ax_refl.legend(fontsize=9)
+    ax_refl.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax_refl.transAxes,
+                 fontsize=14, va='top', ha='right')
+
+    ax_abs.set_xlabel(r'Wavelength ($\mu$m)')
+    ax_abs.set_ylabel('Fraction of Power')
+    ax_abs.set_title('Absorption')
+    ax_abs.legend(fontsize=9)
+    ax_abs.text(-0.14, 1.0, r'$\mathbf{c}$', transform=ax_abs.transAxes,
+                fontsize=14, va='top', ha='right')
+
+    plt.tight_layout()
+    plt.savefig(f'{S.FIGDIR}/sigma_gating.png', dpi=150)
     plt.close()
     print("Saved fig 7: Sigma gating")
 
 
 def fig_fom_comparison(S):
-    """Figure 8: FoM comparison — full sKK vs gated (both panels)."""
+    """FoM comparison — full sKK vs gated (both panels)."""
     fom_full, k_freq, power_d = tmm_h.skk_spectral_fom(
         S.xx_fom, S.e_re_fom, S.e_im_fom)
 
@@ -997,9 +1006,10 @@ def fig_fom_comparison(S):
     print("Saved fig 8: FoM comparison")
 
 
-def fig3c_angle_spol(S):
-    """R_back vs angle, s-pol, λ=3um. Log scale.
-    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], M=2500, lam=3um, delta=0.1
+def fig_reflection_spol_angle(S):
+    """R_back vs angle, s-pol, λ=3um, log scale.
+    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=3um, delta=0.1.
+    Geometry: air | 5mm sapphire | coating | air.
     """
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
     ax.semilogy(S.angle_list_3um, S.Rb_bulk_3um_s, color='gray', lw=2, label='Bulk sapphire')
@@ -1013,9 +1023,10 @@ def fig3c_angle_spol(S):
     plt.close(); print("Saved reflection_spol_vs_angle.png")
 
 
-def fig3d_angle_ppol(S):
-    """R_back vs angle, p-pol, λ=3um. Log scale.
-    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], M=2500, lam=3um, delta=0.1
+def fig_reflection_ppol_angle(S):
+    """R_back vs angle, p-pol, λ=3um, log scale.
+    Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=3um, delta=0.1.
+    Geometry: air | 5mm sapphire | coating | air.
     """
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
     ax.semilogy(S.angle_list_3um, S.Rb_bulk_3um_p, color='gray', lw=2, label='Bulk sapphire')
@@ -1029,8 +1040,8 @@ def fig3d_angle_ppol(S):
     plt.close(); print("Saved reflection_ppol_vs_angle.png")
 
 
-def fig2_alt_substrate_free(S):
-    """Fig 2 alt: same sweeps as fig3a-d but substrate-free geometry.
+def fig_alt_substrate_free(S):
+    """Substrate-free alternative: same sweeps as reflection panels but without sapphire.
 
     Stack: n_b (semi-inf) | coating | air (semi-inf). No sapphire bulk.
     Angles specified in air, converted to angle in n_b via Snell's law.
@@ -1061,11 +1072,11 @@ def fig2_alt_substrate_free(S):
             R_arr[i] = R
         return R_arr
 
-    print("Computing fig2_alt wavelength sweeps...")
+    print("Computing alt_substrate_free wavelength sweeps...")
     R_grin_wl, _, A_grin_wl = _R_T_A_vs_wavelength(S.nc_grin_thick, S.dc_grin_thick, S.pol_test)
     R_skk_wl, _, A_skk_wl  = _R_T_A_vs_wavelength(S.nc_full_thick, S.dc_full_thick, S.pol_test)
 
-    print("Computing fig2_alt angle sweeps...")
+    print("Computing alt_substrate_free angle sweeps...")
     R_grin_ang_s = _R_vs_angle_air(S.nc_grin_thick, S.dc_grin_thick, lam3, 's')
     R_skk_ang_s  = _R_vs_angle_air(S.nc_full_thick, S.dc_full_thick, lam3, 's')
     R_grin_ang_p = _R_vs_angle_air(S.nc_grin_thick, S.dc_grin_thick, lam3, 'p')
@@ -1080,7 +1091,7 @@ def fig2_alt_substrate_free(S):
     ax.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/alt_reflection_spol_80deg.png', dpi=150)
-    plt.close(); print("Saved fig2_alt a: R vs wavelength (log)")
+    plt.close(); print("Saved alt_substrate_free: R vs wavelength (log)")
 
     # Panel b: Absorption vs wavelength
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
@@ -1091,7 +1102,7 @@ def fig2_alt_substrate_free(S):
     ax.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/alt_absorption_spol_80deg.png', dpi=150)
-    plt.close(); print("Saved fig2_alt b: Absorption vs wavelength")
+    plt.close(); print("Saved alt_substrate_free: Absorption vs wavelength")
 
     # Panel c: R vs angle, s-pol, lam=3 um
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
@@ -1102,7 +1113,7 @@ def fig2_alt_substrate_free(S):
     ax.text(-0.14, 1.0, r'$\mathbf{c}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/alt_reflection_spol_vs_angle.png', dpi=150)
-    plt.close(); print("Saved fig2_alt c: R vs angle, s-pol (log)")
+    plt.close(); print("Saved alt_substrate_free: R vs angle, s-pol (log)")
 
     # Panel d: R vs angle, p-pol, lam=3 um
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
@@ -1113,14 +1124,16 @@ def fig2_alt_substrate_free(S):
     ax.text(-0.14, 1.0, r'$\mathbf{d}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/alt_reflection_ppol_vs_angle.png', dpi=150)
-    plt.close(); print("Saved fig2_alt d: R vs angle, p-pol (log)")
+    plt.close(); print("Saved alt_substrate_free: R vs angle, p-pol (log)")
 
 
 def fig_thickness_single(S):
-    """Figure 10: Thickness design space — single panel."""
-    k_values = np.array([2, 3, 4, 5, 7, 10, 15, 20, 30, 50, 75, 100])
+    """Thickness design space — single panel.
+    Geometry: air | 5mm sapphire | coating | air.
+    """
+    k_values = np.array([0.2, 0.4, 0.5, 0.7, 1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20, 30, 40])
     thicknesses = []
-    R_grin_arr, R_skk_arr, R_gated_arr = [], [], []
+    R_grin_arr, R_skk_arr = [], []
     A_skk_arr = []
 
     for k_val in k_values:
@@ -1145,32 +1158,22 @@ def fig_thickness_single(S):
         R_skk_arr.append(np.trapezoid(Rb_fk, S.lamdata) / (S.lamdata[-1] - S.lamdata[0]))
         A_skk_arr.append(np.trapezoid(At_fk, S.lamdata) / (S.lamdata[-1] - S.lamdata[0]))
 
-        # Gated sKK (sigma=0.1)
-        gate_k = tmm_h.smooth_gate(e_re_k, 1.3**2, 0.1)
-        nc_gatk, dc_gatk = tmm_h.discretize_profile(xx_k, e_re_k + 1j*e_im_k*gate_k, delta=S.delta)
-        Rb_gatk, _ = Rback_vs_wavelength(nc_gatk, dc_gatk, S.ndata, S.kdata, S.lamdata,
-                                          S.angle_test, S.pol_test)
-        R_gated_arr.append(np.trapezoid(Rb_gatk, S.lamdata) / (S.lamdata[-1] - S.lamdata[0]))
-
-        print(f"  k={k_val:3d} ({thickness:.1f} um): R_GRIN={R_grin_arr[-1]:.4f}, "
-              f"R_sKK={R_skk_arr[-1]:.4f}, R_gated={R_gated_arr[-1]:.4f}")
+        print(f"  k={k_val:5.1f} ({thickness:.1f} um): R_GRIN={R_grin_arr[-1]:.6f}, "
+              f"R_sKK={R_skk_arr[-1]:.6f}")
 
     thicknesses = np.array(thicknesses)
     R_grin_arr = np.array(R_grin_arr)
     R_skk_arr = np.array(R_skk_arr)
-    R_gated_arr = np.array(R_gated_arr)
     A_skk_arr = np.array(A_skk_arr)
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 5.5))
     ax.axhline(S.Rb_avg_bulk, color='gray', lw=1.5, ls=':', label='Bulk sapphire', zorder=1)
     ax.plot(thicknesses, R_grin_arr, 'o-', color=BLUE, lw=2.5, ms=7, label='GRIN coating')
     ax.plot(thicknesses, R_skk_arr, 's-', color=GREEN, lw=2.5, ms=7, label='sKK coating')
-    ax.plot(thicknesses, R_gated_arr, '^-', color=PURPLE, lw=2.5, ms=7,
-            label=r'sKK gated ($\sigma$=0.1)')
     ax.set_xlabel(r'Coating thickness ($\mu$m)')
     ax.set_ylabel(r'$\langle R_{\rm back} \rangle$')
-    ax.set_title(r'Backside reflection vs coating thickness (s-pol, 80\u00b0, $\lambda$-averaged 2\u20135 $\mu$m)')
-    ax.set_xscale('log'); ax.set_xlim(0.3, 25)
+    ax.set_xscale('log'); ax.set_xlim(0.8, 250)
+    ax.set_yscale('log')
 
     # Second y-axis for sKK absorption
     ax2 = ax.twinx()
@@ -1182,21 +1185,28 @@ def fig_thickness_single(S):
     # Combined legend from both axes
     lines1, labels1 = ax.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax.legend(lines1 + lines2, labels1 + labels2, fontsize=10)
+    ax.legend(lines1 + lines2, labels1 + labels2, fontsize=10,
+              bbox_to_anchor=(0.97, 0.92), loc='upper right')
 
-    # Shaded regime regions
-    ax.axvspan(0.3, 1.5, alpha=0.08, color='red', zorder=0)
-    ax.axvspan(1.5, 6, alpha=0.08, color='yellow', zorder=0)
-    ax.axvspan(6, 25, alpha=0.08, color='green', zorder=0)
-    ax.text(0.7, 0.02, r'Sub-$\lambda$' + '\n(sKK regime)', fontsize=9,
+    # Shaded regime regions — 3 equal parts on log scale
+    xleft, xright = 0.8, 250
+    d1 = (xleft * xright**2)**(1/3)
+    d2 = (xleft**2 * xright)**(1/3)
+    ylims = ax.get_ylim()
+    ax.axvspan(xleft, d2, alpha=0.08, color='red', zorder=0)
+    ax.axvspan(d2, d1, alpha=0.08, color='yellow', zorder=0)
+    ax.axvspan(d1, xright, alpha=0.08, color='green', zorder=0)
+    ax.text(np.sqrt(xleft * d2), ylims[0]*2.5, r'Sub-$\lambda$' + '\n(sKK regime)', fontsize=9,
             ha='center', va='bottom', color='darkred')
-    ax.text(3.0, 0.02, 'Crossover', fontsize=9, ha='center', va='bottom', color='olive')
-    ax.text(12, 0.02, 'GRIN\nsufficient', fontsize=9, ha='center', va='bottom', color='darkgreen')
+    ax.text(np.sqrt(d2 * d1), ylims[0]*2.5, 'Crossover', fontsize=9,
+            ha='center', va='bottom', color='olive')
+    ax.text(np.sqrt(d1 * xright), ylims[0]*2.5, 'GRIN\nsufficient', fontsize=9,
+            ha='center', va='bottom', color='darkgreen')
 
     plt.tight_layout()
     plt.savefig(f'{S.FIGDIR}/thickness_sweep_single.png')
     plt.close()
-    print("Saved fig 10: Thickness design space")
+    print("Saved thickness_sweep_single")
 
 
 def fig_loss_shapes(S):
@@ -1469,14 +1479,16 @@ def _colorplot_compute_and_cache(S, k_color_vals, color_angle_list, compute_grin
     return Rb_skk_2D, Rb_grin_2D, Rb_bulk_2D, thicknesses
 
 
-def fig_task1_colorplots(S):
-    """Fig.3: R_GRIN/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
-    print("\n=== FIG.3: GRIN/sKK COLORPLOTS ===")
+def fig_colorplots(S):
+    """R_GRIN/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols).
+    Geometry: air | 5mm sapphire | coating | air.
+    """
+    print("\n=== GRIN/sKK COLORPLOTS ===")
 
     k_color_vals = [80, 8, 40/15, 0.8]  # \u2192 0.5, 5, 15, 50 \u00b5m
     color_angle_list = np.arange(0, 90, 1)
     color_pols = ['s', 'p']
-    pol_labels = [r'$s$-polarization', r'$p$-polarization']
+    pol_labels = [r'$\boldsymbol{s}$-polarization', r'$\boldsymbol{p}$-polarization']
 
     Rb_skk_2D, Rb_grin_2D, _, color_thicknesses = _colorplot_compute_and_cache(
         S, k_color_vals, color_angle_list, compute_grin=True, compute_bulk=False)
@@ -1484,65 +1496,79 @@ def fig_task1_colorplots(S):
     # ---- Single figure: R_GRIN / R_sKK ratio (2 rows x 4 cols) ----
     fig, axes = plt.subplots(2, 4, figsize=(14, 6))
     norm = matplotlib.colors.LogNorm(vmin=1, vmax=1e4)
+    cmap = matplotlib.cm.inferno.copy()
+    cmap.set_over('white')
 
     for col, thick_c in enumerate(color_thicknesses):
         for row, pol_c in enumerate(color_pols):
             ax = axes[row, col]
             ratio = Rb_grin_2D[pol_c][col] / np.clip(Rb_skk_2D[pol_c][col], 1e-10, None)
             im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
-                               norm=norm, cmap='inferno', shading='auto')
+                               norm=norm, cmap=cmap, shading='auto')
             if row == 0:
                 ax.set_title(f'{thick_c:.1f} \u00b5m', fontsize=11, pad=4)
             if row < 1:
                 ax.set_xticklabels([])
             if col > 0:
                 ax.set_yticklabels([])
-            if col == 0:
-                ax.set_ylabel(pol_labels[row], fontsize=10)
+            pass  # row labels added below via fig.text
 
-    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
+    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02, extend='max')
     cbar.set_label(r'$R_{\mathrm{GRIN}} / R_{\mathrm{sKK}}$', fontsize=11)
     fig.canvas.draw()
     left = axes[0, 0].get_position().x0
     right = axes[0, -1].get_position().x1
+    bottom = axes[1, 0].get_position().y0
     xc = (left + right) / 2
+    fig_w, fig_h = fig.get_size_inches()
+    # match y-label gap to x-label gap (x-label sits at y=0.01)
+    gap_y_fig = bottom - 0.01          # axes-bottom to x-label, in figure y-coords
+    gap_x_fig = gap_y_fig * fig_h / fig_w  # same physical distance in x-coords
     fig.text(xc, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
              fontweight='bold')
     fig.text(xc, 0.01, 'Angle of Incidence (degrees)', fontsize=12,
              ha='center', va='bottom')
-    fig.text(left - 0.04, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
+    fig.text(left - gap_x_fig, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
              ha='center', va='center', rotation='vertical')
+    for row, pol_c in enumerate(color_pols):
+        pos = axes[row, 0].get_position()
+        yc = (pos.y0 + pos.y1) / 2
+        fig.text(left - gap_x_fig * 1.8, yc, pol_labels[row], fontsize=13,
+                 fontweight='bold', ha='center', va='center', rotation='vertical')
     plt.savefig(f'{S.FIGDIR}/colorplot_ratio_GRIN_over_sKK.png', dpi=150,
                 bbox_inches='tight')
     plt.close()
     print("  Saved colorplot_ratio_GRIN_over_sKK.png")
 
 
-def fig_task2_thickness_sweep(S):
-    """Task 2: Thickness sweep for all loss shapes (4 parameter combos)."""
-    print("\n=== TASK 2: THICKNESS SWEEP - ALL LOSS SHAPES ===")
+def fig_thickness_sweep_shapes(S):
+    """Thickness sweep for all loss shapes (2x2 grid, single figure).
+    Geometry: air | 5mm sapphire | coating | air.
+    """
+    print("\n=== THICKNESS SWEEP - ALL LOSS SHAPES ===")
 
     sweep_configs = [
         dict(mode='wavelength', angle=80, pol='s', wavelength=None,
-             title_suffix=r's-pol, 80\u00b0, $\lambda$-averaged 2\u20135 $\mu$m',
-             fname='s80_wlavg'),
+             title=r's-pol, 80$^\circ$, $\lambda$-averaged',
+             fname='s80_wlavg', row=0, col=0),
         dict(mode='wavelength', angle=45, pol='p', wavelength=None,
-             title_suffix=r'p-pol, 45\u00b0, $\lambda$-averaged 2\u20135 $\mu$m',
-             fname='p45_wlavg'),
+             title=r'p-pol, 45$^\circ$, $\lambda$-averaged',
+             fname='p45_wlavg', row=0, col=1),
         dict(mode='angle', angle=None, pol='s', wavelength=3.0,
-             title_suffix=r's-pol, $\lambda$=3 $\mu$m, angle-averaged',
-             fname='s_lam3_angavg'),
+             title=r's-pol, $\lambda$ = 3 $\mu$m, angle-averaged',
+             fname='s_lam3_angavg', row=1, col=0),
         dict(mode='angle', angle=None, pol='p', wavelength=4.5,
-             title_suffix=r'p-pol, $\lambda$=4.5 $\mu$m, angle-averaged',
-             fname='p_lam4p5_angavg'),
+             title=r'p-pol, $\lambda$ = 4.5 $\mu$m, angle-averaged',
+             fname='p_lam4p5_angavg', row=1, col=1),
     ]
 
     k_values_shapes = np.array([2, 3, 4, 5, 7, 10, 15, 20, 30, 50, 75, 100])
-    shape_names_t2 = ['sKK (HT deriv)', 'Constant', 'Gaussian', 'Double peaks', 'Random']
+    shape_names_t2 = ['sKK', 'Constant', 'Gaussian', 'Double peaks', 'Random']
     shape_colors_t2 = [GREEN, RED, BLUE, PURPLE, ORANGE]
     shape_markers_t2 = ['s', 'o', '^', 'D', 'v']
     angle_avg_list = np.arange(0, 90, 1)
 
+    all_results = []
     for cfg in sweep_configs:
         print(f"\n  --- Thickness sweep: {cfg['fname']} ---")
         R_shapes_vs_k = {name: [] for name in shape_names_t2}
@@ -1593,26 +1619,66 @@ def fig_task2_thickness_sweep(S):
             Rb_bulk_cfg = Rback_bulk_angle(n_sub_cfg, angle_avg_list, cfg['wavelength'], cfg['pol'])
             Rb_avg_bulk_cfg = np.trapezoid(Rb_bulk_cfg, angle_avg_list) / (angle_avg_list[-1] - angle_avg_list[0])
 
-        fig_t2, ax_t2 = plt.subplots(1, 1, figsize=(9, 5.5))
-        ax_t2.axhline(Rb_avg_bulk_cfg, color='gray', lw=1.5, ls=':', label='Bulk sapphire', zorder=1)
+        all_results.append(dict(
+            cfg=cfg, thicknesses=thicknesses_t2,
+            R_shapes=R_shapes_vs_k, Rb_bulk=Rb_avg_bulk_cfg))
+
+    # ---- Single 2x2 figure (mirroring colorplot layout) ----
+    fig, axes = plt.subplots(2, 2, figsize=(12, 9),
+                             gridspec_kw={'wspace': 0.20, 'hspace': 0.45})
+
+    for res in all_results:
+        cfg = res['cfg']
+        ax = axes[cfg['row'], cfg['col']]
+        ax.axhline(res['Rb_bulk'], color='gray', lw=1.5, ls=':', zorder=1)
         for name, col, mk in zip(shape_names_t2, shape_colors_t2, shape_markers_t2):
-            ax_t2.plot(thicknesses_t2, R_shapes_vs_k[name], f'{mk}-', color=col,
-                       lw=2, ms=6, label=name)
-        ax_t2.set_xlabel(r'Coating thickness ($\mu$m)')
-        ax_t2.set_ylabel(r'$\langle R_{\rm back} \rangle$')
-        ax_t2.set_title(f'Thickness sweep \u2014 all loss shapes ({cfg["title_suffix"]})')
-        ax_t2.set_xscale('log')
-        ax_t2.set_yscale('log')
-        ax_t2.legend(fontsize=10, loc='best')
-        plt.tight_layout()
-        plt.savefig(f'{S.FIGDIR}/thickness_sweep_all_shapes_{cfg["fname"]}.png', dpi=150)
-        plt.close()
-        print(f"  Saved thickness_sweep_all_shapes_{cfg['fname']}.png")
+            ax.plot(res['thicknesses'], res['R_shapes'][name], f'{mk}-', color=col,
+                    lw=2, ms=6)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_title(cfg['title'], fontsize=11, pad=4)
+        if cfg['row'] < 1:
+            ax.tick_params(labelbottom=False)
+
+    # Common axis labels via fig.text (same approach as colorplots)
+    fig.canvas.draw()
+    left = axes[0, 0].get_position().x0
+    right = axes[0, -1].get_position().x1
+    bottom = axes[1, 0].get_position().y0
+    xc = (left + right) / 2
+    fig_w, fig_h = fig.get_size_inches()
+    gap_y_fig = bottom - 0.01
+    gap_x_fig = gap_y_fig * fig_h / fig_w
+    fig.text(xc, 0.01, r'Coating Thickness ($\mu$m)', fontsize=12,
+             ha='center', va='bottom')
+    fig.text(left - gap_x_fig, 0.5, r'$\langle R_{\rm back} \rangle$', fontsize=12,
+             ha='center', va='center', rotation='vertical')
+
+    # Centered legend in the gap between the 2x2 subplots
+    handles = [plt.Line2D([], [], color='gray', lw=1.5, ls=':', label='Bulk sapphire')]
+    for name, clr, mk in zip(shape_names_t2, shape_colors_t2, shape_markers_t2):
+        handles.append(plt.Line2D([], [], color=clr, marker=mk, lw=2, ms=6, label=name))
+    top_row_bottom = axes[0, 0].get_position().y0
+    bot_row_top = axes[1, 0].get_position().y1
+    left_col_right = axes[0, 0].get_position().x1
+    right_col_left = axes[0, 1].get_position().x0
+    leg_x = (left_col_right + right_col_left) / 2
+    leg_y = (top_row_bottom + bot_row_top) / 2
+    fig.legend(handles=handles, loc='center', fontsize=9, ncol=2,
+               framealpha=0.9, edgecolor='gray',
+               bbox_to_anchor=(leg_x, leg_y))
+
+    plt.savefig(f'{S.FIGDIR}/shapes_thickness_sweep.png', dpi=150,
+                bbox_inches='tight')
+    plt.close()
+    print("  Saved shapes_thickness_sweep.png")
 
 
-def fig_task3_losses_matched(S):
-    """Task 3: Losses-matched thin vs thick comparison."""
-    print("\n=== TASK 3: LOSSES-MATCHED THIN vs THICK ===")
+def fig_losses_matched(S):
+    """Losses-matched thin vs thick comparison.
+    Geometry: air | 5mm sapphire | coating | air.
+    """
+    print("\n=== LOSSES-MATCHED THIN vs THICK ===")
 
     sweep_configs = [
         dict(mode='wavelength', angle=80, pol='s', wavelength=None,
@@ -2002,13 +2068,15 @@ def fig_profiles(S):
 
 
 def fig_thick_colorplots(S):
-    """Fig.S5: R_bare/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols)."""
+    """R_bare/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols).
+    Geometry: air | 5mm sapphire | coating | air.
+    """
     print("\n=== FIG.S5: BARE/sKK COLORPLOTS ===")
 
     k_color_vals = [80, 8, 40/15, 0.8]  # → 0.5, 5, 15, 50 µm
     color_angle_list = np.arange(0, 90, 1)
     color_pols = ['s', 'p']
-    pol_labels = [r'$s$-polarization', r'$p$-polarization']
+    pol_labels = [r'$\boldsymbol{s}$-polarization', r'$\boldsymbol{p}$-polarization']
 
     Rb_skk_2D, _, Rb_bulk_2D, color_thicknesses = _colorplot_compute_and_cache(
         S, k_color_vals, color_angle_list, compute_grin=False, compute_bulk=True)
@@ -2016,34 +2084,44 @@ def fig_thick_colorplots(S):
     # ---- Single figure: R_bare / R_sKK ratio (2 rows x 4 cols) ----
     fig, axes = plt.subplots(2, 4, figsize=(14, 6))
     norm = matplotlib.colors.LogNorm(vmin=1, vmax=1e4)
+    cmap = matplotlib.cm.inferno.copy()
+    cmap.set_over('white')
 
     for col, thick_c in enumerate(color_thicknesses):
         for row, pol_c in enumerate(color_pols):
             ax = axes[row, col]
             ratio = Rb_bulk_2D[pol_c] / np.clip(Rb_skk_2D[pol_c][col], 1e-10, None)
             im = ax.pcolormesh(color_angle_list, S.lamdata, ratio.T,
-                               norm=norm, cmap='inferno', shading='auto')
+                               norm=norm, cmap=cmap, shading='auto')
             if row == 0:
                 ax.set_title(f'{thick_c:.1f} µm', fontsize=11, pad=4)
             if row < 1:
                 ax.set_xticklabels([])
             if col > 0:
                 ax.set_yticklabels([])
-            if col == 0:
-                ax.set_ylabel(pol_labels[row], fontsize=10)
+            pass  # row labels added below via fig.text
 
-    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
+    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02, extend='max')
     cbar.set_label(r'$R_{\mathrm{bare}} / R_{\mathrm{sKK}}$', fontsize=11)
     fig.canvas.draw()
     left = axes[0, 0].get_position().x0
     right = axes[0, -1].get_position().x1
+    bottom = axes[1, 0].get_position().y0
     xc = (left + right) / 2
+    fig_w, fig_h = fig.get_size_inches()
+    gap_y_fig = bottom - 0.01
+    gap_x_fig = gap_y_fig * fig_h / fig_w
     fig.text(xc, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
              fontweight='bold')
     fig.text(xc, 0.01, 'Angle of Incidence (degrees)', fontsize=12,
              ha='center', va='bottom')
-    fig.text(left - 0.04, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
+    fig.text(left - gap_x_fig, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
              ha='center', va='center', rotation='vertical')
+    for row, pol_c in enumerate(color_pols):
+        pos = axes[row, 0].get_position()
+        yc = (pos.y0 + pos.y1) / 2
+        fig.text(left - gap_x_fig * 1.8, yc, pol_labels[row], fontsize=13,
+                 fontweight='bold', ha='center', va='center', rotation='vertical')
     plt.savefig(f'{S.FIGDIR}/colorplot_ratio_bare_over_sKK.png', dpi=150,
                 bbox_inches='tight')
     plt.close()
@@ -2054,7 +2132,7 @@ def fig_thick_colorplots(S):
 # Figure registry
 # ============================================================================
 FIGURE_MAP = {
-    'profile_4panel':    ('4-panel endpoint problem + solution',           fig1_4panel),
+    'profile_4panel':    ('4-panel endpoint problem + solution',           fig_profile_4panel),
     'supp_lorentz':      ('Supp: Lorentzian profile + TRA',               fig_supp_lorentzian),
     'supp_deriv':        ('Supp: Derivative method panel',                 fig_derivative_result),
     'lorentz_profile':   ('Lorentzian profile (single panel)',             fig_lorentz_vs_grin),
@@ -2063,11 +2141,11 @@ FIGURE_MAP = {
     'naive_ht_tmm':      ('Naive HT — TMM validation (T/R/A)',            fig_naive_ht_TMM),
     'derivative_method': ('Derivative method (single panel)',              fig_derivative_result),
     'final_profile':     ('Final profile (eps\' + eps\'\')',               fig_final_profile),
-    'reflection_spol_80':    ('R_back vs wavelength, s-pol 80°',           fig3a_reflection_spol_80),
-    'absorption_spol_80':    ('Absorption vs wavelength, s-pol 80°',       fig3b_absorption_spol_80),
-    'reflection_spol_angle': ('R_back vs angle, s-pol, λ=3um',            fig3c_angle_spol),
-    'reflection_ppol_angle': ('R_back vs angle, p-pol, λ=3um',            fig3d_angle_ppol),
-    'alt_geometry':      ('Substrate-free geometry (4 panels)',             fig2_alt_substrate_free),
+    'reflection_spol_80':    ('R_back vs wavelength, s-pol 80°',           fig_reflection_spol_80),
+    'absorption_spol_80':    ('Absorption vs wavelength, s-pol 80°',       fig_absorption_spol_80),
+    'reflection_spol_angle': ('R_back vs angle, s-pol, λ=3um',            fig_reflection_spol_angle),
+    'reflection_ppol_angle': ('R_back vs angle, p-pol, λ=3um',            fig_reflection_ppol_angle),
+    'alt_geometry':      ('Substrate-free geometry (4 panels)',             fig_alt_substrate_free),
     'fom_intro':         ('FoM intro (single panel)',                      fig_fom_intro),
     'alpha_tradeoff':    ('Alpha tradeoff',                                fig_alpha_tradeoff),
     'sigma_gating':      ('Sigma gating',                                  fig_sigma_gating),
@@ -2075,14 +2153,14 @@ FIGURE_MAP = {
     'thickness_sweep':   ('Thickness design space',                        fig_thickness_single),
     'loss_shapes':       ('Loss shape comparison',                         fig_loss_shapes),
     'thick_shapes':      ('Thick coating shapes',                          fig_thick_shapes),
-    'colorplots':        ('Fig.3: GRIN/sKK colorplots (4 thicknesses)',    fig_task1_colorplots),
-    'thickness_sweep_shapes': ('Thickness sweep all shapes',               fig_task2_thickness_sweep),
-    'losses_matched':    ('Losses-matched comparison',                     fig_task3_losses_matched),
+    'colorplots':        ('GRIN/sKK colorplots (4 thicknesses)',            fig_colorplots),
+    'thickness_sweep_shapes': ('Thickness sweep all shapes',               fig_thickness_sweep_shapes),
+    'losses_matched':    ('Losses-matched comparison',                     fig_losses_matched),
     'crossover':         ('Spectral crossover (logistic + Lorentzian)',    fig_crossover),
     'fom_spectrum':      ('Spectral FoM plots (logistic + Lorentzian)',    fig_fom_spectrum),
     'fom_method':        ('Direct FT vs derivative method comparison',     fig_fom_method),
     'profiles':          ('Dielectric profile gallery (4 panels)',         fig_profiles),
-    'thick_colorplots':  ('Fig.S5: bare/sKK colorplots (4 thicknesses)',   fig_thick_colorplots),
+    'thick_colorplots':  ('bare/sKK colorplots (4 thicknesses)',            fig_thick_colorplots),
 }
 
 
