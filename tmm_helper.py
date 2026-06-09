@@ -449,13 +449,33 @@ def eps_plot(xx, ee, xq, e_list, gam, a, nb, zoomed):
     ax.stairs(e_imag, xq, baseline=0, label='discrete', linewidth = 2)
     plot(fig,ax, midpoints, e_imag, '*', markersize=7, label='inputs', color=colors.green,auto_scale=True)
 
-def smooth_gate(eps_re, eps0, sigma):
+def smooth_gate(eps_re, eps0, sigma, eps_im=None, one_sided=False):
     """Smooth tanh gate on ε'(x): ~1 where ε' > ε₀, ~0 where ε' < ε₀.
 
     eps0: threshold (e.g., n0**2)
     sigma: softness of transition (smaller = harder cutoff)
+    eps_im: ε''(x) array, only needed when one_sided=True (locates the peak)
+    one_sided: if True, return a clamped one-sided gate that preserves the
+        ε'' peak amplitude. A symmetric tanh centered at ε₀ attenuates the
+        peak because the peak sits right at the ε'=ε₀ crossing. Here the gate
+        is anchored to the ε'' peak: it is clamped to 1 on the bulk side of
+        the peak (ε' ≥ ε'_peak) and only rolls off smoothly on the air side
+        (ε' < ε'_peak), so the peak is left at full height.
     """
-    return 0.5 * (1.0 + np.tanh((eps_re - eps0) / sigma))
+    g = 0.5 * (1.0 + np.tanh((eps_re - eps0) / sigma))
+    if one_sided:
+        if eps_im is None:
+            raise ValueError("one_sided=True requires eps_im to locate the ε'' peak")
+        ipk = int(np.argmax(np.abs(eps_im)))
+        # Pin the gate to 1 at the ε'' peak and to 0 at the air asymptote
+        # (lowest ε'), then clamp. tanh is monotonic in ε', so g.min() is the
+        # air-side value. This (a) preserves the peak amplitude that a
+        # symmetric gate would attenuate, and (b) lets the air-side tail decay
+        # all the way to zero instead of saturating at tanh's finite floor.
+        g_air = float(np.min(g))
+        g_pk = g[ipk]
+        g = np.clip((g - g_air) / (g_pk - g_air), 0.0, 1.0)
+    return g
   
 def HT_help(k=8, nb=1.7, sx=1, delta=0.05, alpha=None, sigma=None, n0=1.3, plot_flag=True, zoomed=False, M=2000):
     """Generate sKK logistic coating profile and discretize into TMM layers.

@@ -7,6 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a nanophotonics computational research project investigating the
 **spatial Kramers-Kronig (sKK) relations** originally developed by Horsley et al. (2015). The broad goal is to either extend the theory (for example, zero and unit transmission cases by King, Horsley, Philbin in 2017), or find applications of this phenomena, such as anti-reflection (AR) coatings, thermal emission/absorption asymmetry, perfect absorbers, etc. The calculations of the transmission, absorption and reflection of multilayer materials/coatings are performed using Transfer Matrix Method (TMM) simulations.
 
+## The Paper
+
+When the user refers to "the paper," it means the LaTeX source in `sKK-Paper-Overleaf/main.tex` (and `supplementary.tex`). Figure numbering follows the compiled paper order, not the internal function names in `consolidated.py`. Always check `main.tex` to identify which figure the user is referring to.
+
 ## Running Code
 
 This is a pure Python research project — no build system. Run scripts directly:
@@ -28,7 +32,7 @@ For interactive work, use VS Code interactive mode (#%%) .
 python theory/skk_analysis_consolidated.py
 
 # Run specific figures by name:
-python theory/skk_analysis_consolidated.py fig1 fig6 task1
+python theory/skk_analysis_consolidated.py profile_4panel alpha_tradeoff colorplots
 
 # List available figure names:
 python theory/skk_analysis_consolidated.py --list

@@ -198,6 +198,57 @@ def Rback_bulk_2D(ndata, kdata, lamdata, angle_list_deg, pol):
     return Rb
 
 
+# ============================================================================
+# No-bulk TMM helpers: nb(inf) | coating | air(inf)
+# ============================================================================
+def _angle_air_to_nb(angle_air_deg, nb):
+    return np.arcsin(np.sin(np.radians(angle_air_deg)) / nb)
+
+
+def R_nobulk_vs_wavelength(n_coating, d_coating, nb, lamdata, angle_air_deg, pol):
+    """R vs wavelength.  Stack: nb(inf) | coating | air(inf)."""
+    angle_nb = _angle_air_to_nb(angle_air_deg, nb)
+    n_t = [nb] + list(n_coating) + [1.0]
+    d_t = [np.inf] + list(d_coating) + [np.inf]
+    R = np.zeros(len(lamdata))
+    for i, wl in enumerate(lamdata):
+        _, Ri, _ = tmm_h.TRA(n_t, d_t, lamb=wl, angle=angle_nb, pol=pol)
+        R[i] = Ri
+    return R
+
+
+def R_nobulk_vs_angle(n_coating, d_coating, nb, angle_list_air_deg, lam, pol):
+    """R vs angle.  Stack: nb(inf) | coating | air(inf)."""
+    n_t = [nb] + list(n_coating) + [1.0]
+    d_t = [np.inf] + list(d_coating) + [np.inf]
+    R = np.zeros(len(angle_list_air_deg))
+    for i, ang in enumerate(angle_list_air_deg):
+        angle_nb = _angle_air_to_nb(ang, nb)
+        _, Ri, _ = tmm_h.TRA(n_t, d_t, lamb=lam, angle=angle_nb, pol=pol)
+        R[i] = Ri
+    return R
+
+
+def R_bare_interface(nb, angle_air_deg, pol):
+    """Fresnel R at bare nb|air interface."""
+    angle_nb = _angle_air_to_nb(angle_air_deg, nb)
+    th_f = tmm.snell(nb, 1, angle_nb)
+    return tmm.interface_R(pol, nb, 1, angle_nb, th_f)
+
+
+def R_nobulk_2D(n_coating, d_coating, nb, lamdata, angle_list_air_deg, pol):
+    """R on a 2D (angle x wavelength) grid.  Stack: nb(inf) | coating | air(inf)."""
+    R = np.zeros((len(angle_list_air_deg), len(lamdata)))
+    n_t = [nb] + list(n_coating) + [1.0]
+    d_t = [np.inf] + list(d_coating) + [np.inf]
+    for i, ang in enumerate(angle_list_air_deg):
+        angle_nb = _angle_air_to_nb(ang, nb)
+        for j, wl in enumerate(lamdata):
+            _, Ri, _ = tmm_h.TRA(n_t, d_t, lamb=wl, angle=angle_nb, pol=pol)
+            R[i, j] = Ri
+    return R
+
+
 def _annotate_geomean(ax, data_2d):
     """Annotate a colorplot subplot with the geometric mean of the data."""
     pos = data_2d[data_2d > 0]
@@ -346,6 +397,47 @@ def plot_shape_figure(xx, e_re, e_im_shape, shape_name, fname,
     return R_avg, A_avg, sf, total_loss
 
 
+def plot_shape_figure_nobulk(xx, e_re, e_im_shape, shape_name, fname,
+                              nb, lamdata, angle_air_deg, pol, delta, figdir):
+    """Plot two-panel figure: profile + R vs wavelength.  No-bulk geometry."""
+    ee = e_re + 1j * e_im_shape
+    nc, dc = tmm_h.discretize_profile(xx, ee, delta=delta)
+    Rb = R_nobulk_vs_wavelength(nc, dc, nb, lamdata, angle_air_deg, pol)
+
+    R_avg = np.trapezoid(Rb, lamdata) / (lamdata[-1] - lamdata[0])
+    sf = tmm_h.skk_spectral_fom(xx, e_re, e_im_shape)[0]
+    total_loss = np.trapezoid(e_im_shape, xx)
+
+    fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(13, 5))
+
+    ax_l2 = ax_l.twinx()
+    ax_l.plot(xx, e_re, color=BLUE, lw=2.5)
+    ax_l2.plot(xx, e_im_shape, color=RED, lw=2.5)
+    ax_l.set_xlabel(r'$x$ ($\mu$m)')
+    ax_l.set_ylabel(r"$\epsilon'$", color=BLUE)
+    ax_l2.set_ylabel(r"$\epsilon''$", color=RED)
+    ax_l.tick_params(axis='y', labelcolor=BLUE)
+    ax_l2.tick_params(axis='y', labelcolor=RED)
+    ax_l.set_title(f'{shape_name}')
+    eim_max = np.max(e_im_shape)
+    eim_min = np.min(e_im_shape)
+    ax_l2.set_ylim(min(0, eim_min * 1.1), eim_max * 1.6)
+    ax_l.text(0.97, 0.96, f'Spectral FoM: {sf:.1f}%',
+              transform=ax_l.transAxes, fontsize=10, va='top', ha='right',
+              bbox=dict(facecolor='wheat', alpha=0.8, boxstyle='round,pad=0.4'))
+
+    ax_r.plot(lamdata, Rb, color=GREEN, lw=2.5, label=r'$R$')
+    ax_r.set_xlabel(r'Wavelength ($\mu$m)')
+    ax_r.set_ylabel('Fraction of Power')
+    ax_r.set_title(f'$\\langle R \\rangle$={R_avg:.4f}')
+    ax_r.legend(fontsize=10)
+
+    plt.tight_layout()
+    plt.savefig(f'{figdir}/{fname}')
+    plt.close()
+    return R_avg, sf, total_loss
+
+
 # ============================================================================
 # Setup — shared data for all figures
 # ============================================================================
@@ -426,6 +518,76 @@ def setup(figdir=None):
     print(f"  Bulk:     <R_back> = {S.Rb_avg_bulk:.5f}")
     print(f"  GRIN:     <R_back> = {S.Rb_avg_grin:.5f}")
     print(f"  sKK full: <R_back> = {S.Rb_avg_full:.5f}, <A> = {S.A_avg_full:.5f}")
+
+    # ---- No-bulk geometry: nb(inf) | coating | air(inf) ----
+    # Thick coating (k_steep=4, 5 um), same as profile_4panel
+    S.nb_lamlist = np.linspace(1, 10, 300)
+    S.nb_angle_list = np.arange(0, 90, 1)
+    _lam_nb = 3.0
+
+    def _nb_TRA_vs_wavelength(nc, dc, angle_air_deg, pol):
+        n_t = [S.nb] + list(nc) + [1.0]
+        d_t = [np.inf] + list(dc) + [np.inf]
+        ang_nb = np.arcsin(np.sin(np.radians(angle_air_deg)) / S.nb)
+        R = np.zeros(len(S.nb_lamlist))
+        T = np.zeros(len(S.nb_lamlist))
+        A = np.zeros(len(S.nb_lamlist))
+        for i, wl in enumerate(S.nb_lamlist):
+            Ti, Ri, Ai = tmm_h.TRA(n_t, d_t, lamb=wl, angle=ang_nb, pol=pol)
+            R[i] = Ri; T[i] = Ti; A[i] = Ai
+        return R, T, A
+
+    def _nb_TRA_vs_angle(nc, dc, lam, pol):
+        n_t = [S.nb] + list(nc) + [1.0]
+        d_t = [np.inf] + list(dc) + [np.inf]
+        R = np.zeros(len(S.nb_angle_list))
+        T = np.zeros(len(S.nb_angle_list))
+        A = np.zeros(len(S.nb_angle_list))
+        for i, ang_air in enumerate(S.nb_angle_list):
+            ang_nb = np.arcsin(np.sin(np.radians(ang_air)) / S.nb)
+            Ti, Ri, Ai = tmm_h.TRA(n_t, d_t, lamb=lam, angle=ang_nb, pol=pol)
+            R[i] = Ri; T[i] = Ti; A[i] = Ai
+        return R, T, A
+
+    def _nb_fresnel_vs_wavelength(angle_air_deg, pol):
+        ang_nb = np.arcsin(np.sin(np.radians(angle_air_deg)) / S.nb)
+        n_t = [S.nb, 1.0]; d_t = [np.inf, np.inf]
+        R = np.zeros(len(S.nb_lamlist))
+        T = np.zeros(len(S.nb_lamlist))
+        for i, wl in enumerate(S.nb_lamlist):
+            Ti, Ri, _ = tmm_h.TRA(n_t, d_t, lamb=wl, angle=ang_nb, pol=pol)
+            R[i] = Ri; T[i] = Ti
+        return R, T
+
+    def _nb_fresnel_vs_angle(lam, pol):
+        n_t = [S.nb, 1.0]; d_t = [np.inf, np.inf]
+        R = np.zeros(len(S.nb_angle_list))
+        T = np.zeros(len(S.nb_angle_list))
+        for i, ang_air in enumerate(S.nb_angle_list):
+            ang_nb = np.arcsin(np.sin(np.radians(ang_air)) / S.nb)
+            Ti, Ri, _ = tmm_h.TRA(n_t, d_t, lamb=lam, angle=ang_nb, pol=pol)
+            R[i] = Ri; T[i] = Ti
+        return R, T
+
+    print("\nComputing no-bulk TMM (s-pol, 80 deg)...")
+    S.nb_R_bare_s80, S.nb_T_bare_s80 = _nb_fresnel_vs_wavelength(80, 's')
+    S.nb_R_grin_s80, S.nb_T_grin_s80, S.nb_A_grin_s80 = _nb_TRA_vs_wavelength(S.nc_grin_thick, S.dc_grin_thick, 80, 's')
+    S.nb_R_skk_s80, S.nb_T_skk_s80, S.nb_A_skk_s80 = _nb_TRA_vs_wavelength(S.nc_full_thick, S.dc_full_thick, 80, 's')
+
+    print("Computing no-bulk TMM (p-pol, 80 deg)...")
+    S.nb_R_bare_p80, S.nb_T_bare_p80 = _nb_fresnel_vs_wavelength(80, 'p')
+    S.nb_R_grin_p80, S.nb_T_grin_p80, S.nb_A_grin_p80 = _nb_TRA_vs_wavelength(S.nc_grin_thick, S.dc_grin_thick, 80, 'p')
+    S.nb_R_skk_p80, S.nb_T_skk_p80, S.nb_A_skk_p80 = _nb_TRA_vs_wavelength(S.nc_full_thick, S.dc_full_thick, 80, 'p')
+
+    print("Computing no-bulk TMM (s-pol, angle sweep, lam=3um)...")
+    S.nb_R_bare_s_ang, S.nb_T_bare_s_ang = _nb_fresnel_vs_angle(_lam_nb, 's')
+    S.nb_R_grin_s_ang, S.nb_T_grin_s_ang, S.nb_A_grin_s_ang = _nb_TRA_vs_angle(S.nc_grin_thick, S.dc_grin_thick, _lam_nb, 's')
+    S.nb_R_skk_s_ang, S.nb_T_skk_s_ang, S.nb_A_skk_s_ang = _nb_TRA_vs_angle(S.nc_full_thick, S.dc_full_thick, _lam_nb, 's')
+
+    print("Computing no-bulk TMM (p-pol, angle sweep, lam=3um)...")
+    S.nb_R_bare_p_ang, S.nb_T_bare_p_ang = _nb_fresnel_vs_angle(_lam_nb, 'p')
+    S.nb_R_grin_p_ang, S.nb_T_grin_p_ang, S.nb_A_grin_p_ang = _nb_TRA_vs_angle(S.nc_grin_thick, S.dc_grin_thick, _lam_nb, 'p')
+    S.nb_R_skk_p_ang, S.nb_T_skk_p_ang, S.nb_A_skk_p_ang = _nb_TRA_vs_angle(S.nc_full_thick, S.dc_full_thick, _lam_nb, 'p')
 
     # ---- M=2000 domain for accurate spectral FoM (figs 5, 8) ----
     M_fom = 2000
@@ -817,7 +979,7 @@ def fig_profile_4panel(S):
     print("Saved profile_construction_4panel")
 
 
-def fig_reflection_spol_80(S):
+def fig_reflection_spol_80_on_bulk(S):
     """R_back vs wavelength, s-pol 80°, log scale.
     Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=2-5um, delta=0.1.
     Geometry: air | 5mm sapphire | coating | air.
@@ -834,21 +996,158 @@ def fig_reflection_spol_80(S):
     plt.close(); print("Saved reflection_spol_80deg.png")
 
 
-def fig_absorption_spol_80(S):
-    """Absorption vs wavelength, s-pol 80°.
+def fig_absorption_spol_80_on_bulk(S):
+    """T+A vs wavelength, s-pol 80°.
     Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=2-5um, delta=0.1.
     Geometry: air | 5mm sapphire | coating | air.
     """
+    T_bulk = 1 - S.Rb_bulk - S.A_bulk
+    T_grin = 1 - S.Rb_grin_thick - S.A_grin_thick
+    T_skk = 1 - S.Rb_full_thick - S.A_full_thick
+
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
-    ax.plot(S.lamdata, S.A_bulk, color='gray', lw=2, label='Bulk sapphire')
-    ax.plot(S.lamdata, S.A_grin_thick, '--', color=BLUE, lw=2, label='GRIN coating')
-    ax.plot(S.lamdata, S.A_full_thick, color=RED, lw=2.5, label='sKK coating')
-    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel('Absorbance')
-    ax.legend(fontsize=10, loc='center left')
+    ax.plot(S.lamdata, T_bulk, ':', color=BLUE, lw=2, label=r'$T$ bulk sapphire')
+    ax.plot(S.lamdata, T_grin, '--', color=BLUE, lw=2, label=r'$T$ GRIN')
+    ax.plot(S.lamdata, T_skk, color=BLUE, lw=2.5, label=r'$T$ sKK')
+    ax.plot(S.lamdata, S.A_full_thick, color=RED, lw=2.5, label=r'$A$ sKK')
+    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel('Fraction of Power')
+    ax.set_ylim(0, 1)
+    ax.legend(fontsize=10)
     ax.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
     plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/absorption_spol_80deg.png', dpi=150)
-    plt.close(); print("Saved absorption_spol_80deg.png")
+    plt.savefig(f'{S.FIGDIR}/TA_spol_80deg_on_bulk.png', dpi=150)
+    plt.close(); print("Saved TA_spol_80deg_on_bulk.png")
+
+
+# ============================================================================
+# No-bulk figure functions: nb(inf) | coating | air(inf)
+# ============================================================================
+def _save_nobulk(fig, S, filename):
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+    fig.savefig(os.path.join(outdir, filename), dpi=150)
+    plt.close(fig)
+    print(f"  Saved 2026May29_no_bulk/{filename}")
+
+
+def fig_reflection_spol_80(S):
+    """R, T, A vs wavelength, s-pol 80°, no-bulk geometry.
+    Geometry: nb(inf) | coating | air(inf). Angles specified in air.
+    """
+    lam = S.nb_lamlist
+    # Panel 1: Reflectance (log scale)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.semilogy(lam, S.nb_R_bare_s80, ':', color=GREEN, lw=2, label='Bare interface')
+    ax.semilogy(lam, S.nb_R_grin_s80, '--', color=GREEN, lw=2, label='GRIN coating')
+    ax.semilogy(lam, S.nb_R_skk_s80, color=GREEN, lw=2.5, label='sKK coating')
+    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel(r'$R$')
+    ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'R_spol_80deg.png')
+
+    # Panel 2: T and A (linear)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.plot(lam, S.nb_T_bare_s80, ':', color=BLUE, lw=2, label=r'$T$ bare interface')
+    ax.plot(lam, S.nb_T_grin_s80, '--', color=BLUE, lw=2, label=r'$T$ GRIN')
+    ax.plot(lam, S.nb_T_skk_s80, color=BLUE, lw=2.5, label=r'$T$ sKK')
+    ax.plot(lam, S.nb_A_skk_s80, color=RED, lw=2.5, label=r'$A$ sKK')
+    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel('Fraction of Power')
+    ax.set_ylim(0, 1)
+    ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'TA_spol_80deg.png')
+
+
+def fig_reflection_ppol_80(S):
+    """R, T, A vs wavelength, p-pol 80°, no-bulk geometry.
+    Geometry: nb(inf) | coating | air(inf). Angles specified in air.
+    """
+    lam = S.nb_lamlist
+    # Panel 1: Reflectance (log scale)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.semilogy(lam, S.nb_R_bare_p80, ':', color=GREEN, lw=2, label='Bare interface')
+    ax.semilogy(lam, S.nb_R_grin_p80, '--', color=GREEN, lw=2, label='GRIN coating')
+    ax.semilogy(lam, S.nb_R_skk_p80, color=GREEN, lw=2.5, label='sKK coating')
+    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel(r'$R$')
+    ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'R_ppol_80deg.png')
+
+    # Panel 2: T and A (linear)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.plot(lam, S.nb_T_bare_p80, ':', color=BLUE, lw=2, label=r'$T$ bare interface')
+    ax.plot(lam, S.nb_T_grin_p80, '--', color=BLUE, lw=2, label=r'$T$ GRIN')
+    ax.plot(lam, S.nb_T_skk_p80, color=BLUE, lw=2.5, label=r'$T$ sKK')
+    ax.plot(lam, S.nb_A_skk_p80, color=RED, lw=2.5, label=r'$A$ sKK')
+    ax.set_xlabel(r'Wavelength ($\mu$m)'); ax.set_ylabel('Fraction of Power')
+    ax.set_ylim(0, 1)
+    ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'TA_ppol_80deg.png')
+
+
+def fig_reflection_spol_angle(S):
+    """R, T, A vs angle, s-pol, lam=3um, no-bulk geometry.
+    Geometry: nb(inf) | coating | air(inf). Angles specified in air.
+    """
+    ang = S.nb_angle_list
+    # Panel 1: Reflectance (log scale)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.semilogy(ang, S.nb_R_bare_s_ang, ':', color=GREEN, lw=2, label='Bare interface')
+    ax.semilogy(ang, S.nb_R_grin_s_ang, '--', color=GREEN, lw=2, label='GRIN coating')
+    ax.semilogy(ang, S.nb_R_skk_s_ang, color=GREEN, lw=2.5, label='sKK coating')
+    ax.set_xlabel('Angle in Air (°)'); ax.set_ylabel(r'$R$')
+    ax.set_xlim(0, 89); ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{c}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'R_spol_vs_angle.png')
+
+    # Panel 2: T and A (linear)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.plot(ang, S.nb_T_bare_s_ang, ':', color=BLUE, lw=2, label=r'$T$ bare interface')
+    ax.plot(ang, S.nb_T_grin_s_ang, '--', color=BLUE, lw=2, label=r'$T$ GRIN')
+    ax.plot(ang, S.nb_T_skk_s_ang, color=BLUE, lw=2.5, label=r'$T$ sKK')
+    ax.plot(ang, S.nb_A_skk_s_ang, color=RED, lw=2.5, label=r'$A$ sKK')
+    ax.set_xlabel('Angle in Air (°)'); ax.set_ylabel('Fraction of Power')
+    ax.set_xlim(0, 89); ax.set_ylim(0, 1)
+    ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{d}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'TA_spol_vs_angle.png')
+
+
+def fig_reflection_ppol_angle(S):
+    """R, T, A vs angle, p-pol, lam=3um, no-bulk geometry.
+    Geometry: nb(inf) | coating | air(inf). Angles specified in air.
+    """
+    ang = S.nb_angle_list
+    # Panel 1: Reflectance (log scale)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.semilogy(ang, S.nb_R_bare_p_ang, ':', color=GREEN, lw=2, label='Bare interface')
+    ax.semilogy(ang, S.nb_R_grin_p_ang, '--', color=GREEN, lw=2, label='GRIN coating')
+    ax.semilogy(ang, S.nb_R_skk_p_ang, color=GREEN, lw=2.5, label='sKK coating')
+    ax.set_xlabel('Angle in Air (°)'); ax.set_ylabel(r'$R$')
+    ax.set_xlim(0, 89); ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{c}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'R_ppol_vs_angle.png')
+
+    # Panel 2: T and A (linear)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    ax.plot(ang, S.nb_T_bare_p_ang, ':', color=BLUE, lw=2, label=r'$T$ bare interface')
+    ax.plot(ang, S.nb_T_grin_p_ang, '--', color=BLUE, lw=2, label=r'$T$ GRIN')
+    ax.plot(ang, S.nb_T_skk_p_ang, color=BLUE, lw=2.5, label=r'$T$ sKK')
+    ax.plot(ang, S.nb_A_skk_p_ang, color=RED, lw=2.5, label=r'$A$ sKK')
+    ax.set_xlabel('Angle in Air (°)'); ax.set_ylabel('Fraction of Power')
+    ax.set_xlim(0, 89); ax.set_ylim(0, 1)
+    ax.legend(fontsize=10)
+    ax.text(-0.14, 1.0, r'$\mathbf{d}$', transform=ax.transAxes, fontsize=14, va='top', ha='right')
+    fig.tight_layout()
+    _save_nobulk(fig, S, 'TA_ppol_vs_angle.png')
 
 
 def fig_fom_intro(S):
@@ -867,28 +1166,45 @@ def fig_fom_intro(S):
 
 def fig_alpha_tradeoff(S):
     """R-A tradeoff with spectral FoM on twin axis.
-    Geometry: air | 5mm sapphire | coating | air.
+    Geometry: nb(inf) | coating | air(inf). Uses thick coating (k_steep=4, 5um).
     """
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+    lamdata_nb = np.linspace(1, 10, 150)
+
+    xx = S.xx_thick_fig
+    e_re = S.e_re_thick_fig
+    e_im_base = S.e_im_thick_fig
+
     alpha_list = np.linspace(0, 1, 40)
     R_vs_a = np.zeros(len(alpha_list))
     A_vs_a = np.zeros(len(alpha_list))
     FoM_vs_a = np.zeros(len(alpha_list))
 
     for j, alpha in enumerate(alpha_list):
-        e_im_a = alpha * S.e_im_deriv
-        ee_a = S.e_re + 1j * e_im_a
-        nc_a, dc_a = tmm_h.discretize_profile(S.xx, ee_a, delta=S.delta)
-        Rb_a, At_a = Rback_vs_wavelength(nc_a, dc_a, S.ndata, S.kdata, S.lamdata,
-                                          S.angle_test, S.pol_test)
-        R_vs_a[j] = np.trapezoid(Rb_a, S.lamdata) / (S.lamdata[-1] - S.lamdata[0])
-        A_vs_a[j] = np.trapezoid(At_a, S.lamdata) / (S.lamdata[-1] - S.lamdata[0])
-        FoM_vs_a[j] = tmm_h.skk_spectral_fom(S.xx, S.e_re, e_im_a)[0] / 100.0
+        e_im_a = alpha * e_im_base
+        ee_a = e_re + 1j * e_im_a
+        nc_a, dc_a = tmm_h.discretize_profile(xx, ee_a, delta=S.delta)
+        n_t = [S.nb] + list(nc_a) + [1.0]
+        d_t = [np.inf] + list(dc_a) + [np.inf]
+        ang_nb = np.arcsin(np.sin(np.radians(S.angle_test)) / S.nb)
+        R_arr = np.zeros(len(lamdata_nb))
+        A_arr = np.zeros(len(lamdata_nb))
+        for i, wl in enumerate(lamdata_nb):
+            Ti, Ri, Ai = tmm_h.TRA(n_t, d_t, lamb=wl, angle=ang_nb, pol=S.pol_test)
+            R_arr[i] = Ri; A_arr[i] = Ai
+        R_vs_a[j] = np.trapezoid(R_arr, lamdata_nb) / (lamdata_nb[-1] - lamdata_nb[0])
+        A_vs_a[j] = np.trapezoid(A_arr, lamdata_nb) / (lamdata_nb[-1] - lamdata_nb[0])
+        FoM_vs_a[j] = tmm_h.skk_spectral_fom(xx, e_re, e_im_a)[0] / 100.0
         if j % 10 == 0:
             print(f"  alpha={alpha:.2f}: <R>={R_vs_a[j]:.4f}, <A>={A_vs_a[j]:.4f}, FoM={FoM_vs_a[j]:.3f}")
 
+    np.save(os.path.join(outdir, 'alpha_tradeoff_data.npy'),
+            dict(alpha=alpha_list, R=R_vs_a, A=A_vs_a, FoM=FoM_vs_a))
+
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax2 = ax.twinx()
-    ax.plot(alpha_list, R_vs_a, color=GREEN, lw=2.5, label=r'$\langle R_{\rm back} \rangle_\lambda$')
+    ax.plot(alpha_list, R_vs_a, color=GREEN, lw=2.5, label=r'$\langle R \rangle_\lambda$')
     ax.plot(alpha_list, A_vs_a, color=RED, lw=2.5, label=r'$\langle A \rangle_\lambda$')
     ax2.plot(alpha_list, FoM_vs_a, '--', color=PURPLE, lw=2, label='Spectral FoM')
     ax.set_xlabel(r'$\alpha$ (imaginary scaling factor)', fontsize=14)
@@ -900,88 +1216,217 @@ def fig_alpha_tradeoff(S):
     ax2.legend(fontsize=11, loc='center right')
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/alpha_tradeoff.png')
-    plt.close()
-    print("Saved fig 6: Alpha tradeoff")
+    _save_nobulk(fig, S, 'alpha_tradeoff.png')
+    print("Saved alpha_tradeoff (no bulk, 5um coating)")
+
+
+def _sigma_gating_R_grids(S, sigma_pair, n0_gate, angles_air, wls):
+    """Compute R(angle, wavelength) for ungated + each gated σ, with caching.
+
+    Geometry: nb(inf) | coating | air(inf). Angles given in air, converted to
+    the nb incidence angle via Snell. Returns dict of 2D arrays keyed by
+    'ungated' and each σ, each shaped (n_angle, n_wl).
+
+    Data is cached under theory/Data/sigma_gating/: the grid is computed and
+    saved only when missing or when the grid/parameters change; otherwise it is
+    loaded and the (slow) TMM sweep is skipped entirely.
+    """
+    xx = S.xx_thick_fig
+    e_re = S.e_re_thick_fig
+    e_im_base = S.e_im_thick_fig.copy()
+
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             'Data', 'sigma_gating')
+    os.makedirs(cache_dir, exist_ok=True)
+    cache = os.path.join(cache_dir, 'R_colorplot_grids.npz')
+    if os.path.exists(cache):
+        d = np.load(cache, allow_pickle=True)
+        if (np.array_equal(d['angles'], angles_air) and np.array_equal(d['wls'], wls)
+                and float(d['delta']) == float(S.delta) and float(d['nb']) == float(S.nb)
+                and str(d['pol']) == str(S.pol_test) and float(d['n0']) == float(n0_gate)
+                and np.array_equal(d['sigmas'], np.array(sigma_pair, dtype=float))):
+            print(f"  [cache hit] sigma_gating grids ({cache})")
+            return {k: d[k] for k in ['ungated'] + [f'{s}' for s in sigma_pair]}
+
+    # Build one TMM stack per profile (ε is non-dispersive here, so the stack
+    # is wavelength/angle independent — only TRA varies over the grid).
+    profiles = {'ungated': e_im_base}
+    for s in sigma_pair:
+        gate = tmm_h.smooth_gate(e_re, n0_gate**2, s, eps_im=e_im_base, one_sided=True)
+        profiles[f'{s}'] = e_im_base * gate
+
+    grids = {}
+    for key, e_im in profiles.items():
+        ee = e_re + 1j * e_im
+        nc, dc = tmm_h.discretize_profile(xx, ee, delta=S.delta)
+        n_t = [S.nb] + list(nc) + [1.0]
+        d_t = [np.inf] + list(dc) + [np.inf]
+        R2D = np.zeros((len(angles_air), len(wls)))
+        for ia, a in enumerate(angles_air):
+            ang_nb = np.arcsin(np.sin(np.radians(a)) / S.nb)
+            for iw, wl in enumerate(wls):
+                _, Ri, _ = tmm_h.TRA(n_t, d_t, lamb=wl, angle=ang_nb, pol=S.pol_test)
+                R2D[ia, iw] = Ri
+        grids[key] = R2D
+        print(f"  computed R grid: {key}")
+
+    np.savez(cache, angles=angles_air, wls=wls, delta=S.delta, nb=S.nb,
+             pol=S.pol_test, n0=n0_gate, sigmas=np.array(sigma_pair, dtype=float),
+             **grids)
+    print(f"  saved sigma_gating grids -> {cache}")
+    return grids
 
 
 def fig_sigma_gating(S):
-    """Sigma gating — profiles + reflection.
-    Geometry: air | 5mm sapphire | coating | air.
-    Top row: single profile subplot with ε' and all three ε'' overlaid.
-    Bottom row: reflection subplot + absorption subplot, each with all 3 σ curves.
+    """Sigma gating — 2x2 grid:
+      a: gated ε''(x) profiles      b: absolute R for σ=0.1 (own colorbar)
+      c: R_σ0.7/R_ungated           d: R_σ0.1/R_ungated   (shared colorbar)
+    Panel b shows how good the AR still is in absolute terms after the most
+    aggressive gating; c/d show the relative AR penalty vs the ungated ideal.
+    Geometry: nb(inf) | coating | air(inf). Uses thick coating (k_steep=4, 5um).
+    The g(x) gate function itself is a separate supplementary figure
+    (fig_sigma_gate_function).
     """
-    sigma_list = [None, 0.7, 0.1]
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+
+    sigma_list = [None, 0.7, 0.1]   # None = ungated reference
+    sigma_pair = [0.7, 0.1]         # gated cases shown as colorplots
     n0_gate = 1.3
     imag_colors = [RED, ORANGE, PURPLE]
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
-    fig.subplots_adjust(wspace=0.45)
 
     xx = S.xx_thick_fig
     e_re = S.e_re_thick_fig
     e_im_base = S.e_im_thick_fig.copy()
 
-    ax_prof = axes[0]
+    # --- 2x2 layout ---
+    #   a: gated ε'' profiles      b: absolute R for σ=0.1 (own colorbar)
+    #   c: R_σ0.7/R_ungated        d: R_σ0.1/R_ungated   (shared colorbar)
+    fig, axes = plt.subplots(2, 2, figsize=(13, 10), constrained_layout=True)
+    ax_prof = axes[0, 0]
     ax_prof2 = ax_prof.twinx()
-    ax_refl = axes[1]
-    ax_abs = axes[2]
+    ax_abs = axes[0, 1]   # b: absolute R, σ=0.1
+    ax_c = axes[1, 0]     # c: ratio σ=0.7
+    ax_d = axes[1, 1]     # d: ratio σ=0.1
 
-    ax_prof.plot(xx, e_re, color=BLUE, lw=2.5, label=r"$\epsilon'$")
+    LBL = 12  # shared label font size for the colorplots + colorbars
+
+    # --- Panel a: ε'(x) + gated ε''(x) for each σ ---
+    ax_prof.plot(xx, e_re, color=BLUE, lw=2.5)
     ax_prof.set_xlabel(r'$x$ ($\mu$m)')
     ax_prof.set_ylabel(r"$\epsilon'$", color=BLUE)
     ax_prof.tick_params(axis='y', labelcolor=BLUE)
-
     for idx, sigma in enumerate(sigma_list):
         if sigma is not None:
-            gate = tmm_h.smooth_gate(e_re, n0_gate**2, sigma)
+            gate = tmm_h.smooth_gate(e_re, n0_gate**2, sigma,
+                                     eps_im=e_im_base, one_sided=True)
             e_im_gated = e_im_base * gate
-            label = f'$\\sigma$ = {sigma}'
+            label = f'$\\sigma$={sigma}'
         else:
             e_im_gated = e_im_base.copy()
-            label = 'No gating'
-
-        col = imag_colors[idx]
-
+            label = 'ungated'
         sf = tmm_h.skk_spectral_fom(xx, e_re, e_im_gated)[0]
-        ax_prof2.plot(xx, e_im_gated, color=col, lw=2, label=f"{label} (FoM {sf:.0f}%)")
-
-        ee_g = e_re + 1j * e_im_gated
-        nc_g, dc_g = tmm_h.discretize_profile(xx, ee_g, delta=S.delta)
-        Rb_g, At_g = Rback_vs_wavelength(nc_g, dc_g, S.ndata, S.kdata, S.lamdata,
-                                          S.angle_test, S.pol_test)
-
-        R_avg = np.trapezoid(Rb_g, S.lamdata) / (S.lamdata[-1] - S.lamdata[0])
-        A_avg = np.trapezoid(At_g, S.lamdata) / (S.lamdata[-1] - S.lamdata[0])
-
-        ax_refl.plot(S.lamdata, Rb_g, color=col, lw=2,
-                     label=f'{label} ($\\langle R \\rangle$={R_avg:.4f})')
-        ax_abs.plot(S.lamdata, At_g, color=col, lw=2,
-                    label=f'{label} ($\\langle A \\rangle$={A_avg:.4f})')
-
+        ax_prof2.plot(xx, e_im_gated, color=imag_colors[idx], lw=2,
+                      label=f"{label} (FoM={sf/100:.2f})")
     ax_prof2.set_ylabel(r"$\epsilon''$")
     ax_prof2.legend(fontsize=9, loc='upper right')
-    ax_prof.text(-0.14, 1.0, r'$\mathbf{a}$', transform=ax_prof.transAxes,
+    ax_prof.text(-0.18, 1.0, r'$\mathbf{a}$', transform=ax_prof.transAxes,
                  fontsize=14, va='top', ha='right')
 
-    ax_refl.set_xlabel(r'Wavelength ($\mu$m)')
-    ax_refl.set_ylabel('Fraction of Power')
-    ax_refl.set_title('Reflection')
-    ax_refl.legend(fontsize=9)
-    ax_refl.text(-0.14, 1.0, r'$\mathbf{b}$', transform=ax_refl.transAxes,
-                 fontsize=14, va='top', ha='right')
+    # --- Compute / load R(angle, wavelength) grids ---
+    angles_air = np.arange(0, 80.5, 0.5)
+    wls = np.linspace(1, 10, 250)
+    grids = _sigma_gating_R_grids(S, sigma_pair, n0_gate, angles_air, wls)
+    R_ung = np.clip(grids['ungated'], 1e-10, None)
+    ratios = {s: grids[f'{s}'] / R_ung for s in sigma_pair}
 
-    ax_abs.set_xlabel(r'Wavelength ($\mu$m)')
-    ax_abs.set_ylabel('Fraction of Power')
-    ax_abs.set_title('Absorption')
-    ax_abs.legend(fontsize=9)
-    ax_abs.text(-0.14, 1.0, r'$\mathbf{c}$', transform=ax_abs.transAxes,
+    # --- Panel b: absolute R for σ=0.1 (own colorbar, distinct range) ---
+    # Shows how good the AR still is in absolute terms under the most
+    # aggressive gating, rather than only relative to the ungated ideal.
+    norm_abs = matplotlib.colors.LogNorm(vmin=1e-5, vmax=1e-1)
+    cmap_abs = matplotlib.cm.inferno.copy()
+    cmap_abs.set_over('white')
+    im_b = ax_abs.pcolormesh(angles_air, wls, grids['0.1'].T,
+                             norm=norm_abs, cmap=cmap_abs, shading='auto')
+    ax_abs.set_title(r'$\sigma$=0.1', fontsize=12, pad=4)
+    ax_abs.set_xlabel('Angle of Incidence (degrees)', fontsize=LBL)
+    ax_abs.set_ylabel(r'Wavelength ($\mu$m)', fontsize=LBL)
+    ax_abs.text(-0.18, 1.0, r'$\mathbf{b}$', transform=ax_abs.transAxes,
                 fontsize=14, va='top', ha='right')
+    cbar_b = fig.colorbar(im_b, ax=ax_abs, location='right',
+                          shrink=0.9, pad=0.02, extend='both')
+    cbar_b.set_label(r'$R$', fontsize=LBL)
 
-    plt.tight_layout()
-    plt.savefig(f'{S.FIGDIR}/sigma_gating.png', dpi=150)
+    # --- Panels c, d: reflection-penalty ratios (shared colorbar) ---
+    # Gating removes loss, so reflection rises vs the ungated AR ideal;
+    # R_σ/R_ungated > 1 quantifies that tradeoff.
+    norm = matplotlib.colors.LogNorm(vmin=1, vmax=1e4)
+    cmap = matplotlib.cm.inferno.copy()
+    cmap.set_over('white')
+    for ax, sigma, lab in [(ax_c, 0.7, 'c'), (ax_d, 0.1, 'd')]:
+        im = ax.pcolormesh(angles_air, wls, ratios[sigma].T,
+                           norm=norm, cmap=cmap, shading='auto')
+        ax.set_title(f'$\\sigma$={sigma}', fontsize=12, pad=4)
+        ax.set_xlabel('Angle of Incidence (degrees)', fontsize=LBL)
+        ax.set_ylabel(r'Wavelength ($\mu$m)', fontsize=LBL)
+        ax.text(-0.18, 1.0, rf'$\mathbf{{{lab}}}$', transform=ax.transAxes,
+                fontsize=14, va='top', ha='right')
+    cbar = fig.colorbar(im, ax=[ax_c, ax_d], location='right',
+                        shrink=0.9, pad=0.02, extend='max')
+    cbar.set_label(r'$R_\sigma / R_{\mathrm{ungated}}$', fontsize=LBL)
+
+    fig.savefig(os.path.join(outdir, 'sigma_gating.png'), dpi=150,
+                bbox_inches='tight')
     plt.close()
-    print("Saved fig 7: Sigma gating")
+    print("Saved sigma_gating (2x2: profiles + absolute R + R-penalty ratios)")
+
+
+def fig_sigma_gate_function(S):
+    """SUPPLEMENTARY: the one-sided gate function g(x) for each σ, with the
+    ungated |ε''| (normalized) and ε'(x) overlaid to show the lossy-air region
+    the gate removes. Split out of fig_sigma_gating so the main figure can show
+    only the result (gated ε'') while this construction detail lives in the SI.
+    Geometry: nb(inf) | coating | air(inf), thick coating (k_steep=4, 5um).
+    """
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+
+    n0_gate = 1.3
+    sigma_pair = [(0.7, ORANGE), (0.1, PURPLE)]
+
+    xx = S.xx_thick_fig
+    e_re = S.e_re_thick_fig
+    e_im_base = S.e_im_thick_fig.copy()
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.5, 4.5))
+    ax2 = ax.twinx()
+
+    ax2.plot(xx, e_re, color=BLUE, lw=2, ls='--')
+    ax2.set_ylabel(r"$\epsilon'(x)$", color=BLUE)
+    ax2.tick_params(axis='y', labelcolor=BLUE)
+    ax.set_xlabel(r'$x$ ($\mu$m)')
+    ax.set_ylabel(r"Gate $g(x)$ / norm. $|\epsilon''|$")
+    ax.set_ylim(-0.05, 1.05)
+
+    e_im_norm = np.abs(e_im_base) / np.max(np.abs(e_im_base))
+    ax.fill_between(xx, 0, e_im_norm, color=RED, alpha=0.12)
+    ax.plot(xx, e_im_norm, color=RED, lw=1.3, alpha=0.55,
+            label=r"$|\epsilon''|$ (norm., ungated)")
+    for sigma, col in sigma_pair:
+        gate = tmm_h.smooth_gate(e_re, n0_gate**2, sigma,
+                                 eps_im=e_im_base, one_sided=True)
+        ax.plot(xx, gate, color=col, lw=2, label=f'$\\sigma$ = {sigma}')
+
+    i_cross = int(np.argmin(np.abs(e_re - n0_gate**2)))
+    ax.axvline(xx[i_cross], color='gray', ls='--', lw=1)
+    ax.text(xx[i_cross], 0.5, r"  $\epsilon'=n_{\min}^2$", color='gray',
+            fontsize=9, va='center', ha='left')
+    ax.legend(fontsize=9, loc='center left')
+
+    fig.tight_layout()
+    fig.savefig(os.path.join(outdir, 'sigma_gate_function.png'), dpi=150)
+    plt.close()
+    print("Saved sigma_gate_function (supplementary: g(x))")
 
 
 def fig_fom_comparison(S):
@@ -1006,7 +1451,7 @@ def fig_fom_comparison(S):
     print("Saved fig 8: FoM comparison")
 
 
-def fig_reflection_spol_angle(S):
+def fig_reflection_spol_angle_on_bulk(S):
     """R_back vs angle, s-pol, λ=3um, log scale.
     Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=3um, delta=0.1.
     Geometry: air | 5mm sapphire | coating | air.
@@ -1023,7 +1468,7 @@ def fig_reflection_spol_angle(S):
     plt.close(); print("Saved reflection_spol_vs_angle.png")
 
 
-def fig_reflection_ppol_angle(S):
+def fig_reflection_ppol_angle_on_bulk(S):
     """R_back vs angle, p-pol, λ=3um, log scale.
     Params: k_steep=4, nb=1.7, thickness=5um, domain=[-2.5,2.5], lam=3um, delta=0.1.
     Geometry: air | 5mm sapphire | coating | air.
@@ -1127,7 +1572,7 @@ def fig_alt_substrate_free(S):
     plt.close(); print("Saved alt_substrate_free: R vs angle, p-pol (log)")
 
 
-def fig_thickness_single(S):
+def fig_thickness_single_on_bulk(S):
     """Thickness design space — single panel.
     Geometry: air | 5mm sapphire | coating | air.
     """
@@ -1209,13 +1654,95 @@ def fig_thickness_single(S):
     print("Saved thickness_sweep_single")
 
 
+def fig_thickness_single(S):
+    """Thickness design space — single panel.
+    Geometry: nb(inf) | coating | air(inf).
+    """
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+
+    k_values = np.array([0.2, 0.4, 0.5, 0.7, 1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20, 30, 40])
+    lamlist = np.linspace(1, 10, 150)
+    angle_air = 80
+    pol = 's'
+    thicknesses = []
+    R_grin_arr, R_skk_arr, A_skk_arr = [], [], []
+
+    R_bare = R_bare_interface(S.nb, angle_air, pol)
+
+    for k_val in k_values:
+        dx_k = 1 / (100 * k_val); xmin_k = -20 / k_val; xmax_k = -xmin_k
+        nx_k = 1 + int(np.floor((xmax_k - xmin_k) / dx_k))
+        xx_k = np.linspace(xmin_k, xmax_k, nx_k)
+        e_re_k = tmm_h.logistic(xx_k, k_val, S.nb)
+        e_im_k = tmm_h.ht_derivative(xx_k, e_re_k)
+        thickness = 2 * xmax_k
+        thicknesses.append(thickness)
+
+        nc_gk, dc_gk = tmm_h.discretize_profile(xx_k, e_re_k + 0j, delta=S.delta)
+        R_g = R_nobulk_vs_wavelength(nc_gk, dc_gk, S.nb, lamlist, angle_air, pol)
+        R_grin_arr.append(np.nanmean(R_g))
+
+        nc_fk, dc_fk = tmm_h.discretize_profile(xx_k, e_re_k + 1j * e_im_k, delta=S.delta)
+        n_t = [S.nb] + list(nc_fk) + [1.0]
+        d_t = [np.inf] + list(dc_fk) + [np.inf]
+        angle_nb = _angle_air_to_nb(angle_air, S.nb)
+        R_arr = np.zeros(len(lamlist))
+        A_arr = np.zeros(len(lamlist))
+        for i, wl in enumerate(lamlist):
+            Ti, Ri, Ai = tmm_h.TRA(n_t, d_t, lamb=wl, angle=angle_nb, pol=pol)
+            R_arr[i] = Ri
+            A_arr[i] = Ai
+        R_skk_arr.append(np.nanmean(R_arr))
+        A_skk_arr.append(np.nanmean(A_arr))
+
+        print(f"  k={k_val:5.1f} ({thickness:.1f} um): R_GRIN={R_grin_arr[-1]:.6f}, "
+              f"R_sKK={R_skk_arr[-1]:.6f}")
+
+    thicknesses = np.array(thicknesses)
+    R_grin_arr = np.array(R_grin_arr)
+    R_skk_arr = np.array(R_skk_arr)
+    A_skk_arr = np.array(A_skk_arr)
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 5.5))
+    ax.axhline(R_bare, color='gray', lw=1.5, ls=':', label='Bare interface', zorder=1)
+    ax.plot(thicknesses, R_grin_arr, 'o--', color=GREEN, lw=2.5, ms=7, label='GRIN coating')
+    ax.plot(thicknesses, R_skk_arr, 's-', color=GREEN, lw=2.5, ms=7, label='sKK coating')
+    ax.set_xlabel(r'Coating thickness ($\mu$m)')
+    ax.set_ylabel(r'$\langle R \rangle$', color=GREEN)
+    ax.tick_params(axis='y', labelcolor=GREEN)
+    ax.set_xscale('log'); ax.set_xlim(0.8, 250)
+    ax.set_yscale('log')
+
+    ax2 = ax.twinx()
+    ax2.plot(thicknesses, A_skk_arr, 's--', color=RED, lw=2, ms=6, alpha=0.6,
+             label=r'sKK absorption')
+    ax2.set_ylabel(r'$\langle A \rangle$ (sKK coating)', color=RED)
+    ax2.tick_params(axis='y', labelcolor=RED)
+
+    lines1, labels1 = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(lines1 + lines2, labels1 + labels2, fontsize=10,
+              bbox_to_anchor=(0.97, 0.92), loc='upper right')
+
+    plt.tight_layout()
+    _save_nobulk(fig, S, 'thickness_sweep_single.png')
+    plt.close()
+    print("Saved thickness_sweep_single (no bulk)")
+
+
 def fig_loss_shapes(S):
-    """Loss shape comparison: Batch 1 (unconstrained) + Batch 2 (gated)."""
+    """Loss shape comparison: Batch 1 (unconstrained) + Batch 2 (gated).
+    Geometry: nb(inf) | coating | air(inf).
+    """
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+    lamdata_nb = np.linspace(1, 10, 150)
     shape_names = ['sKK (HT derivative)', 'Constant', 'Gaussian', 'Double peaks', 'Random']
     shape_fnames = ['skk', 'constant', 'gaussian', 'double', 'random']
 
     # --- Batch 1: Unconstrained loss placement ---
-    print("\n=== LOSS SHAPE COMPARISON - Batch 1: Unconstrained ===")
+    print("\n=== LOSS SHAPE COMPARISON - Batch 1: Unconstrained (no bulk) ===")
     loss_ref = np.trapezoid(S.e_im_dense, S.xx_dense)
     print(f"  Reference total loss (sKK): int(eps'')dx = {loss_ref:.6f}")
 
@@ -1228,18 +1755,17 @@ def fig_loss_shapes(S):
     ]
 
     _col = 'int(e")'
-    print(f"  {'Shape':<22s} {_col:>10s} {'<R>':>10s} {'<A>':>10s} {'FoM%':>8s}")
-    print(f"  {'-'*54}")
+    print(f"  {'Shape':<22s} {_col:>10s} {'<R>':>10s} {'FoM%':>8s}")
+    print(f"  {'-'*44}")
     for name, fname, e_im_shape in zip(shape_names, shape_fnames, shapes_b1):
-        R_avg, A_avg, sf, tl = plot_shape_figure(
+        R_avg, sf, tl = plot_shape_figure_nobulk(
             S.xx_dense, S.e_re_dense, e_im_shape, name,
-            f'shapes_thin_{fname}.png', S.ndata, S.kdata, S.lamdata,
-            S.angle_test, S.pol_test, S.delta, S.FIGDIR)
-        print(f"  {name:<22s} {tl:10.6f} {R_avg:10.5f} {A_avg:10.5f} {sf:8.1f}")
-        print(f"    Saved shapes_thin_{fname}.png")
+            f'shapes_thin_{fname}.png', S.nb, lamdata_nb,
+            S.angle_test, S.pol_test, S.delta, outdir)
+        print(f"  {name:<22s} {tl:10.6f} {R_avg:10.5f} {sf:8.1f}")
 
     # --- Batch 2: Gated loss placement ---
-    print("\n=== LOSS SHAPE COMPARISON - Batch 2: Gated ===")
+    print("\n=== LOSS SHAPE COMPARISON - Batch 2: Gated (no bulk) ===")
     gate_dense = tmm_h.smooth_gate(S.e_re_dense, 1.3**2, 0.1)
     e_im_gated_ref = S.e_im_dense * gate_dense
     loss_ref_gated = np.trapezoid(e_im_gated_ref, S.xx_dense)
@@ -1254,15 +1780,14 @@ def fig_loss_shapes(S):
         shapes_b2.append(gated)
 
     _col = 'int(e")'
-    print(f"  {'Shape':<22s} {_col:>10s} {'<R>':>10s} {'<A>':>10s} {'FoM%':>8s}")
-    print(f"  {'-'*54}")
+    print(f"  {'Shape':<22s} {_col:>10s} {'<R>':>10s} {'FoM%':>8s}")
+    print(f"  {'-'*44}")
     for name, fname, e_im_shape in zip(shape_names, shape_fnames, shapes_b2):
-        R_avg, A_avg, sf, tl = plot_shape_figure(
+        R_avg, sf, tl = plot_shape_figure_nobulk(
             S.xx_dense, S.e_re_dense, e_im_shape, name,
-            f'shapes_gated_{fname}.png', S.ndata, S.kdata, S.lamdata,
-            S.angle_test, S.pol_test, S.delta, S.FIGDIR)
-        print(f"  {name:<22s} {tl:10.6f} {R_avg:10.5f} {A_avg:10.5f} {sf:8.1f}")
-        print(f"    Saved shapes_gated_{fname}.png")
+            f'shapes_gated_{fname}.png', S.nb, lamdata_nb,
+            S.angle_test, S.pol_test, S.delta, outdir)
+        print(f"  {name:<22s} {tl:10.6f} {R_avg:10.5f} {sf:8.1f}")
 
 
 
@@ -1479,7 +2004,7 @@ def _colorplot_compute_and_cache(S, k_color_vals, color_angle_list, compute_grin
     return Rb_skk_2D, Rb_grin_2D, Rb_bulk_2D, thicknesses
 
 
-def fig_colorplots(S):
+def fig_colorplots_on_bulk(S):
     """R_GRIN/R_sKK colorplots (angle x wavelength, 4 thicknesses, 2 pols).
     Geometry: air | 5mm sapphire | coating | air.
     """
@@ -1541,7 +2066,151 @@ def fig_colorplots(S):
     print("  Saved colorplot_ratio_GRIN_over_sKK.png")
 
 
-def fig_thickness_sweep_shapes(S):
+def fig_colorplots(S):
+    """No-bulk colorplots: absolute R_sKK + R_GRIN/R_sKK ratio (angle x wavelength).
+    Geometry: nb(inf) | coating | air(inf). Saves data as .npy.
+    """
+    print("\n=== NO-BULK COLORPLOTS ===")
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Data', 'colorplots_nobulk')
+    os.makedirs(cache_dir, exist_ok=True)
+
+    k_color_vals = [40, 8, 40/15, 0.8]
+    color_angle_list = np.arange(0, 90, 2)
+    color_lamlist = np.linspace(1, 10, 150)
+    color_pols = ['s', 'p']
+    pol_labels = [r'$\boldsymbol{s}$-polarization', r'$\boldsymbol{p}$-polarization']
+
+    R_skk_2D = {p: [] for p in color_pols}
+    R_grin_2D = {p: [] for p in color_pols}
+    thicknesses = []
+
+    for k_c in k_color_vals:
+        dx_c = 1 / (100 * k_c); xmin_c = -20 / k_c; xmax_c = -xmin_c
+        nx_c = 1 + int(np.floor((xmax_c - xmin_c) / dx_c))
+        xx_c = np.linspace(xmin_c, xmax_c, nx_c)
+        e_re_c = tmm_h.logistic(xx_c, k_c, S.nb)
+        e_im_c = tmm_h.ht_derivative(xx_c, e_re_c)
+        thickness_c = xmax_c - xmin_c
+        thicknesses.append(thickness_c)
+        thick_tag = f'{thickness_c:.1f}um'
+
+        nc_skk, dc_skk = tmm_h.discretize_profile(xx_c, e_re_c + 1j * e_im_c, delta=S.delta)
+        nc_grin, dc_grin = tmm_h.discretize_profile(xx_c, e_re_c + 0j, delta=S.delta)
+
+        for pol_c in color_pols:
+            cache_skk = os.path.join(cache_dir, f'skk_{pol_c}_{thick_tag}.npy')
+            cache_grin = os.path.join(cache_dir, f'grin_{pol_c}_{thick_tag}.npy')
+
+            if os.path.exists(cache_skk):
+                print(f"  [cache hit] sKK {pol_c}-pol {thick_tag}")
+                R_skk_2D[pol_c].append(np.load(cache_skk))
+            else:
+                print(f"  k={k_c:.2f} ({thick_tag}), {pol_c}-pol: computing sKK 2D...")
+                R_s = R_nobulk_2D(nc_skk, dc_skk, S.nb, color_lamlist, color_angle_list, pol_c)
+                np.save(cache_skk, R_s)
+                R_skk_2D[pol_c].append(R_s)
+
+            if os.path.exists(cache_grin):
+                print(f"  [cache hit] GRIN {pol_c}-pol {thick_tag}")
+                R_grin_2D[pol_c].append(np.load(cache_grin))
+            else:
+                print(f"  k={k_c:.2f} ({thick_tag}), {pol_c}-pol: computing GRIN 2D...")
+                R_g = R_nobulk_2D(nc_grin, dc_grin, S.nb, color_lamlist, color_angle_list, pol_c)
+                np.save(cache_grin, R_g)
+                R_grin_2D[pol_c].append(R_g)
+
+    # ---- Figure 1: R_GRIN / R_sKK ratio (2 rows x 4 cols) ----
+    fig, axes = plt.subplots(2, 4, figsize=(14, 6))
+    norm = matplotlib.colors.LogNorm(vmin=1, vmax=1e5)
+    cmap = matplotlib.cm.inferno.copy()
+    cmap.set_over('white')
+
+    for col, thick_c in enumerate(thicknesses):
+        for row, pol_c in enumerate(color_pols):
+            ax = axes[row, col]
+            ratio = R_grin_2D[pol_c][col] / np.clip(R_skk_2D[pol_c][col], 1e-15, None)
+            im = ax.pcolormesh(color_angle_list, color_lamlist, ratio.T,
+                               norm=norm, cmap=cmap, shading='auto')
+            if row == 0:
+                ax.set_title(f'{thick_c:.1f} µm', fontsize=11, pad=4)
+            if row < 1:
+                ax.set_xticklabels([])
+            if col > 0:
+                ax.set_yticklabels([])
+
+    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02, extend='max')
+    cbar.set_label(r'$R_{\mathrm{GRIN}} / R_{\mathrm{sKK}}$', fontsize=11)
+    fig.canvas.draw()
+    left = axes[0, 0].get_position().x0
+    right = axes[0, -1].get_position().x1
+    bottom = axes[1, 0].get_position().y0
+    xc = (left + right) / 2
+    fig_w, fig_h = fig.get_size_inches()
+    gap_y_fig = bottom - 0.01
+    gap_x_fig = gap_y_fig * fig_h / fig_w
+    fig.text(xc, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
+             fontweight='bold')
+    fig.text(xc, 0.01, 'Angle in Air (degrees)', fontsize=12,
+             ha='center', va='bottom')
+    fig.text(left - gap_x_fig, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
+             ha='center', va='center', rotation='vertical')
+    for row, pol_c in enumerate(color_pols):
+        pos = axes[row, 0].get_position()
+        yc = (pos.y0 + pos.y1) / 2
+        fig.text(left - gap_x_fig * 1.8, yc, pol_labels[row], fontsize=13,
+                 fontweight='bold', ha='center', va='center', rotation='vertical')
+    plt.savefig(os.path.join(outdir, 'colorplot_ratio_GRIN_over_sKK.png'), dpi=150,
+                bbox_inches='tight')
+    plt.close()
+    print("  Saved colorplot_ratio_GRIN_over_sKK.png")
+
+    # ---- Figure 2: Absolute R_sKK (2 rows x 4 cols) ----
+    fig, axes = plt.subplots(2, 4, figsize=(14, 6))
+    norm_abs = matplotlib.colors.LogNorm(vmin=1e-8, vmax=1)
+    cmap_abs = matplotlib.cm.viridis.copy()
+
+    for col, thick_c in enumerate(thicknesses):
+        for row, pol_c in enumerate(color_pols):
+            ax = axes[row, col]
+            im = ax.pcolormesh(color_angle_list, color_lamlist, R_skk_2D[pol_c][col].T,
+                               norm=norm_abs, cmap=cmap_abs, shading='auto')
+            if row == 0:
+                ax.set_title(f'{thick_c:.1f} µm', fontsize=11, pad=4)
+            if row < 1:
+                ax.set_xticklabels([])
+            if col > 0:
+                ax.set_yticklabels([])
+
+    cbar = fig.colorbar(im, ax=axes, location='right', shrink=0.85, pad=0.02)
+    cbar.set_label(r'$R_{\mathrm{sKK}}$', fontsize=11)
+    fig.canvas.draw()
+    left = axes[0, 0].get_position().x0
+    right = axes[0, -1].get_position().x1
+    bottom = axes[1, 0].get_position().y0
+    xc = (left + right) / 2
+    fig_w, fig_h = fig.get_size_inches()
+    gap_y_fig = bottom - 0.01
+    gap_x_fig = gap_y_fig * fig_h / fig_w
+    fig.text(xc, 0.98, 'Coating Thickness', fontsize=13, ha='center', va='top',
+             fontweight='bold')
+    fig.text(xc, 0.01, 'Angle in Air (degrees)', fontsize=12,
+             ha='center', va='bottom')
+    fig.text(left - gap_x_fig, 0.5, r'Wavelength ($\mu$m)', fontsize=12,
+             ha='center', va='center', rotation='vertical')
+    for row, pol_c in enumerate(color_pols):
+        pos = axes[row, 0].get_position()
+        yc = (pos.y0 + pos.y1) / 2
+        fig.text(left - gap_x_fig * 1.8, yc, pol_labels[row], fontsize=13,
+                 fontweight='bold', ha='center', va='center', rotation='vertical')
+    plt.savefig(os.path.join(outdir, 'colorplot_abs_R_sKK.png'), dpi=150,
+                bbox_inches='tight')
+    plt.close()
+    print("  Saved colorplot_abs_R_sKK.png")
+
+
+def fig_thickness_sweep_shapes_on_bulk(S):
     """Thickness sweep for all loss shapes (2x2 grid, single figure).
     Geometry: air | 5mm sapphire | coating | air.
     """
@@ -1669,6 +2338,146 @@ def fig_thickness_sweep_shapes(S):
                bbox_to_anchor=(leg_x, leg_y))
 
     plt.savefig(f'{S.FIGDIR}/shapes_thickness_sweep.png', dpi=150,
+                bbox_inches='tight')
+    plt.close()
+    print("  Saved shapes_thickness_sweep.png")
+
+
+def fig_thickness_sweep_shapes(S):
+    """Thickness sweep for all loss shapes (2x2 grid).
+    Geometry: nb(inf) | coating | air(inf). Saves data as .npy.
+    """
+    print("\n=== THICKNESS SWEEP - ALL LOSS SHAPES (no bulk) ===")
+    outdir = os.path.join(S.FIGDIR, '2026May29_no_bulk')
+    os.makedirs(outdir, exist_ok=True)
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Data', 'thickness_sweep_nobulk')
+    os.makedirs(cache_dir, exist_ok=True)
+
+    lamdata_nb = np.linspace(1, 10, 150)
+    angle_avg_list = np.arange(0, 90, 2)
+
+    sweep_configs = [
+        dict(mode='wavelength', angle=80, pol='s', wavelength=None,
+             title=r's-pol, 80$^\circ$, $\lambda$-averaged',
+             fname='s80_wlavg', row=0, col=0),
+        dict(mode='wavelength', angle=45, pol='p', wavelength=None,
+             title=r'p-pol, 45$^\circ$, $\lambda$-averaged',
+             fname='p45_wlavg', row=0, col=1),
+        dict(mode='angle', angle=None, pol='s', wavelength=3.0,
+             title=r's-pol, $\lambda$ = 3 $\mu$m, angle-averaged',
+             fname='s_lam3_angavg', row=1, col=0),
+        dict(mode='angle', angle=None, pol='p', wavelength=4.5,
+             title=r'p-pol, $\lambda$ = 4.5 $\mu$m, angle-averaged',
+             fname='p_lam4p5_angavg', row=1, col=1),
+    ]
+
+    k_values_shapes = np.array([2, 3, 4, 5, 7, 10, 15, 20, 30, 50, 75, 100])
+    shape_names_t2 = ['sKK', 'Constant', 'Gaussian', 'Double peaks', 'Random']
+    shape_colors_t2 = [GREEN, RED, BLUE, PURPLE, ORANGE]
+    shape_markers_t2 = ['s', 'o', '^', 'D', 'v']
+
+    all_results = []
+    for cfg in sweep_configs:
+        cache_f = os.path.join(cache_dir, f'{cfg["fname"]}.npy')
+        if os.path.exists(cache_f):
+            print(f"  [cache hit] {cfg['fname']}")
+            data = np.load(cache_f, allow_pickle=True).item()
+            all_results.append(data)
+            continue
+
+        print(f"\n  --- Thickness sweep: {cfg['fname']} ---")
+        R_shapes_vs_k = {name: [] for name in shape_names_t2}
+        thicknesses_t2 = []
+
+        for k_val in k_values_shapes:
+            dx_k2 = 1 / (100 * k_val); xmin_k2 = -20 / k_val; xmax_k2 = -xmin_k2
+            nx_k2 = 1 + int(np.floor((xmax_k2 - xmin_k2) / dx_k2))
+            xx_k2 = np.linspace(xmin_k2, xmax_k2, nx_k2)
+            e_re_k2 = tmm_h.logistic(xx_k2, k_val, S.nb)
+            e_im_k2 = tmm_h.ht_derivative(xx_k2, e_re_k2)
+            loss_ref_k2 = np.trapezoid(e_im_k2, xx_k2)
+            thickness_k2 = xmax_k2 - xmin_k2
+            thicknesses_t2.append(thickness_k2)
+
+            shapes_k2 = [
+                np.copy(e_im_k2),
+                make_constant_profile(xx_k2, loss_ref_k2),
+                make_gaussian_profile(xx_k2, loss_ref_k2),
+                make_double_peak_profile(xx_k2, loss_ref_k2),
+                make_random_profile(xx_k2, loss_ref_k2),
+            ]
+
+            for name, e_im_s in zip(shape_names_t2, shapes_k2):
+                nc_s2, dc_s2 = tmm_h.discretize_profile(xx_k2, e_re_k2 + 1j * e_im_s, delta=S.delta)
+                if cfg['mode'] == 'wavelength':
+                    Rb_s2 = R_nobulk_vs_wavelength(nc_s2, dc_s2, S.nb, lamdata_nb,
+                                                     cfg['angle'], cfg['pol'])
+                    R_avg = np.trapezoid(Rb_s2, lamdata_nb) / (lamdata_nb[-1] - lamdata_nb[0])
+                else:
+                    Rb_s2 = R_nobulk_vs_angle(nc_s2, dc_s2, S.nb,
+                                                angle_avg_list, cfg['wavelength'], cfg['pol'])
+                    R_avg = np.trapezoid(Rb_s2, angle_avg_list) / (angle_avg_list[-1] - angle_avg_list[0])
+                R_shapes_vs_k[name].append(R_avg)
+
+            print(f"    k={k_val:3d} ({thickness_k2:.1f} um): done")
+
+        thicknesses_t2 = np.array(thicknesses_t2)
+
+        if cfg['mode'] == 'wavelength':
+            R_bare_cfg = R_bare_interface(S.nb, cfg['angle'], cfg['pol'])
+        else:
+            R_bare_arr = np.array([R_bare_interface(S.nb, a, cfg['pol']) for a in angle_avg_list])
+            R_bare_cfg = np.trapezoid(R_bare_arr, angle_avg_list) / (angle_avg_list[-1] - angle_avg_list[0])
+
+        data = dict(cfg=cfg, thicknesses=thicknesses_t2,
+                    R_shapes=R_shapes_vs_k, R_bare=R_bare_cfg)
+        np.save(cache_f, data)
+        all_results.append(data)
+
+    # ---- Single 2x2 figure ----
+    fig, axes = plt.subplots(2, 2, figsize=(12, 9),
+                             gridspec_kw={'wspace': 0.20, 'hspace': 0.45})
+
+    for res in all_results:
+        cfg = res['cfg']
+        ax = axes[cfg['row'], cfg['col']]
+        ax.axhline(res['R_bare'], color='gray', lw=1.5, ls=':', zorder=1)
+        for name, col, mk in zip(shape_names_t2, shape_colors_t2, shape_markers_t2):
+            ax.plot(res['thicknesses'], res['R_shapes'][name], f'{mk}-', color=col,
+                    lw=2, ms=6)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_title(cfg['title'], fontsize=11, pad=4)
+        if cfg['row'] < 1:
+            ax.tick_params(labelbottom=False)
+
+    fig.canvas.draw()
+    left = axes[0, 0].get_position().x0
+    right = axes[0, -1].get_position().x1
+    bottom = axes[1, 0].get_position().y0
+    xc = (left + right) / 2
+    fig_w, fig_h = fig.get_size_inches()
+    gap_y_fig = bottom - 0.01
+    gap_x_fig = gap_y_fig * fig_h / fig_w
+    fig.text(xc, 0.01, r'Coating Thickness ($\mu$m)', fontsize=12,
+             ha='center', va='bottom')
+    fig.text(left - gap_x_fig, 0.5, r'$\langle R \rangle$', fontsize=12,
+             ha='center', va='center', rotation='vertical')
+
+    handles = [plt.Line2D([], [], color='gray', lw=1.5, ls=':', label='Bare interface')]
+    for name, clr, mk in zip(shape_names_t2, shape_colors_t2, shape_markers_t2):
+        handles.append(plt.Line2D([], [], color=clr, marker=mk, lw=2, ms=6, label=name))
+    top_row_bottom = axes[0, 0].get_position().y0
+    bot_row_top = axes[1, 0].get_position().y1
+    left_col_right = axes[0, 0].get_position().x1
+    right_col_left = axes[0, 1].get_position().x0
+    leg_x = (left_col_right + right_col_left) / 2
+    leg_y = (top_row_bottom + bot_row_top) / 2
+    fig.legend(handles=handles, loc='center', fontsize=9, ncol=2,
+               framealpha=0.9, edgecolor='gray',
+               bbox_to_anchor=(leg_x, leg_y))
+
+    plt.savefig(os.path.join(outdir, 'shapes_thickness_sweep.png'), dpi=150,
                 bbox_inches='tight')
     plt.close()
     print("  Saved shapes_thickness_sweep.png")
@@ -2141,20 +2950,28 @@ FIGURE_MAP = {
     'naive_ht_tmm':      ('Naive HT — TMM validation (T/R/A)',            fig_naive_ht_TMM),
     'derivative_method': ('Derivative method (single panel)',              fig_derivative_result),
     'final_profile':     ('Final profile (eps\' + eps\'\')',               fig_final_profile),
-    'reflection_spol_80':    ('R_back vs wavelength, s-pol 80°',           fig_reflection_spol_80),
-    'absorption_spol_80':    ('Absorption vs wavelength, s-pol 80°',       fig_absorption_spol_80),
-    'reflection_spol_angle': ('R_back vs angle, s-pol, λ=3um',            fig_reflection_spol_angle),
-    'reflection_ppol_angle': ('R_back vs angle, p-pol, λ=3um',            fig_reflection_ppol_angle),
+    'reflection_spol_80':    ('R vs wavelength, s-pol 80° (no bulk)',       fig_reflection_spol_80),
+    'reflection_ppol_80':    ('R vs wavelength, p-pol 80° (no bulk)',       fig_reflection_ppol_80),
+    'reflection_spol_angle': ('R vs angle, s-pol, λ=3um (no bulk)',        fig_reflection_spol_angle),
+    'reflection_ppol_angle': ('R vs angle, p-pol, λ=3um (no bulk)',        fig_reflection_ppol_angle),
+    'reflection_spol_80_on_bulk':    ('R_back vs λ, s-pol 80° (sapphire)',          fig_reflection_spol_80_on_bulk),
+    'absorption_spol_80_on_bulk':    ('Absorption vs λ, s-pol 80° (sapphire)',      fig_absorption_spol_80_on_bulk),
+    'reflection_spol_angle_on_bulk': ('R_back vs angle, s-pol λ=3um (sapphire)',    fig_reflection_spol_angle_on_bulk),
+    'reflection_ppol_angle_on_bulk': ('R_back vs angle, p-pol λ=3um (sapphire)',    fig_reflection_ppol_angle_on_bulk),
     'alt_geometry':      ('Substrate-free geometry (4 panels)',             fig_alt_substrate_free),
     'fom_intro':         ('FoM intro (single panel)',                      fig_fom_intro),
-    'alpha_tradeoff':    ('Alpha tradeoff',                                fig_alpha_tradeoff),
-    'sigma_gating':      ('Sigma gating',                                  fig_sigma_gating),
+    'alpha_tradeoff':    ('Alpha tradeoff (no bulk, 5um)',                  fig_alpha_tradeoff),
+    'sigma_gating':      ('Sigma gating (no bulk, 5um)',                    fig_sigma_gating),
+    'sigma_gate_function': ('Sigma gate function g(x) (supplementary)',     fig_sigma_gate_function),
     'fom_comparison':    ('FoM comparison (full vs gated)',                 fig_fom_comparison),
-    'thickness_sweep':   ('Thickness design space',                        fig_thickness_single),
-    'loss_shapes':       ('Loss shape comparison',                         fig_loss_shapes),
+    'thickness_sweep':   ('Thickness design space (no bulk)',               fig_thickness_single),
+    'thickness_sweep_on_bulk': ('Thickness design space (sapphire)',          fig_thickness_single_on_bulk),
+    'loss_shapes':       ('Loss shape comparison (no bulk)',                fig_loss_shapes),
     'thick_shapes':      ('Thick coating shapes',                          fig_thick_shapes),
-    'colorplots':        ('GRIN/sKK colorplots (4 thicknesses)',            fig_colorplots),
-    'thickness_sweep_shapes': ('Thickness sweep all shapes',               fig_thickness_sweep_shapes),
+    'colorplots':        ('Colorplots ratio + abs R (no bulk)',             fig_colorplots),
+    'colorplots_on_bulk': ('GRIN/sKK colorplots (sapphire)',               fig_colorplots_on_bulk),
+    'thickness_sweep_shapes':         ('Thickness sweep all shapes (no bulk)',      fig_thickness_sweep_shapes),
+    'thickness_sweep_shapes_on_bulk': ('Thickness sweep all shapes (sapphire)',     fig_thickness_sweep_shapes_on_bulk),
     'losses_matched':    ('Losses-matched comparison',                     fig_losses_matched),
     'crossover':         ('Spectral crossover (logistic + Lorentzian)',    fig_crossover),
     'fom_spectrum':      ('Spectral FoM plots (logistic + Lorentzian)',    fig_fom_spectrum),
