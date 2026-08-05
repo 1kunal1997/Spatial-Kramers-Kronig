@@ -1,0 +1,9 @@
+{
+  "delta": 0.0025,
+  "nb": 1.7,
+  "L": 5.0,
+  "ang_step": 0.5,
+  "lol_min": 0.06,
+  "lol_max": 30.0,
+  "pts_per_decade": 30
+}
