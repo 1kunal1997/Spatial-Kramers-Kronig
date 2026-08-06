@@ -145,7 +145,7 @@ for r, (map_s, map_p, cmap, norm, cblabel) in enumerate(ROWS):
         else:
             ax.tick_params(labelbottom=False)
         if r == 0:                                   # polarization named once, at the top
-            ax.set_title(('$s$' if c == 0 else '$p$') + '-polarization')
+            ax.set_title(('s' if c == 0 else 'p') + '-polarization')   # upright, not math italic
     # one bar per row, registered on the row's rightmost panel. Rows 0 and 1 use the SAME
     # norm, so bar 1 duplicates bar 0 on purpose -- it keeps the rows equal width.
     C.colorbar_strip(fig, axs[r, 1], m, cblabel, shared=True)

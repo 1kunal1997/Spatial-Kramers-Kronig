@@ -61,12 +61,14 @@ C_SKK = C.C_R                                      # green -- stands out against
 skk_stack = C.build_stack(xx, e_re + 1j * e_im_skk, n_out=1.0)
 L_tot = C.coating_thickness(skk_stack[1])
 gauss = []
-for (f, matched), col in zip(SIGMAS, gauss_cmap):
+for i, ((f, matched), col) in enumerate(zip(SIGMAS, gauss_cmap)):
     sig = sigma_default * f
     eim = gaussian_profile(xx, target, sig)
-    label = r'Gaussian, $\sigma = %.3f\,L$' % (sig / L_tot)
-    if matched:
-        label += '\n(peak matched to sKK)'
+    # "Gaussian" is written ONCE, on the first entry of the family; the rest are identified by
+    # sigma alone (they sit together in the legend, so the word doesn't need repeating).
+    label = r'$\sigma = %.3f\,L$' % (sig / L_tot)
+    if i == 0:
+        label = 'Gaussian, ' + label
     gauss.append(dict(eim=eim, stack=C.build_stack(xx, e_re + 1j * eim, n_out=1.0),
                       col=col, label=label, sigma=sig))
 print("sKK peak eps'' = %.3f ; peak-matched Gaussian sigma = %.4f um (%.3f L), realised peak = %.3f"
@@ -99,6 +101,7 @@ for g in gauss:
     axa.plot(xx / L_tot, g['eim'], color=g['col'], lw=C.LW_MAIN, label=g['label'])
 axa.plot(xx / L_tot, e_im_skk, color=C_SKK, lw=C.LW_MAIN, label='sKK', zorder=10)
 axa.set_xlim(xx.min() / L_tot, xx.max() / L_tot)
+axa.set_ylim(0, 12)          # headroom so the tallest spike (peak 10.5) clears the legend
 axa.xaxis.set_major_locator(FixedLocator([-0.5, 0, 0.5]))
 axa.xaxis.set_major_formatter(FixedFormatter([r'$-L/2$', r'$0$', r'$L/2$']))
 axa.set_xlabel(r'$x$')
@@ -119,11 +122,14 @@ axb.xaxis.set_minor_formatter(NullFormatter())
 axb.set_xlabel(r'$\lambda$')
 axb.set_ylabel('Reflectance')
 
-# single-column legend INSIDE panel a, sKK first
+# Single-column legend INSIDE panel a, upper left, in PLOT order: the Gaussians first (widest
+# label, "Gaussian, sigma = 0.125 L", on the TOP row) and sKK last. That ordering is what lets the
+# legend live at upper left without collisions -- only the top row is wide enough to reach x=0,
+# and it sits above the tallest spike (peak 10.5, ylim top 12); every row below it is a bare
+# sigma, far short of x=0. (sKK still draws ON TOP of the Gaussians via zorder=10.)
 h, l = axa.get_legend_handles_labels()
-order = [len(h) - 1] + list(range(len(h) - 1))
-axa.legend([h[i] for i in order], [l[i] for i in order],
-           loc='upper left', ncol=1, frameon=False, fontsize=5,
+axa.legend(h, l,
+           loc='upper left', ncol=1, frameon=False, fontsize=6,   # = apply_style's legend size
            handlelength=1.4, handletextpad=0.5, labelspacing=0.35, borderpad=0.2)
 
 C.relayout_grid(fig, axs, letters=['a', 'b'], buffer_in=0.05, col_ws_in=0.2)

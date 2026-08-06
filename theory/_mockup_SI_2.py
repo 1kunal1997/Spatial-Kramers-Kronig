@@ -56,7 +56,9 @@ PANELS = [(0, 0, 's', 10), (0, 1, 'p', 10),
 
 
 def _title(pol, th):
-    return pol + r'-polarization, $\theta_b = %d^\circ$' % th
+    # ^{\circ} braced, as in the main text: unbraced \circ gets binary-operator spacing in
+    # mathtext and renders as "10 °".
+    return pol + r'-polarization, $\theta_b = %d^{\circ}$' % th
 
 
 fig, axs, _ = C.panel_grid(nrows=2, ncols=2)         # no schematic band
@@ -97,7 +99,7 @@ handles = [plt.Line2D([], [], color=col, marker=mk, lw=C.LW_MAIN, ms=3.2, mew=0,
            for name, _stk, col, mk in stacks]
 ptop, pright, pbot = axa.get_position(), axb.get_position(), axc.get_position()
 xc = (ptop.x0 + pright.x1) / 2
-yc = (pbot.y1 + ptop.y0) / 2
+yc = (pbot.y1 + ptop.y0) / 2 + 0.01
 fig.legend(handles=handles, ncol=3, loc='center', bbox_to_anchor=(xc, yc), fontsize=7)
 
 C.save(fig, os.path.join('theory', '_mockup_SI_2.png'))
