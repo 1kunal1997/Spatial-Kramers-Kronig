@@ -1,0 +1,546 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}{Remark}
+
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Hp}{\mathcal{H}_p}
+\newcommand{\PV}{\text{P.\,V.}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\K}{\mathcal{K}}
+
+\title{What Constrains $\eps'(x)$ for Passivity?\\[4pt]
+\large Fourier Decomposition, Analytic Function Theory,\\
+and the Inverse Kernel}
+\author{Spatial Kramers--Kronig Project}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%======================================================================
+\part{Fourier Mode Decomposition of $\eps''$}
+%======================================================================
+
+\section{Setup and Motivation}
+
+The companion document \textit{The Hilbert Transform: From First Principles to the sKK Passivity Condition} established the exact passivity condition (Theorem~8 of that document):
+
+\begin{theorem}[Passivity condition --- restated]\label{thm:passivity}
+Let $\eps'(x)$ be periodic on $[-L,L]$ and let $\eps''(x) = \Hp[\eps'](x) + C_0$ be its HT partner satisfying $\eps''(\pm L) = 0$.  Then:
+\begin{equation}
+\boxed{\eps''(x) \geq 0 \;\;\forall\, x \quad\Longleftrightarrow\quad \Hp[\eps'](x) \geq \Hp[\eps']({\pm L}) \;\;\forall\, x}
+\end{equation}
+In words: the periodic Hilbert transform of $\eps'$ must attain its global minimum at the domain boundary.
+\end{theorem}
+
+This condition is exact, necessary and sufficient, and numerically checkable.  But it is stated in terms of $\Hp[\eps']$, not in terms of $\eps'$ itself.  The question driving this document is:
+
+\medskip
+\noindent\textbf{Central question:} What features of the real permittivity profile $\eps'(x)$ determine whether the passivity condition is satisfied?
+
+\medskip
+We attack this question from three directions: Fourier decomposition (Part~I), analytic function theory on the unit disk (Part~II), and the inverse kernel (Part~III).
+
+\section{Fourier Expansion of $\eps'$ and $\eps''$}\label{sec:fourier-setup}
+
+Write $\eps'(x)$ as a Fourier series on $[-L, L]$ (period $2L$):
+\begin{equation}
+\eps'(x) = \frac{a_0}{2} + \sum_{n=1}^{\infty}\Bigl[a_n \cos\frac{n\pi x}{L} + b_n \sin\frac{n\pi x}{L}\Bigr]
+\end{equation}
+The periodic Hilbert transform acts mode by mode via the Fourier multiplier $c_n \mapsto -i\,\text{sgn}(n)\,c_n$:
+\begin{equation}
+\Hp[\eps'](x) = \sum_{n=1}^{\infty}\Bigl[a_n \sin\frac{n\pi x}{L} - b_n \cos\frac{n\pi x}{L}\Bigr]
+\end{equation}
+Constants are annihilated ($\Hp[\text{const}] = 0$).
+
+The boundary value $h_0 = \Hp[\eps'](\pm L)$ evaluates to (using $\sin(n\pi) = 0$, $\cos(n\pi) = (-1)^n$):
+\begin{equation}
+h_0 = -\sum_{n=1}^{\infty} b_n (-1)^n
+\end{equation}
+Therefore $C_0 = -h_0 = \sum_{n=1}^{\infty} b_n(-1)^n$, and:
+\begin{equation}\label{eq:eps-imag-fourier}
+\eps''(x) = \Hp[\eps'](x) - h_0 = \sum_{n=1}^{\infty}\Bigl[a_n \sin\frac{n\pi x}{L} - b_n\,\varphi_n(x)\Bigr]
+\end{equation}
+where we define:
+\begin{equation}\label{eq:phi-n}
+\boxed{\varphi_n(x) \equiv \cos\frac{n\pi x}{L} - (-1)^n}
+\end{equation}
+
+\section{Properties of $\varphi_n(x)$}
+
+The functions $\varphi_n$ have a definite sign that depends on the parity of $n$:
+
+\begin{itemize}
+\item \textbf{Odd $n$:} $(-1)^n = -1$, so $\varphi_n(x) = \cos(n\pi x/L) + 1 \geq 0$ for all $x$.  The function is non-negative, vanishes only when $\cos(n\pi x/L) = -1$.
+\item \textbf{Even $n$:} $(-1)^n = +1$, so $\varphi_n(x) = \cos(n\pi x/L) - 1 \leq 0$ for all $x$.  The function is non-positive, vanishes only when $\cos(n\pi x/L) = 1$.
+\end{itemize}
+
+Both satisfy $\varphi_n(\pm L) = 0$, consistent with $\eps''(\pm L) = 0$.
+
+\section{Mode-by-Mode Safety Classification}
+
+Equation~\eqref{eq:eps-imag-fourier} writes $\eps''$ as a sum of \emph{mode contributions}:
+\begin{equation}
+\eps''(x) = \sum_{n=1}^{\infty} g_n(x), \qquad g_n(x) = a_n\sin\frac{n\pi x}{L} - b_n\,\varphi_n(x)
+\end{equation}
+
+We classify each mode as \textbf{safe} or \textbf{unsafe} based on whether its contribution $g_n(x)$ can go negative:
+
+\subsection{The $b_n$ term: sign-definite if $b_n$ has the correct sign}
+
+The contribution $-b_n\,\varphi_n(x)$ is non-negative for all $x$ when:
+\begin{itemize}
+\item Odd $n$: $-b_n \cdot (\geq 0) \geq 0 \;\Longrightarrow\; b_n \leq 0$
+\item Even $n$: $-b_n \cdot (\leq 0) \geq 0 \;\Longrightarrow\; b_n \geq 0$
+\end{itemize}
+
+Summarizing: mode $n$'s $\varphi_n$ term is \textbf{safe} when $b_n (-1)^n \leq 0$.
+
+\subsection{The $a_n$ term: always sign-indefinite}
+
+The term $a_n \sin(n\pi x/L)$ oscillates between positive and negative values for any $a_n \neq 0$.  There is no sign of $a_n$ that makes this term non-negative everywhere.  Every nonzero $a_n$ is inherently \textbf{unsafe}.
+
+\subsection{Connection to $\eps'(x)$}
+
+The coefficients $(a_n, b_n)$ are the Fourier coefficients of $\eps'(x)$ itself:
+\begin{align}
+a_n &= \frac{1}{L}\int_{-L}^{L} \eps'(x)\cos\frac{n\pi x}{L}\,\dd x \qquad\text{(cosine = \emph{symmetric} content of $\eps'$)} \\[4pt]
+b_n &= \frac{1}{L}\int_{-L}^{L} \eps'(x)\sin\frac{n\pi x}{L}\,\dd x \qquad\text{(sine = \emph{antisymmetric} content of $\eps'$)}
+\end{align}
+
+Therefore:
+\begin{itemize}
+\item \textbf{Symmetric features} in $\eps'(x)$ (bumps, dips, cosine-like variations centered at $x=0$) produce nonzero $a_n$ $\to$ \textbf{always unsafe} sine terms in $\eps''$.
+\item \textbf{Antisymmetric features} in $\eps'(x)$ (step-like, monotonic transitions) produce nonzero $b_n$ $\to$ \textbf{safe if $b_n$ has the correct sign}.
+\end{itemize}
+
+\section{Application to Test Profiles}\label{sec:fourier-test}
+
+The Fourier decomposition was implemented numerically (\texttt{theory/fourier\_passivity\_diagnostic.py}) and tested against the full suite of profiles from \texttt{theory/mismatch\_table.py}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccl}
+\toprule
+\textbf{Profile} & \textbf{Pass?} & \textbf{Dominant unsafe mode} & \textbf{Mechanism} \\
+\midrule
+Logistic (monotonic) & \checkmark & --- & All modes safe \\
+Tanh (equal slopes) & \checkmark & --- & All modes safe \\
+Backward-constructed & \checkmark & --- & All modes safe (by construction) \\
+\midrule
+Cosine bump & $\times$ & $a_1$ & Single unsafe sine mode \\
+Logistic + bump ($\alpha$) & $\times$ & $a_1$ & $a_1$ grows with $\alpha$, overtakes $|b_1|$ \\
+Opposite bumps ($\alpha$) & $\times$ & $a_2$ & Higher-harmonic sine content \\
+Asymmetric rise-fall & $\times$ & $a_2$--$a_5$ & Distributed multi-mode failure \\
+Sine & $\times$ & $a_1$ & Pure unsafe content \\
+\bottomrule
+\end{tabular}
+\caption{Fourier mode classification for all test profiles.  Passing profiles have $a_n \approx 0$ and correct-sign $b_n$ at every mode.  Failing profiles have at least one dominant unsafe $a_n$ term.}
+\label{tab:fourier-results}
+\end{table}
+
+\subsection{Two distinct failure mechanisms}
+
+\textbf{Mechanism 1: Unsafe cosine content ($a_n \neq 0$).}  The cosine coefficients of $\eps'$ generate sine terms in $\eps''$ via the HT.  Sines oscillate through zero and always violate passivity.  This drives failure in: cosine bump ($a_1$), logistic+bump ($a_1$ grows with bump amplitude), opposite bumps ($a_2$), and asymmetric rise-fall ($a_2$--$a_5$).
+
+\textbf{Mechanism 2: Wrong-sign sine content.}  Less common, but can occur when perturbations flip the sign of $b_n$ from safe to unsafe for a given mode $n$.
+
+\subsection{Why ``area'' was a useful but imperfect proxy}
+
+Earlier empirical work found that the ``area'' $\int [\eps'(x) - \text{baseline}]\,\dd x$ correlated with passivity failure.  The Fourier decomposition explains why: this integral is proportional to $a_0$ (the DC component), which is related to but not identical to $a_1$ (the first cosine coefficient).  The asymmetric rise-fall profile has zero area ($a_0 = 0$) but nonzero $a_2$--$a_5$, explaining why the area metric missed it.
+
+\subsection{Crossover behavior}
+
+For the logistic+bump family $\eps'(x) = \eps'_{\text{logistic}}(x) + \alpha\cos(\pi x/L)$, the coefficient $a_1$ grows linearly with $\alpha$ while $|b_1|$ remains constant (set by the logistic).  The passivity margin $\min_x \eps''(x)$ crosses zero near $\alpha \approx 0$, showing that even a small symmetric perturbation to a monotonic profile can break passivity.  See Figure~\ref{fig:crossover}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{theory/figures/2026May12_fourier/crossover_a1_vs_b1.png}
+\caption{Crossover for the logistic+bump family.  (a)~Passivity margin vs.\ bump amplitude $\alpha$.  (b)~The unsafe coefficient $a_1$ grows linearly while the safe coefficient $|b_1|$ stays flat.}
+\label{fig:crossover}
+\end{figure}
+
+\subsection{Limitations of the Fourier picture}
+
+The mode-by-mode classification explains \emph{which Fourier components of $\eps''$ go negative} but does not directly answer \emph{what spatial features of $\eps'(x)$ cause those components}.  The relationship $a_n = \langle \eps', \cos(n\pi x/L)\rangle/L$ is exact but non-local: every point of $\eps'$ contributes to every $a_n$.  The Fourier decomposition is a visualization of the problem in a different basis, not a solution.
+
+
+%======================================================================
+\part{Analytic Function Theory on the Unit Disk}
+%======================================================================
+
+\section{Mapping to the Unit Circle}\label{sec:unit-circle}
+
+Define the angular variable $\theta = \pi x/L \in [-\pi, \pi]$ and the unit circle coordinate $z = e^{i\theta}$.  The domain endpoints $x = \pm L$ both map to $z = e^{\pm i\pi} = -1$.
+
+Write $u(\theta) \equiv \eps'(x(\theta))$.  By the theory of conjugate harmonic functions, there exists a unique analytic function $F(z)$ in the unit disk $|z| < 1$ with:
+\begin{equation}
+\operatorname{Re}[F(e^{i\theta})] = u(\theta) = \eps'(\theta), \qquad \operatorname{Im}[F(e^{i\theta})] = \tilde{u}(\theta) = \Hp[\eps'](\theta)
+\end{equation}
+$F$ is given by the \textbf{Schwarz integral formula}:
+\begin{equation}\label{eq:schwarz}
+F(z) = \frac{1}{2\pi}\oint_{|\zeta|=1} \frac{\zeta + z}{\zeta - z}\,u(\zeta)\,\frac{\dd\zeta}{i\zeta} + iv_0
+\end{equation}
+where $v_0 = \operatorname{Im}[F(0)]$ is a free real constant.
+
+\section{The Passivity Condition on the Disk}
+
+The sKK relation gives $\eps''(\theta) = \operatorname{Im}[F(e^{i\theta})] + C_0$.  The endpoint condition $\eps''(\pm L) = 0$ translates to:
+\begin{equation}
+C_0 = -\operatorname{Im}[F(-1)]
+\end{equation}
+Therefore:
+\begin{equation}
+\eps''(\theta) = \operatorname{Im}[F(e^{i\theta})] - \operatorname{Im}[F(-1)]
+\end{equation}
+and the passivity condition $\eps''(\theta) \geq 0$ becomes:
+\begin{equation}\label{eq:passivity-disk}
+\boxed{\operatorname{Im}[F(e^{i\theta})] \geq \operatorname{Im}[F(-1)] \quad \forall\;\theta \in [-\pi,\pi]}
+\end{equation}
+
+\section{The Shifted Function $G(z)$}
+
+Define:
+\begin{equation}
+G(z) \equiv F(z) - F(-1)
+\end{equation}
+Then $G$ is analytic in the disk with:
+\begin{align}
+G(-1) &= 0 \\
+\operatorname{Re}[G(e^{i\theta})] &= \eps'(\theta) - \eps'(\pi) \equiv \eps'(\theta) - \eps'_L \\
+\operatorname{Im}[G(e^{i\theta})] &= \eps''(\theta)
+\end{align}
+The passivity condition becomes $\operatorname{Im}[G(e^{i\theta})] \geq 0$ for all $\theta$.  By the \textbf{minimum principle for harmonic functions}, this extends to the interior:
+\begin{equation}
+\operatorname{Im}[G(z)] \geq 0 \quad \forall\;|z| \leq 1
+\end{equation}
+So \textbf{$G$ maps the closed unit disk into the closed upper half-plane} $\{w : \operatorname{Im}(w) \geq 0\}$, with the boundary point $z = -1$ mapping to the origin $w = 0$.
+
+\section{The Herglotz--Riesz Representation}
+
+\begin{theorem}[Herglotz--Riesz, rotated]\label{thm:herglotz}
+$G(z)$ is analytic in $|z| < 1$ with $\operatorname{Im}[G] \geq 0$ if and only if there exists a finite non-negative Borel measure $\mu$ on $[-\pi, \pi]$ and a real constant $\beta$ such that:
+\begin{equation}
+G(z) = -\beta + i\int_{-\pi}^{\pi} \frac{e^{it} + z}{e^{it} - z}\,\dd\mu(t)
+\end{equation}
+\end{theorem}
+
+The boundary values decompose via the Poisson kernel $P_r$ and conjugate Poisson kernel $Q_r$:
+\begin{align}
+\operatorname{Im}[G(e^{i\theta})] &= \frac{\dd\mu_{\text{ac}}}{\dd\theta}(\theta) \quad\text{(a.e.)} \label{eq:herglotz-imag}\\[4pt]
+\operatorname{Re}[G(e^{i\theta})] &= -\PV\!\int_{-\pi}^{\pi}\cot\frac{\theta - t}{2}\,\dd\mu(t) - \beta \label{eq:herglotz-real}
+\end{align}
+The condition $G(-1) = 0$ requires: (i)~$\mu$ has \textbf{no point mass at $t = \pi$}, and (ii)~$\beta$ is determined by $\operatorname{Re}[G(-1)] = 0$.
+
+For smooth profiles, $\mu$ is purely absolutely continuous with density $\eps''(\theta) \geq 0$, and \eqref{eq:herglotz-real} reduces to $\eps'(\theta) - \eps'_L = -\Hp[\eps''](\theta) + \text{const}$, which is the inverse HT relation.  The Herglotz representation is exact but \emph{tautological} for smooth functions: it restates passivity ($\eps'' \geq 0$) as non-negativity of the measure density.
+
+\section{Factoring the Zero: $G(z) = (1+z)\,P(z)$}\label{sec:factoring}
+
+Since $G(-1) = 0$ and $G$ is analytic, we factor:
+\begin{equation}
+G(z) = (1+z)\,P(z)
+\end{equation}
+where $P(z)$ is analytic in $|z| \leq 1$.  On the boundary, using $1 + e^{i\theta} = 2\cos(\theta/2)\,e^{i\theta/2}$:
+\begin{equation}
+G(e^{i\theta}) = 2\cos\frac{\theta}{2}\;e^{i\theta/2}\;P(e^{i\theta})
+\end{equation}
+Writing $P(e^{i\theta}) = p(\theta) + iq(\theta)$ and separating real/imaginary parts:
+\begin{align}
+\eps'(\theta) - \eps'_L &= (1+\cos\theta)\,p(\theta) - \sin\theta\,q(\theta) \label{eq:factor-real}\\
+\eps''(\theta) &= \sin\theta\,p(\theta) + (1+\cos\theta)\,q(\theta) \label{eq:factor-imag}
+\end{align}
+The imaginary part factorizes as:
+\begin{equation}
+\eps''(\theta) = 2\cos\frac{\theta}{2}\Bigl[\sin\frac{\theta}{2}\,p(\theta) + \cos\frac{\theta}{2}\,q(\theta)\Bigr]
+\end{equation}
+Since $\cos(\theta/2) \geq 0$ for $\theta \in [-\pi,\pi]$, passivity requires:
+\begin{equation}
+\sin\frac{\theta}{2}\,p(\theta) + \cos\frac{\theta}{2}\,q(\theta) \geq 0 \qquad \forall\;\theta \in (-\pi,\pi)
+\end{equation}
+
+\subsection{The phase constraint}
+
+Writing $P(e^{i\theta}) = |P|\,e^{i\phi}$ in polar form, the passivity condition becomes:
+\begin{equation}\label{eq:phase-constraint}
+\boxed{\sin\!\Bigl(\frac{\theta}{2} + \phi(\theta)\Bigr) \geq 0 \qquad\Longleftrightarrow\qquad \phi(\theta) \in \Bigl[-\frac{\theta}{2},\;\pi - \frac{\theta}{2}\Bigr]}
+\end{equation}
+
+\textbf{Geometric interpretation:} The phase of $P(e^{i\theta})$ must stay within a window of width $\pi$ that \emph{rotates} as $\theta$ sweeps around the circle:
+\begin{center}
+\begin{tabular}{rcl}
+$\theta = 0$ (center): & $\phi \in [0, \pi]$ & ($P$ in the upper half-plane) \\
+$\theta = +\pi/2$: & $\phi \in [-\pi/4, 3\pi/4]$ & (window rotates CW) \\
+$\theta = -\pi/2$: & $\phi \in [+\pi/4, 5\pi/4]$ & (window rotates CCW) \\
+\end{tabular}
+\end{center}
+
+\subsection{Solving for $P$ from $\eps'$}
+
+The system \eqref{eq:factor-real}--\eqref{eq:factor-imag} inverts (determinant $= 2(1+\cos\theta) \neq 0$ for $\theta \neq \pm\pi$):
+\begin{align}
+p(\theta) &= \frac{1}{2}\Bigl[(\eps' - \eps'_L) + \tan\frac{\theta}{2}\;\eps''\Bigr] \\[4pt]
+q(\theta) &= \frac{1}{2}\Bigl[\eps'' - \tan\frac{\theta}{2}\;(\eps' - \eps'_L)\Bigr]
+\end{align}
+Since $\eps'' = \Hp[\eps'] + C_0$, both $p$ and $q$ are determined entirely by $\eps'$.  However, evaluating them requires computing $\Hp[\eps']$ first.  The phase constraint \eqref{eq:phase-constraint} is a geometric reformulation of passivity, not a simplification that avoids the Hilbert transform.
+
+\subsection{What the factorization achieves}
+
+The factorization is rigorous and exact.  It shows that passivity is equivalent to a \emph{rotating half-plane constraint} on the boundary values of an analytic function $P(z)$.  But every step is invertible---no information is gained or lost.  The constraint still requires knowledge of $\Hp[\eps']$ to evaluate, because $P$ is determined by $G$, which is determined by $F$, which is the analytic extension of $\eps'$.
+
+
+%======================================================================
+\part{The Inverse Kernel}
+%======================================================================
+
+\section{The Inverse Direction}\label{sec:inverse}
+
+Instead of asking ``given $\eps'$, is $\eps''$ passive?'', we flip the question: \textbf{given passive $\eps''$, what must $\eps'$ look like?}
+
+The inverse HT relation ($\Hp^{-1} = -\Hp$ up to constants) gives:
+\begin{equation}
+\eps'(\theta) = \eps'_L - \Hp[\eps''](\theta) + \Hp[\eps''](\pi)
+\end{equation}
+Expanding:
+\begin{equation}\label{eq:inverse-integral}
+\eps'(\theta) - \eps'_L = -\frac{1}{2\pi}\,\PV\!\int_{-\pi}^{\pi}\eps''(t)\Bigl[\cot\frac{\theta - t}{2} - \cot\frac{\pi - t}{2}\Bigr]\dd t
+\end{equation}
+Using $\cot\frac{\pi - t}{2} = \tan\frac{t}{2}$, define the \textbf{inverse kernel}:
+\begin{equation}\label{eq:kernel-def}
+\boxed{\K(\theta, t) \equiv -\frac{1}{2\pi}\Bigl[\cot\frac{\theta - t}{2} - \tan\frac{t}{2}\Bigr]}
+\end{equation}
+so that:
+\begin{equation}\label{eq:eps-from-kernel}
+\eps'(\theta) - \eps'_L = \int_{-\pi}^{\pi}\K(\theta, t)\;\eps''(t)\;\dd t
+\end{equation}
+The passivity constraints on $\eps''$ are: (i)~$\eps''(t) \geq 0$ for all $t$, and (ii)~$\eps''(\pm\pi) = 0$.
+
+\section{Sign Structure of $\K(\theta, t)$}
+
+The kernel $\K(\theta, t)$ has a remarkably simple sign structure, dominated by the cotangent singularity at $t = \theta$:
+\begin{equation}\label{eq:kernel-sign}
+\K(\theta, t) > 0 \;\;\text{when}\;\; t > \theta, \qquad \K(\theta, t) < 0 \;\;\text{when}\;\; t < \theta
+\end{equation}
+with the sign boundary along the diagonal $t = \theta$ (modulo small corrections near the periodic boundary from the $\tan(t/2)$ term).  See Figure~\ref{fig:kernel-sign}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.55\textwidth]{theory/figures/2026May12_kernel/kernel_sign.png}
+\caption{Sign of $\K(\theta, t)$.  Blue = positive, red = negative.  The sign boundary is the diagonal $t = \theta$.}
+\label{fig:kernel-sign}
+\end{figure}
+
+\section{Physical Interpretation}
+
+Since $\eps''(t) \geq 0$, equation~\eqref{eq:eps-from-kernel} decomposes $\eps'(\theta) - \eps'_L$ into contributions from loss at each position $t$:
+\begin{equation}
+\eps'(\theta) - \eps'_L = \underbrace{\int_{t > \theta}\K(\theta,t)\,\eps''(t)\,\dd t}_{> 0\text{ (loss to the right)}} + \underbrace{\int_{t < \theta}\K(\theta,t)\,\eps''(t)\,\dd t}_{< 0\text{ (loss to the left)}}
+\end{equation}
+
+\textbf{Loss to the right of position $\theta$ raises $\eps'(\theta)$ above $\eps'_L$.  Loss to the left lowers it.}
+
+\medskip
+This explains the characteristic sKK profile shapes:
+\begin{itemize}
+\item \textbf{At the left boundary} ($\theta \approx -\pi$): all loss is to the right $\Longrightarrow$ $\eps' - \eps'_L > 0$ $\Longrightarrow$ high refractive index.
+\item \textbf{At the right boundary} ($\theta = \pi$): all loss is to the left $\Longrightarrow$ $\eps' - \eps'_L = 0$ by construction.
+\item \textbf{At the center}: loss is split between left and right $\Longrightarrow$ $\eps'$ is intermediate.
+\end{itemize}
+The monotonically decreasing step-down (logistic) profile is the natural shape produced by centrally concentrated loss.
+
+\section{Cotangent Atoms}
+
+Each ``atom'' of loss---a delta function $\eps''(t) = \delta(t - t_0)$---generates a specific $\eps'$ profile:
+\begin{equation}
+\eps'(\theta) - \eps'_L = \K(\theta, t_0) = -\frac{1}{2\pi}\Bigl[\cot\frac{\theta - t_0}{2} - \tan\frac{t_0}{2}\Bigr]
+\end{equation}
+This is an antisymmetric cotangent centered at $t_0$, with a positive lobe for $\theta < t_0$ and a negative lobe for $\theta > t_0$ (with an asymmetric correction from $\tan(t_0/2)$).  See Figure~\ref{fig:atoms}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{theory/figures/2026May12_kernel/delta_atoms.png}
+\caption{The $\eps'$ profile generated by a single atom of loss $\eps'' = \delta(t - t_0)$ at three positions.  Each atom produces an antisymmetric cotangent in $\eps'$.}
+\label{fig:atoms}
+\end{figure}
+
+Any smooth, passive $\eps''$ is a superposition of such atoms with non-negative weights.  Therefore \textbf{any valid $\eps'$ profile is a non-negative superposition of shifted cotangent basis functions}.
+
+\section{Analytic Verification with Single Fourier Modes}
+
+The inverse kernel can be verified analytically for simple cases.
+
+\textbf{Case 1:} $\eps''(t) = 1 + \cos t$ (non-negative, vanishes at $\pm\pi$).
+\begin{equation}
+\Hp[1 + \cos t] = 0 + \sin t = \sin t \qquad\Longrightarrow\qquad \eps'(\theta) = c - \sin\theta
+\end{equation}
+A monotonically decreasing sinusoid---a valid sKK-type profile.  \checkmark
+
+\textbf{Case 2:} $\eps''(t) = \sin t$ (goes negative for $t < 0$---\emph{not} passive).
+\begin{equation}
+\Hp[\sin t] = -\cos t \qquad\Longrightarrow\qquad \eps'(\theta) = c + \cos\theta
+\end{equation}
+A \textbf{cosine bump}.  The cosine bump profile fails passivity precisely because its HT partner $\sin t$ is not non-negative.  This matches the empirical result from Section~\ref{sec:fourier-test}.
+
+\section{The Constructive Characterization}
+
+\begin{theorem}[Constructive form of the passivity condition]\label{thm:constructive}
+A profile $\eps'(\theta)$ satisfies the passivity condition (Theorem~\ref{thm:passivity}) if and only if it can be written as:
+\begin{equation}\label{eq:constructive}
+\eps'(\theta) = \eps'_L + \int_{-\pi}^{\pi}\K(\theta, t)\;f(t)\;\dd t
+\end{equation}
+for some function $f(t) \geq 0$ with $f(\pm\pi) = 0$.  The function $f$ is the passive loss profile $\eps''$.
+\end{theorem}
+
+\begin{proof}
+$(\Longrightarrow)$: If $\eps'$ satisfies passivity, then $\eps'' = \Hp[\eps'] + C_0 \geq 0$ with $\eps''(\pm\pi) = 0$.  The inverse HT gives \eqref{eq:eps-from-kernel} with $f = \eps''$.
+
+$(\Longleftarrow)$: If $\eps'$ has the form \eqref{eq:constructive} with $f \geq 0$ and $f(\pm\pi) = 0$, then by the HT pairing, $\eps'' = f \geq 0$ and $\eps''(\pm\pi) = 0$.
+\end{proof}
+
+The set of valid $\eps'$ profiles is a \textbf{convex cone}: if $\eps'_1$ and $\eps'_2$ are valid (with the same $\eps'_L$), then $\alpha\,\eps'_1 + (1-\alpha)\,\eps'_2$ is valid for $\alpha \in [0,1]$ (since $\alpha f_1 + (1-\alpha)f_2 \geq 0$).
+
+
+%======================================================================
+\part{Conclusions}
+%======================================================================
+
+\section{The Fundamental Non-Locality}
+
+The passivity condition for sKK profiles is \emph{inherently non-local}: it depends on the Hilbert transform of $\eps'(x)$, which couples the value at every point to the values at every other point.  No finite set of local properties (endpoint values, slopes, curvature, area, etc.)\ can determine passivity in general.
+
+This is analogous to asking ``what feature of a function determines whether its Fourier transform is non-negative?''  There is no simple real-space characterization; one must compute the transform and check.
+
+Each approach in this document provides a different \emph{lens} on the same irreducible condition:
+
+\begin{center}
+\begin{tabular}{lp{8cm}}
+\toprule
+\textbf{Approach} & \textbf{What it reveals} \\
+\midrule
+Fourier decomposition & Which harmonic components of $\eps''$ go negative, and how they relate to cosine/sine content of $\eps'$ \\[4pt]
+Analytic function theory & Passivity $\Longleftrightarrow$ $G$ maps disk to upper half-plane; phase of $P$ stays in a rotating window \\[4pt]
+Inverse kernel & Loss to the right raises $\eps'$, loss to the left lowers it; valid profiles are conic combinations of cotangent atoms \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{What Is Achievable}\label{sec:achievable}
+
+While no simple local condition exists, the analysis does yield actionable results:
+
+\begin{enumerate}
+\item \textbf{The exact condition} (Theorem~\ref{thm:passivity}): $\Hp[\eps'](x) \geq \Hp[\eps'](\pm L)$ for all $x$.  Numerically checkable via FFT.
+
+\item \textbf{The constructive characterization} (Theorem~\ref{thm:constructive}): a profile is valid iff it decomposes as a non-negative superposition of cotangent atoms.  This provides a \emph{design strategy}: start from a valid $\eps'' \geq 0$ and recover $\eps'$ via the inverse HT.
+
+\item \textbf{Sufficient condition---monotonic profiles:}  If $\eps'(x)$ is monotonically decreasing from $n_b^2$ to $n_{\text{air}}^2$, its Fourier sine coefficients $b_n$ have signs consistent with mode safety (all $b_n(-1)^n \leq 0$) and its cosine coefficients $a_n$ are small.  This is why the logistic, tanh, and similar profiles consistently pass.
+
+\item \textbf{Danger signal---symmetric perturbations:}  Any symmetric (even) perturbation to $\eps'$ injects cosine content ($a_n \neq 0$), which maps to sign-indefinite sine terms in $\eps''$.  Even small symmetric bumps can break passivity (the logistic+bump crossover occurs near $\alpha \approx 0$).
+
+\item \textbf{The backward construction} (start from $\eps'' \geq 0$, recover $\eps'$) satisfies passivity by construction and is the recommended design approach when the goal is to guarantee a valid profile.
+\end{enumerate}
+
+\section{Relationship to the Previous Document}
+
+This document extends the companion \textit{Hilbert Transform Notes} (which established the exact passivity condition in Theorems~5--8) by asking the \emph{next} question: what does the condition tell us about $\eps'(x)$ itself?
+
+The answer, after pursuing three independent mathematical approaches, is that \textbf{the passivity condition cannot be reduced to local features of $\eps'$}.  The Hilbert transform is the irreducible bridge between $\eps'$ and $\eps''$, and any equivalent reformulation must encode the same global information.  The constructive characterization (Theorem~\ref{thm:constructive}) and the inverse kernel provide the most physically transparent way to understand and work with this constraint.
+
+%======================================================================
+\part{The DFT Pipeline and Toeplitz PSD Condition}
+%======================================================================
+
+\section{Motivation: Working with What the Code Actually Does}
+
+The preceding approaches (Fourier decomposition, analytic function theory, inverse kernel) all operate on continuous functions and integral transforms.  In practice, however, our code computes $\eps''$ from $\eps'$ using \texttt{scipy.signal.hilbert}, which implements a specific discrete pipeline:
+\begin{enumerate}
+\item Compute the DFT of the input signal $\eps'[n]$.
+\item Zero out negative-frequency components, double positive-frequency components.
+\item Inverse DFT to obtain the analytic signal $x_a[n] = \eps'[n] + i\,\mathrm{HT}\{\eps'\}[n]$.
+\end{enumerate}
+This section derives the passivity condition directly in terms of this DFT pipeline.
+
+\section{The DFT Hilbert Transform}
+
+Let $\eps'[n]$ be sampled at $N$ points (with $N$ even).  The DFT is
+\begin{equation}
+\hat\eps[k] = \sum_{n=0}^{N-1} \eps'[n]\, e^{-2\pi i kn/N}, \quad k = 0, \ldots, N-1.
+\end{equation}
+Since $\eps'[n]$ is real, $\hat\eps[N-k] = \hat\eps[k]^*$.  Write $\hat\eps[k] = \alpha_k + i\beta_k$.
+
+The analytic signal construction yields the Hilbert transform as the imaginary part:
+\begin{equation}\label{eq:dft-ht}
+\mathrm{HT}\{\eps'\}[n] = \frac{2}{N}\sum_{k=1}^{M}\bigl[\alpha_k \sin(k\theta_n) + \beta_k\cos(k\theta_n)\bigr],
+\end{equation}
+where $M = N/2 - 1$ and $\theta_n = 2\pi n/N$.  Each Fourier mode is simply \textbf{rotated by $-\pi/2$}: cosine maps to sine, $-$sine maps to cosine.
+
+Applying the boundary condition $\eps''[0] = 0$ (which fixes $C_0 = -\mathrm{HT}\{\eps'\}[0]$):
+\begin{equation}\label{eq:eim-dft}
+\boxed{\eps''[n] = \frac{2}{N}\sum_{k=1}^{M}\bigl[\alpha_k \sin(k\theta_n) + \beta_k\bigl(\cos(k\theta_n) - 1\bigr)\bigr]}
+\end{equation}
+This is a real trigonometric polynomial of degree $M$.
+
+\section{Fej\'er--Riesz and the PSD Toeplitz Condition}
+
+The passivity condition $\eps''(\theta) \geq 0$ for all $\theta$ is a constraint on a trigonometric polynomial.  The classical \textbf{Fej\'er--Riesz theorem} (1915) states:
+
+\begin{theorem}[Fej\'er--Riesz]\label{thm:fejer-riesz}
+A real trigonometric polynomial $T(\theta) = \sum_{k=-M}^{M} c_k\, e^{ik\theta}$ satisfies $T(\theta) \geq 0$ for all $\theta$ if and only if $T(\theta) = |P(e^{i\theta})|^2$ for some algebraic polynomial $P(z) = \sum_{j=0}^{M} p_j z^j$.
+\end{theorem}
+
+An equivalent matrix formulation: $T(\theta) \geq 0$ if and only if the $(M{+}1) \times (M{+}1)$ \textbf{Toeplitz matrix}
+\begin{equation}
+\mathbf{T}_{jl} = c_{j-l}, \quad j,l = 0, \ldots, M
+\end{equation}
+is \textbf{positive semi-definite} (PSD), where $c_k$ are the exponential Fourier coefficients of $\eps''$.
+
+\section{Connecting to $\eps'$}
+
+Converting \eqref{eq:eim-dft} to exponential form, the Fourier coefficients of $\eps''$ are:
+\begin{equation}
+c_0 = -\frac{2}{N}\sum_{k=1}^{M}\beta_k, \qquad c_k = \frac{\beta_k - i\alpha_k}{N} \;\;\text{for } k \geq 1, \qquad c_{-k} = c_k^*.
+\end{equation}
+These are \textbf{linear functions of the DFT coefficients $(\alpha_k, \beta_k)$ of $\eps'$}.  The passivity condition becomes:
+\begin{equation}
+\boxed{\eps''(x) \geq 0 \quad\Longleftrightarrow\quad \mathbf{T}_{jl} = c_{j-l}(\alpha, \beta) \text{ is PSD}}
+\end{equation}
+
+Additionally, since $\eps''(0) = 0$, the Fej\'er--Riesz polynomial satisfies $P(1) = 0$, giving the factorization $P(z) = (z-1)\,Q(z)$ and therefore:
+\begin{equation}
+\eps''(\theta) = 4\sin^2(\theta/2)\,|Q(e^{i\theta})|^2
+\end{equation}
+for some polynomial $Q$ of degree $M-1$ with $M$ free complex coefficients.
+
+\section{Numerical Verification}
+
+The Toeplitz PSD condition was tested against the direct passivity check (compute $\eps''$, check $\min \eps'' \geq 0$) on 34 test profiles spanning tanh, triangle, cosine-tilt, Gaussian, logistic, backward-constructed, opposite-bump, and asymmetric rise/fall shapes.
+
+\textbf{Result: 32/34 profiles show exact agreement.}  The two ``disagreements'' occur for profiles with $\min \eps'' \approx -0.001$ to $-0.010$: the direct check tolerates these within its $\pm 0.01$ threshold, while the Toeplitz eigenvalue correctly identifies them as non-passive.  The Toeplitz condition is the more principled check (no arbitrary tolerance; the minimum eigenvalue tracks the depth of the passivity violation).
+
+\section{Shortcomings}
+
+Despite its mathematical elegance, the Toeplitz PSD condition has fundamental limitations:
+
+\begin{enumerate}
+\item \textbf{It still requires the Hilbert transform.}  The Fourier coefficients $c_k$ of $\eps''$ are computed from $\eps'$ via the HT---the same computation as the direct check.  The Toeplitz matrix is built from $c_k$, so the HT is embedded in the pipeline.  There is no shortcut that avoids it.
+
+\item \textbf{It is computationally slower.}  The direct check (FFT $\to$ check $\min \eps'' \geq 0$) is $O(N \log N)$.  The Toeplitz check adds an eigenvalue decomposition of an $M \times M$ matrix, which is $O(M^2)$ to $O(M^3)$ additional work.
+
+\item \textbf{It is an equivalent reformulation, not a simplification.}  The PSD condition encodes exactly the same information as $\eps'' \geq 0$.  It does not reveal new structure or provide a local condition on $\eps'$.  The non-locality of the Hilbert transform remains the irreducible core.
+
+\item \textbf{The constructive direction (Fej\'er--Riesz factorization) is the backward construction in disguise.}  Choosing a polynomial $Q$ and computing $\eps'' = 4\sin^2(\theta/2)|Q|^2$ is equivalent to choosing a valid $\eps'' \geq 0$ and recovering $\eps'$ via inverse HT---the same backward construction identified in Section~\ref{sec:achievable}.
+\end{enumerate}
+
+\noindent\textbf{Bottom line:} The Toeplitz PSD condition provides a clean matrix-algebraic restatement of passivity that connects to classical harmonic analysis (Fej\'er--Riesz, 1915) and modern optimization (semidefinite programming).  However, it does not circumvent the Hilbert transform or yield a local characterization of valid $\eps'$ profiles.  The passivity condition remains fundamentally non-local.
+
+\end{document}
