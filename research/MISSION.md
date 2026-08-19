@@ -184,5 +184,11 @@ If `red-team` kills one of these, that is a Captain checkpoint — not a routine
 - **Wave 1**: `passivity_constraint_notes.tex`, `derivation_ht_endpoint_slope_constraints.tex`,
   `hilbert_transform_notes.tex` (repo root)
 - **Motivation**: `Papers/Longhi_sKK_Slowly_Decaying_Profiles_2015.pdf` §3
+- **⭐ LABELLED EXAMPLE CORPUS (Captain, 2026-08-18)**: `theory/figures/2026Apr27/` and
+  `theory/figures/2026May07/` hold an *abundance* of worked examples beyond the seed figure — dozens
+  of profile families with their DiHiTI partners, many carrying PASS/FAIL labels and min ε″ values.
+  Wave 1 produced no conditions, but it produced **data**. Treat these folders as the mission's
+  labelled test set: mine them for near-threshold cases, counterexample candidates, and validation of
+  any proposed criterion. Any crew member short of test cases or ideas should go here first.
 - **Figures**: `theory/figures/2026May07/opposite_bumps_sweep.png` (the seed),
   `2026Aug13_potential_criterion/`, `2026Aug12_passive_constructor/`

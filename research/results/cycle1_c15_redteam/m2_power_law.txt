@@ -1,0 +1,1 @@
+power-law fit over same window: log|eps''| = 1.9977*log(s) + -2.1356

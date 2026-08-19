@@ -1,0 +1,19 @@
+N=4096 (prior-session resolution):
+  m=   0 a=0.00: min_full=+0.00000 min_interior=+0.00212 dM1=+0.0e+00 dsigma=+0.0e+00 maxdLegendre=0.0e+00
+  m=   4 a=0.25: min_full=-0.11522 min_interior=-0.11522 dM1=-7.3e-01 dsigma=-2.0e-15 maxdLegendre=1.5e-01
+  m=   8 a=0.25: min_full=-0.16199 min_interior=-0.16199 dM1=+1.6e-02 dsigma=+2.2e-16 maxdLegendre=4.7e-02
+  m=  16 a=0.25: min_full=-0.19823 min_interior=-0.19823 dM1=+4.7e-02 dsigma=-2.7e-15 maxdLegendre=1.0e-03
+  m=  32 a=0.25: min_full=-0.20189 min_interior=-0.20189 dM1=+5.7e-03 dsigma=-2.2e-15 maxdLegendre=3.7e-04
+  m=  64 a=0.25: min_full=-0.20115 min_interior=-0.20115 dM1=-1.2e-04 dsigma=+0.0e+00 maxdLegendre=8.3e-06
+  m= 128 a=0.25: min_full=-0.19996 min_interior=-0.19996 dM1=-4.9e-05 dsigma=-8.9e-16 maxdLegendre=9.5e-07
+spread(min_full)=0.08667  spread(min_interior)=0.08667
+
+N=2**14:
+  m=   0 a=0.00: min_full=+0.00000 min_interior=+0.00209 dM1=+0.0e+00 dsigma=+0.0e+00 maxdLegendre=0.0e+00
+  m=   4 a=0.25: min_full=-0.11530 min_interior=-0.11530 dM1=-7.3e-01 dsigma=+1.5e-14 maxdLegendre=1.5e-01
+  m=   8 a=0.25: min_full=-0.16205 min_interior=-0.16205 dM1=+1.6e-02 dsigma=+1.7e-14 maxdLegendre=4.7e-02
+  m=  16 a=0.25: min_full=-0.19833 min_interior=-0.19833 dM1=+4.7e-02 dsigma=+3.1e-14 maxdLegendre=1.0e-03
+  m=  32 a=0.25: min_full=-0.20210 min_interior=-0.20210 dM1=+5.7e-03 dsigma=+1.6e-14 maxdLegendre=3.7e-04
+  m=  64 a=0.25: min_full=-0.20176 min_interior=-0.20176 dM1=-1.2e-04 dsigma=+1.7e-14 maxdLegendre=8.3e-06
+  m= 128 a=0.25: min_full=-0.20230 min_interior=-0.20230 dM1=-4.9e-05 dsigma=+9.8e-15 maxdLegendre=9.5e-07
+spread(min_full)=0.08700  spread(min_interior)=0.08700

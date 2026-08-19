@@ -1,0 +1,334 @@
+{
+  "experiment": "H7 -- is eps''(+/-L)=0 automatic in the DiHiTI gauge (V5)?",
+  "timestamp": "2026-08-18T21:17:57.861938",
+  "git_sha": "8522a35e33ab6fd30288df4d16f6e67688ca4aed",
+  "script": "/Users/kunal/Documents/Spatial KK Project/research/results/cycle1_h7_endpoints/check_endpoints.py",
+  "families_tested": [
+    "logistic_k1.0",
+    "logistic_k4.0",
+    "logistic_k10.0",
+    "logistic_k30.0",
+    "plateau_a0.5L",
+    "offcentre_step_x0=0.3L",
+    "gain_carrying_opp_bumps_alpha1.5"
+  ],
+  "grid_sizes": [
+    2001,
+    4001,
+    8001,
+    16001,
+    32001,
+    64001
+  ],
+  "results": {
+    "logistic_k1.0": {
+      "2001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -2.5738324300095435e-16,
+        "raw_endpoint_mismatch": -2.5738324300095435e-16
+      },
+      "4001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 7.811738062646735e-16,
+        "raw_endpoint_mismatch": 7.811738062646735e-16
+      },
+      "8001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.0491172737168433e-15,
+        "raw_endpoint_mismatch": 1.0491172737168433e-15
+      },
+      "16001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 2.704328708143705e-17,
+        "raw_endpoint_mismatch": 2.704328708143705e-17
+      },
+      "32001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -8.712559653459603e-16,
+        "raw_endpoint_mismatch": -8.712559653459603e-16
+      },
+      "64001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.7276319060385185e-15,
+        "raw_endpoint_mismatch": 1.7276319060385185e-15
+      }
+    },
+    "logistic_k4.0": {
+      "2001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -3.074759244686264e-16,
+        "raw_endpoint_mismatch": -3.074759244686264e-16
+      },
+      "4001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -1.3700595926787146e-15,
+        "raw_endpoint_mismatch": -1.3700595926787146e-15
+      },
+      "8001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -3.372495428461989e-15,
+        "raw_endpoint_mismatch": -3.372495428461989e-15
+      },
+      "16001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.274408979445174e-15,
+        "raw_endpoint_mismatch": 1.274408979445174e-15
+      },
+      "32001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 3.897150274697457e-15,
+        "raw_endpoint_mismatch": 3.897150274697457e-15
+      },
+      "64001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.0940312912016452e-14,
+        "raw_endpoint_mismatch": 1.0940312912016452e-14
+      }
+    },
+    "logistic_k10.0": {
+      "2001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -1.8516423983016336e-15,
+        "raw_endpoint_mismatch": -1.8516423983016336e-15
+      },
+      "4001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.8366591266185338e-16,
+        "raw_endpoint_mismatch": 1.8366591266185338e-16
+      },
+      "8001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -7.269848866989695e-16,
+        "raw_endpoint_mismatch": -7.269848866989695e-16
+      },
+      "16001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 7.901354214640689e-16,
+        "raw_endpoint_mismatch": 7.901354214640689e-16
+      },
+      "32001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 6.991906238460915e-16,
+        "raw_endpoint_mismatch": 6.991906238460915e-16
+      },
+      "64001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 2.5587231944355835e-15,
+        "raw_endpoint_mismatch": 2.5587231944355835e-15
+      }
+    },
+    "logistic_k30.0": {
+      "2001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -1.9262816710642616e-15,
+        "raw_endpoint_mismatch": -1.9262816710642616e-15
+      },
+      "4001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -2.041071470197046e-15,
+        "raw_endpoint_mismatch": -2.041071470197046e-15
+      },
+      "8001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -5.771574161782893e-15,
+        "raw_endpoint_mismatch": -5.771574161782893e-15
+      },
+      "16001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -2.0636767082990094e-15,
+        "raw_endpoint_mismatch": -2.0636767082990094e-15
+      },
+      "32001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.8204571664302373e-15,
+        "raw_endpoint_mismatch": 1.8204571664302373e-15
+      },
+      "64001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -1.4815030632490983e-15,
+        "raw_endpoint_mismatch": -1.4815030632490983e-15
+      }
+    },
+    "plateau_a0.5L": {
+      "2001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 0.0008902583276945499,
+        "raw_endpoint_mismatch": 0.0008902583276945499
+      },
+      "4001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 0.0004450640415127902,
+        "raw_endpoint_mismatch": 0.0004450640415127902
+      },
+      "8001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 0.0002225159426069983,
+        "raw_endpoint_mismatch": 0.0002225159426069983
+      },
+      "16001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 0.00011125397726175244,
+        "raw_endpoint_mismatch": 0.00011125397726175244
+      },
+      "32001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 5.562599280554187e-05,
+        "raw_endpoint_mismatch": 5.562599280554187e-05
+      },
+      "64001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 2.781274703475048e-05,
+        "raw_endpoint_mismatch": 2.781274703475048e-05
+      }
+    },
+    "offcentre_step_x0=0.3L": {
+      "2001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 0.0002545292420918125,
+        "raw_endpoint_mismatch": 0.0002545292420918125
+      },
+      "4001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 0.00012733333031334553,
+        "raw_endpoint_mismatch": 0.00012733333031334553
+      },
+      "8001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 6.3683874820162e-05,
+        "raw_endpoint_mismatch": 6.3683874820162e-05
+      },
+      "16001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 3.1846243877953185e-05,
+        "raw_endpoint_mismatch": 3.1846243877953185e-05
+      },
+      "32001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.5924199061408347e-05,
+        "raw_endpoint_mismatch": 1.5924199061408347e-05
+      },
+      "64001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 7.962368873657405e-06,
+        "raw_endpoint_mismatch": 7.962368873657405e-06
+      }
+    },
+    "gain_carrying_opp_bumps_alpha1.5": {
+      "2001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -1.3803848448964057e-16,
+        "raw_endpoint_mismatch": -1.3803848448964057e-16
+      },
+      "4001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": -1.972402340418295e-15,
+        "raw_endpoint_mismatch": -1.972402340418295e-15
+      },
+      "8001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 6.347616103894767e-15,
+        "raw_endpoint_mismatch": 6.347616103894767e-15
+      },
+      "16001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 5.429787385211511e-16,
+        "raw_endpoint_mismatch": 5.429787385211511e-16
+      },
+      "32001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.3403925861051162e-14,
+        "raw_endpoint_mismatch": 1.3403925861051162e-14
+      },
+      "64001": {
+        "detilt_endpoint_L_neg": 0.0,
+        "detilt_endpoint_L_pos": 0.0,
+        "raw_endpoint_L_neg": 0.0,
+        "raw_endpoint_L_pos": 1.1436881216196078e-15,
+        "raw_endpoint_mismatch": 1.1436881216196078e-15
+      }
+    }
+  },
+  "headline": "CORRECTED after inspecting actual numbers (superseding the pre-run speculative text that was in the script comment). detilt(+/-L) is EXACTLY 0.0 (float64-exact) for every family and every N -- expected, since the de-tilt step algebraically subtracts the linear interpolant between the raw endpoints, forcing new endpoints to 0 by construction regardless of anything else. The real question is the RAW (pre-detilt) endpoint values / mismatch, i.e. whether K(+/-L;t)=0 already holds in the un-corrected kernel. Result: for SMOOTH profiles with no derivative discontinuity (logistic at k=1,4,10,30; the alpha=1.5 opposite-bumps gain-carrying case) the raw mismatch is at the float64 noise floor (~1e-15) already at N=2001, with NO growth or trend across N up to 64001 -- consistent with the raw kernel being exactly zero at the seam for these profiles. For profiles with a genuine derivative discontinuity at some interior point (plateau_a0.5L: sharp edge at x=+/-a*L; offcentre_step: a steep tanh edge, w=0.02) the raw mismatch is NONZERO but DECAYS CLEANLY AS O(1/N) -- e.g. plateau_a0.5L: 8.90e-4 (N=2001) -> 4.45e-4 (4001) -> 2.23e-4 (8001) -> 1.11e-4 (16001) -> 5.56e-5 (32001) -> 2.78e-5 (64001), a clean halving each time N doubles (Gibbs/quadrature error from the Hilbert-transform FFT and cumulative-trapezoid steps near a discontinuity), extrapolating to exactly 0 as N -> infinity. CONCLUSION: V5 is SUPPORTED. eps''(+/-L)=0 holds automatically in the continuum limit -- the raw (un-detilted) kernel already gives K(+/-L;t)=0, matching the Wave-3 claim. The de-tilt step genuinely IS \"a no-op that only absorbs discretization error\": for smooth profiles it has nothing to absorb (already at machine zero); for profiles with sharp features it absorbs an O(1/N) quadrature artifact that vanishes with resolution, not an O(1) physical effect. No family tested (smooth, plateau, off-centre step, or gain-carrying/non-passive) broke this. CAVEAT / scope: only checked eps''(+/-L) itself (V5), not whether the de-tilt could still matter for OTHER quantities (e.g. it clearly does shift the interior profile by a nonzero linear ramp whenever raw_endpoint_mismatch != 0, which changes min(eps'') at finite N by a commensurate O(1/N) amount -- this is a genuine, if vanishing, effect on the H6 crossover calculation and should be kept in mind for near-threshold alpha_c values at low N)."
+}

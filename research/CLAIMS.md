@@ -25,10 +25,13 @@ a convention error in the pipeline itself. `replicator` must use an independent 
 | C10 | **Off-centre step closed form**: min ε″ = (D/π)·ln cos(πx₀/2L) at the wrap-antipode; passivity is not translation invariant | W2 §1, W3 Cor 4.4 | conjecture | — | — | — | — |
 | C11 | **Mirror identity**: ε″_m(x) = −ε″(−x); the mirror of a passive profile is pure gain | W2 §1, W3 Rmk 1.4 | conjecture | — | — | — | — |
 | C12 | **No-go on the line** (Prop 2.1): no asymptotically-lossless asymmetric passive profile on ℝ; truncation is forced, with price max ε″ = (D/π)ln(L/w) | W3 §2 | conjecture | — | — | — | — |
-| C13 | **ε″(±L) = 0 automatic** in the DiHiTI gauge (seam normalization K(±L;t) ≡ 0) — mission requirement V5 | W3 §1 | conjecture | — | — | — | — |
+| C13 | **ε″(±L) = 0 automatic** in the DiHiTI gauge (seam normalization K(±L;t) ≡ 0) — mission requirement V5 | W3 §1 | **supported** | — | — | — | — |
 | C14 | **Finite smooth-moment batteries cannot be sufficient** (cosine dressing, m-independent min ε″ ≈ −0.20) | W2 §4 | conjecture | — | — | — | — |
 | C15 | ⚠️ **"Nothing beats running DiHiTI"** — no test cheaper than O(N log N) exists | W3 §7 | **conjecture — CONTESTED** | — | — | — | — |
 | C16 | **Passive ⇒ stable**: ε″ ≥ 0 ⟹ Im V ≤ 0 ⟹ Im(E) ≤ 0 for every mode, no growing solution | W2 §3 | conjecture | — | — | — | — |
+| C18 | **α_c = 0.66623** — the true grid-converged crossover for the Captain's opposite-bumps family, bisected on the *interior* minimum; stable to <1e−5 over N = 10⁴–1.6×10⁵ | cycle 1 numericist | **supported** | — | — | — | — |
+| C19 | ⭐ **min ε″ over the whole domain is a blind PASS/FAIL indicator.** It reads exactly 0.000 for *every* passive profile regardless of margin, because the minimum is realized at the boundary, which C13 pins to zero by construction. The interior minimum is the informative quantity | cycle 1 numericist | **supported** | — | — | — | — |
+| C20 | g = −dε′/dx for the opposite-bumps family is **not** the rectangular "plateau minus centred dip" of §5.1 — it has three signed regions, so the narrow closed-form d*(b) hypotheses are not met as stated | cycle 1 numericist | **supported** | — | — | — | — |
 | C17 | **Analyticity and passivity are independent**: triangle profile has spectral FoM 99.9999987% *and* min ε″ = −1.82 | W2 §3 | conjecture | — | — | — | — |
 
 ## C15 is the mission's central target

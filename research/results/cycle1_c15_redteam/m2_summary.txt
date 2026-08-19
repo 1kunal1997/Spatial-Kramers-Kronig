@@ -1,0 +1,17 @@
+logistic w=0.05 (k=20.0), L=2.5, N=262144
+g(-L) = -0.000000e+00   g(+L) = -0.000000e+00
+predicted c1 = (1/pi)[g(-L)-g(+L)] = 0.000000e+00
+M1 = -4.960985e-12   predicted c2 = -M1/(2L) = 9.921970e-13
+fit window s in [2.500e-03, 2.500e-02] L, N_pts=1179
+fitted c1 = -1.717375e-03  (ratio to predicted = -inf)
+fitted c2 = 9.141818e-03  (ratio to predicted = 9213713268.1598)
+R^2 of 2-term fit = 0.99172697
+max relative residual using CLOSED-FORM coeffs directly = 1.0000e+00
+[+L edge] fitted (c1,c2) = [-0.00171737  0.00914182]
+
+--- non-degenerate check: tanh_slopes mL=2.0 mR=1.0 ---
+g(-L)=-2.000000e+00  g(+L)=-9.999998e-01  c1_pred=-3.183099e-01
+M1=1.557474e+11  c2_pred=-3.114949e+10
+fitted c1=-3.253569e-01 (ratio to predicted 1.0221)
+fitted c2=-4.285343e-01 (ratio to predicted 0.0000)
+R^2=0.999998
