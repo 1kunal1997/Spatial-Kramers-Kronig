@@ -589,3 +589,13 @@ intervention and nothing lost.
 | auditor (sonnet) | **Audit C33 / C34 / C35** | The theorist fixed its own defect and verified its own fix. It was wrong once already about this exact gap. 240/240 on one seed is not a fix — asked to re-run at other seeds, other N, non-power-of-two. |
 | replicator (sonnet) | **Blind-verify C30's local law** | The Θ(N) proof rests on the width-independence of the bump depression. If that empirical core fails, V2a's proof loses its foundation. Barred from all four originating directories. |
 | numericist (sonnet) | **V1-c compiled implementation** | The last untested lever on V1. Seven routes have died on Python constants, not information deficits; 2.86× sits just under the 3× bar. Explicitly warned about the `linspace` endpoint bug that produced the bogus 1.70×. |
+
+### Cycle 3 tick — no-op (35 s after dispatch)
+
+Queued cron fires from the ~3 h lockout are releasing back-to-back, so this heartbeat landed 35
+seconds after the cycle-3 dispatch. All four hands are still working; nothing has landed on disk.
+**No dispatch** — adding hands now would duplicate work already in flight.
+
+*Operational note for future sessions:* cron fires that fail during a lockout appear to queue and
+then release in rapid succession once the window resets. Expect a burst of near-simultaneous
+heartbeats after any lockout, and treat all but the first as no-ops rather than as cues to dispatch.
