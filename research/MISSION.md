@@ -34,8 +34,43 @@ partner is gain-free (ε″ ≥ 0 everywhere), with ε″ = 0 at the endpoints.
    not count as a win.
 2. **FALLBACK 1.** Exact necessary-and-sufficient conditions that are *not* computationally cheaper,
    but are structurally clean and give real insight into *which* ε′ are passive.
-3. **FALLBACK 2 — LAST RESORT ONLY.** Looser (sufficient-but-not-necessary) conditions. Only after
-   1 and 2 have been genuinely exhausted and the exhaustion documented.
+3. ~~**FALLBACK 2 — LAST RESORT ONLY.** Looser (sufficient-but-not-necessary) conditions. Only after
+   1 and 2 have been genuinely exhausted and the exhaustion documented.~~
+   **🚩 PROMOTED 2026-08-19 by the Captain — no longer a fallback. See the amendment below.**
+
+---
+
+## ⭐ CAPTAIN'S AMENDMENT — 2026-08-19 (binding, supersedes the ranking above)
+
+The solo Fable session returned a *two-part* answer to the one question: N&S conditions exist
+exactly at the finite-description level, and **below that they provably do not exist** (Theorems 1
+and 2, `research/theory/ns_answer.md`, claims C48/C49). The Captain has read it and adjusted the
+end goal accordingly. **The mission now has two sequential goals, in this order:**
+
+### GOAL A — make the impossibility *exact*
+If necessary-and-sufficient conditions on ε′ guaranteeing ε″ ≥ 0 cannot be found — as C49 now
+indicates — then the deliverable is a **mathematically rigorous and exact proof of why they
+cannot exist**. Not a numerically-certified argument; not "proved modulo an ingredient". A proof.
+
+This makes Fable's outstanding gap the mission's critical path: Theorem 2 currently carries the
+label *"proved modulo a numerically-certified constructive ingredient"* (Lemma E's active-point
+window, and the thickening step written with hypotheses). Closing that is **Goal A**, and until it
+closes the mission has no deliverable at all under the new framing.
+
+### GOAL B — the cleanest, most succinct one-sided conditions
+Once A is closed: find the **cleanest, most succinct** set of conditions on ε′ that are
+**sufficient-but-not-necessary and/or necessary-but-not-sufficient** for passivity.
+
+**Read this correctly — B is a demand for FEWER statements, not more.** The corpus already holds
+roughly a dozen one-sided results (middle-half, unimodality, plateau/Clausen, dip tolerance, the
+four-term edge cascade, the depth law, the off-centre step …). Producing a thirteenth is still a
+failure. The deliverable is the **minimal spanning set**: the weakest sufficient condition from
+which the existing sufficient theorems fall out as *corollaries*, the strongest necessary
+condition from which the cascade falls out as *corollaries*, and an honest characterization of
+the gap between them. Two statements bracketing the truth, with the zoo collapsing into them.
+
+Goal A is what makes Goal B respectable rather than defeatist: one-sided conditions stop being an
+admission of failure the moment it is *proved* that two-sided ones cannot exist.
 
 ## Victory conditions — FALSIFIABLE
 
@@ -77,11 +112,35 @@ restatement of "compute the transform and look at its sign" — with proof and n
 `opposite_bumps_sweep.png`, matching the observed PASS→FAIL transition between α = 0.6 and α = 1.0
 to within a few percent.
 
-**V6 (parsimony — binding on every deliverable).** The final characterization must be **necessary
-and sufficient**, and must consist of **one or two** conditions on ε′, with the prior special cases
-recovered as corollaries. A result that adds a new one-sided condition to the existing zoo does not
-satisfy this mission regardless of its correctness. Parsimony is a hard requirement here, not a
-stylistic preference: the Captain is after a *definition*, and a definition is two-sided and short.
+**V6 (parsimony — binding on every deliverable).** ~~The final characterization must be **necessary
+and sufficient**, and~~ must consist of **one or two** conditions on ε′, with the prior special cases
+recovered as corollaries. ~~A result that adds a new one-sided condition to the existing zoo does not
+satisfy this mission regardless of its correctness.~~ Parsimony is a hard requirement here, not a
+stylistic preference: the Captain is after a *definition*, and a definition is ~~two-sided and~~ short.
+
+> **🚩 AMENDED 2026-08-19 (Captain).** The **two-sidedness** requirement is withdrawn — C49 makes it
+> unachievable for continuum profiles, and V6 must not demand what has been proved impossible. The
+> **parsimony** requirement is *retained in full* and now binds Goal B: one or two one-sided
+> conditions, with the existing zoo recovered as corollaries. Adding a thirteenth sibling theorem
+> remains a mission failure. What changed is the *shape* of the target, not the standard.
+
+**V7 (NEW 2026-08-19 — Goal A, now the critical path).** A **mathematically rigorous and exact**
+proof that no necessary-and-sufficient condition of the wanted kind exists on general (continuum)
+ε′. Falsifiable form: Theorems 1 and 2 of `research/theory/ns_answer.md` carry the label **proved**
+with *no* numerically-certified ingredient — specifically, (i) Lemma E's active-point interval is
+established analytically rather than by grid certification, (ii) the thickening step is written out
+in full with its hypotheses discharged, and (iii) the result survives `red-team`, `replicator` and
+`auditor` verdicts to rung `hardened`. Partial credit is not available here: "proved modulo" is
+exactly what this victory condition exists to eliminate.
+
+**V8 (NEW 2026-08-19 — Goal B).** A **minimal spanning set** of one-sided conditions: one
+sufficient-but-not-necessary condition implying C3 (middle-half), C5 (unimodality) and C6/C7
+(plateau/dip) as corollaries; one necessary-but-not-sufficient condition implying the C8 cascade
+(edge slopes, M₁ = 0, M₂ ≥ 0, σ ≥ 0) as corollaries; and a quantified statement of the gap between
+them. Falsifiable form: each prior one-sided theorem is derived *from* the new statement in one or
+two lines, the derivations are checked, and the total count of independent one-sided statements in
+the corpus **strictly decreases**. A result that leaves the zoo intact and adds to it fails V8 by
+construction.
 
 **V5 (endpoint requirement).** ε″(±L) = 0 must hold. *Status: believed automatic in the DiHiTI
 gauge (the seam normalization K(±L;t) ≡ 0 is built into the kernel). This is a claim to verify, not

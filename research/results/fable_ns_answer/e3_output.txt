@@ -1,0 +1,22 @@
+(a) lambda* controls vs red-team/handA
+  corner (-0.40,+0.90), bulk +-0.1: 0.2620  [rt 0.262]
+  corner (-0.40,+0.90), bulk +-0.2: 0.2778  [handA ~0.278]
+  corner +-0.90 (box 1.80), bulk +-0.1: 0.0872  [rt 0.087]
+  corner +-0.99 (box 1.98), bulk +-0.1: 0.0009  [rt 0.0009]
+
+(b) lambda* vs bulk, corner FIXED at (-0.4, +0.9)
+  centred bulk pairs +-m:
+    m=0.05: lambda* = 0.2583
+    m=0.15: lambda* = 0.2685
+    m=0.25: lambda* = 0.2902
+    m=0.35: lambda* = 0.3267
+    m=0.45: lambda* = 0.3834
+  near-threshold bulk pairs (-a,+b), a+b -> L:
+    (-0.2,+0.7) sum 0.90: lambda* = 0.2595
+    (-0.25,+0.7) sum 0.95: lambda* = 0.1605
+    (-0.24,+0.74) sum 0.98: lambda* = 0.0658
+    (-0.2,+0.79) sum 0.99: lambda* = 0.0302
+
+(c) killer pair: same corner distribution (fraction 0.25), different bulk
+  bulk (-0.2,+0.2): exact sup Delta = -5.2839e-03 at eta=+3.249 -> PASSIVE (expect PASSIVE); production min = +1.573e-09 @ x=+1.000
+  bulk (-0.24,+0.74): exact sup Delta = +6.2232e-02 at eta=+1.000 -> GAIN (expect GAIN); production min = -1.980e-02 @ x=+0.500

@@ -1,0 +1,29 @@
+==============================================================================
+Battery 1: k = 8  (mass, M1, M2, sigma, t..t^4)  --  n = 10 pairs
+  battery rank = 7 (k = 8), dim ker = 3, sv range 9.1e+00..1.0e-04
+  boundary point (1 tried): sup Delta = -2.66e-15 at eta* = +1.522874,  |P_ker grad| = 0.0151
+  kernel quality: max |M kappa| = 6.66e-16
+  battery match:   max rel |l(gG) - l(gP)| = 6.11e-16
+  M1 exact:        +3.89e-16 / -2.22e-16
+  verdict gG:      sup Delta = +2.436531e-02 at eta = +1.5281  -> GAIN   min eps'' = -7.756e-03
+  verdict gP:      sup Delta = -2.421095e-02 at eta = +1.5177  -> PASSIVE
+  same atoms, min weight: gG 4.777e-02 / gP 3.673e-02
+  control non-kernel dir: max rel change = 1.04e-01  (>> match above)
+  production N=2^16: gG min = -7.658e-03 @ +0.6311 (GAIN), gP min = +3.091e-08 (PASS)
+  Lemma A sanity: sing. vals of [Delta_j(eta)] in [8.349e+00, 1.607e+02]
+==============================================================================
+Battery 2: k = 16 (adds t^5..t^8, cos/sin(pi t), cos/sin(2 pi t)) -- n = 18 pairs
+  battery rank = 13 (k = 16), dim ker = 5, sv range 1.3e+01..8.2e-08
+  boundary point (30 tried): sup Delta = -2.78e-17 at eta* = +0.956574,  |P_ker grad| = 0.0001
+  kernel quality: max |M kappa| = 2.72e-11
+  battery match:   max rel |l(gG) - l(gP)| = 8.26e-12
+  M1 exact:        -2.78e-17 / +9.16e-16
+  verdict gG:      sup Delta = +5.040215e-05 at eta = +0.9566  -> GAIN   min eps'' = -1.604e-05
+  verdict gP:      sup Delta = -5.039394e-05 at eta = +0.9566  -> PASSIVE
+  same atoms, min weight: gG 1.986e-02 / gP 4.360e-02
+  control non-kernel dir: max rel change = 1.47e-02  (>> match above)
+  production N=2^20: gG min = -1.152e-06 @ +0.4859 (GAIN), gP min = +6.932e-11 (PASS)
+  production N=2^22: gG min = -1.295e-05 @ +0.4859 (GAIN), gP min = -1.130e-10 (PASS)
+  Lemma A sanity: sing. vals of [Delta_j(eta)] in [6.428e+00, 2.134e+02]
+==============================================================================
+THEOREM 2 WITNESSES: battery-8 OK, battery-16 OK

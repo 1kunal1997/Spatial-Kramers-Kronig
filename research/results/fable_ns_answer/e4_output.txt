@@ -1,0 +1,11 @@
+accepted theta values: 152 of 281
+contiguous window(s): [1.450, 2.960] (gaps: False)
+touching-max nondegeneracy: Delta'' in [-0.506, -0.069] (all < 0: True)
+  theta = 1.450: masses (bad1,bad2,good)/good = (0.0315, 1.7063, 1)   Delta''=-0.506
+  theta = 1.640: masses (bad1,bad2,good)/good = (0.7874, 1.0584, 1)   Delta''=-0.393
+  theta = 1.830: masses (bad1,bad2,good)/good = (1.1224, 0.6322, 1)   Delta''=-0.269
+  theta = 2.020: masses (bad1,bad2,good)/good = (1.2237, 0.3654, 1)   Delta''=-0.188
+  theta = 2.210: masses (bad1,bad2,good)/good = (1.2082, 0.2029, 1)   Delta''=-0.138
+  theta = 2.400: masses (bad1,bad2,good)/good = (1.1412, 0.1058, 1)   Delta''=-0.107
+  theta = 2.590: masses (bad1,bad2,good)/good = (1.0567, 0.0491, 1)   Delta''=-0.086
+  theta = 2.780: masses (bad1,bad2,good)/good = (0.9733, 0.0177, 1)   Delta''=-0.073
