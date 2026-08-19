@@ -62,7 +62,7 @@ a convention error in the pipeline itself. `replicator` must use an independent 
 | C20 | g = −dε′/dx for the opposite-bumps family is **not** the rectangular "plateau minus centred dip" of §5.1 — it has three signed regions, so the narrow closed-form d*(b) hypotheses are not met as stated | cycle 1 numericist | **supported** | — | — | — | — |
 | C17 | **Analyticity and passivity are independent**: triangle profile has spectral FoM 99.9999987% *and* min ε″ = −1.82 | W2 §3 | conjecture | — | — | — | — |
 | C48 | ⭐ **Theorem 1 (density)**: any test set of positions that is sound AND complete for passivity (over balanced positive atomic g) must be **dense** — a violation can be confined inside any open window (boundary pair + inflation; positivity window shrinks ∝ √s onto the target). Upgrades C27/K17 from "no finite node set" to "no non-dense set". `ns_answer.md` §3, `e1_density.py` (δ=0 control exact at machine precision) | solo Fable 2026-08-19 | **supported** | — | — | — | — |
-| C49 | ⭐⭐ **Theorem 2 (no finite battery)**: for ANY finite set of linear functionals of ε′ (arbitrary kernels: moments, samples, corner masses, mass/M₁/M₂/σ, …) and ANY decision rule on their values, there exist two positive balanced atomic profiles with the SAME atoms, identical readings, opposite verdicts. Proof = saturation/convexity (Lemma D) + active-point interval (Lemma E, numerically certified window [1.45, 2.96], Δ″<0 throughout) + independence via log singularities (Lemma A). Explicit witnesses: k=8 battery **containing the entire known necessary cascade** (match 6e−16, GAIN −7.8e−3 vs PASSIVE, production-corroborated) and k=16 (match 8e−12, GAIN −1.6e−5, production-confirmed at N=2²⁰–2²²). **Kills the "clean finite conditions" program on continuum profiles**; closes V3/V6 downward. `ns_answer.md` §4, `e2_battery.py`, `e4_lemmaE.py`, `witness_k*.npz` | solo Fable 2026-08-19 | **supported** (proved modulo numerically-certified Lemma E; analytic closure = top theory task) | — | — | — | — |
+| C49 | ⭐⭐ **Theorem 2 (no finite battery)**: for ANY finite set of linear functionals of ε′ (arbitrary kernels: moments, samples, corner masses, mass/M₁/M₂/σ, …) and ANY decision rule on their values, there exist two positive balanced atomic profiles with the SAME atoms, identical readings, opposite verdicts. Proof = saturation/convexity (Lemma D) + active-point interval (Lemma E, numerically certified window [1.45, 2.96], Δ″<0 throughout) + independence via log singularities (Lemma A). Explicit witnesses: k=8 battery **containing the entire known necessary cascade** (match 6e−16, GAIN −7.8e−3 vs PASSIVE, production-corroborated) and k=16 (match 8e−12, GAIN −1.6e−5, production-confirmed at N=2²⁰–2²²). **Kills the "clean finite conditions" program on continuum profiles**; closes V3/V6 downward. `ns_answer.md` §4, `e2_battery.py`, `e4_lemmaE.py`, `witness_k*.npz` | solo Fable 2026-08-19 | **replicated** (witness pair only — see scope note) | **MATCH** `results/c49_blind_replication/` 2026-08-19 | — | — | — |
 | C50 | **Lemma B (no exterior gain)**: a balanced positive drop measure has Δ < 0 strictly outside the convex hull of its Cayley support (per-pair outer-branch monotonicity, numerator bound γ(1+β²) > 0, + mean-zero pair decomposition). In x-space: ε″ > 0 strictly between the outermost drop and the seam. **Discharges red-team residual risk #3** of `cycle3_c25_hardening/redteam.md` | solo Fable 2026-08-19 | **supported** (proof is elementary and self-contained) | — | — | — | — |
 | C51 | **N1 CLOSED — corner mass cannot be a criterion.** λ* is exact per family but ranges **0.030–0.383** for one and the same corner geometry (−0.4,+0.9) as the bulk moves; killer pair: identical corner distribution (fraction 0.25), bulk (±0.2) → PASSIVE (margin 5.3e−3) vs bulk (−0.24,+0.74) → GAIN (−2.0e−2, production-confirmed). Controls 4/4 vs red-team/handA (0.2620/0.2778/0.0872/0.0009). ⚠️ red-team's λ*(a+b) table mixed unrecorded corner splits — its 1.40L/1.94L rows match neither convention tried; re-derive before reuse. `e3_n1_closure.py` | solo Fable 2026-08-19 | **supported** | — | — | — | — |
 | C52 | **T2/N2 (CFM/Choquet conjecture) REFUTED.** f = cos(x)e^{−y} is harmonic entire, bounded on ℂ₊, ω-integrable (∫f dω = e^{−1}); P = δ₀ is passive yet ∫f dP = 1 > e^{−1}. The log-potential order is **strictly weaker** than the subharmonic/CFM order; CFM does not apply verbatim. Corrected form: the test cone is exactly the log-potential cone (+constants); sub-logarithmic growth on ℂ is the growth condition that makes the repaired statement true (and nearly tautological). `ns_answer.md` §7 | solo Fable 2026-08-19 | **supported** (counterexample is one line, checkable by hand) | — | — | — | — |
@@ -81,3 +81,26 @@ Two outcomes are both wins, and the crew must not prefer one:
 
 The failure mode to guard against is *neither* — accepting C15 on the strength of its author's
 confidence. It sits at `conjecture` until a proof or a counterexample moves it.
+
+## C49 promotion scope note (First Mate, 2026-08-19)
+
+**What is `replicated`: the witness pair, not the theorem.** The blind replicator was given only the
+20 atom positions and two weight vectors (relabelled A/B, mapping sealed in `research/.sealed/`) and
+was forbidden the originating directory; `manifest.json` records `forbidden_paths_touched: []`. It
+reproduced the property by an independent route — direct x-space evaluation of the log-potential
+master identity, no Cayley coordinates, no polynomial node collapse, no FFT — plus a production
+`ht_derivative` cross-check on a **cell-centred non-duplicating grid** swept over N ∈ {4001, 6000,
+8192, 16001} and smoothing s ∈ {0.02 … 0.002}, 16 combinations with no verdict flip. Its harness
+control (balanced pair passive ⟺ a+b ≤ 1) reproduced the threshold exactly.
+
+Three independent routes now agree on the headline number: Fable's exact node test −7.756e−3,
+the replicator's analytic route −0.007756 @ x ≈ 0.6311, and the First Mate's own 4-million-point
+x-space scan −7.755719e−3 @ x = +0.63111 (negative on 1.78% of the domain; witness B negative
+nowhere). The non-power-of-two N values and the fresh grid convention specifically address the
+common-mode failure recorded in `PROTOCOL.md` (two implementers reaching for `np.linspace(-L,L,N)`).
+
+**What is NOT certified by this verdict:** Theorem 2 *itself*. A replicator cannot certify a proof.
+Lemma E remains numerically certified rather than analytic, and the thickening step remains a
+continuity argument stated with hypotheses — that is board item **F1**, dispatched, and victory
+condition **V7** turns on it. C49 must not be quoted as a proved theorem until F1 lands and
+`red-team` + `auditor` sign it to `hardened`.

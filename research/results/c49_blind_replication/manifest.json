@@ -1,0 +1,49 @@
+{
+  "exp_id": "c49_blind_replication",
+  "board_item": "F5",
+  "claim_under_test": "C49",
+  "role": "replicator (blind)",
+  "timestamp_utc": "2026-08-19T21:04:59Z",
+  "git_sha": "7f7522937746a1b9e75d4ce4ee312a9855a91e96",
+  "input_file": "research/results/c49_blind_replication/witness_input.json",
+  "params": {
+    "L": 1.0,
+    "n_atoms": 20,
+    "atoms_t": [
+      -0.4, -0.35, -0.3, -0.25, -0.2, -0.18, -0.16, -0.14, -0.12, -0.1,
+      0.42, 0.43999999999999995, 0.45999999999999996, 0.48, 0.5,
+      0.7499999999999999, 0.7999999999999999, 0.8499999999999999, 0.8999999999999999, 0.95
+    ]
+  },
+  "forbidden_paths_touched": [],
+  "forbidden_paths_declared": [
+    "research/results/fable_ns_answer/",
+    "research/theory/ns_answer.md"
+  ],
+  "routes": [
+    {
+      "id": "route1_analytic",
+      "strength": "Rank 1 (analytic closed form)",
+      "description": "Log-potential master identity quoted verbatim in research/MISSION.md (foundational assumption #3, Wave-2 finding): eps''(x) = (1/pi) * integral g(t) * ln[cos(pi t/2L)/|sin(pi(x-t)/2L)|] dt, collapsed to an exact finite sum for atomic g. No FFT, no grid, no smoothing.",
+      "code": "research/results/c49_blind_replication/replication/1_analytic_route.py",
+      "independence_from_source": "Does not call tmm_helper.ht_derivative or any FFT/Hilbert-transform machinery at all; pure closed-form arithmetic over the 20 atoms."
+    },
+    {
+      "id": "route2_ht_derivative",
+      "strength": "Rank 2/3 (different discretization of the production pipeline)",
+      "description": "Atomic measure realized as a smoothed decreasing staircase (erf transitions of variable width s) on a cell-centered non-duplicating grid, pushed through tmm_helper.ht_derivative (the DiHiTI implementation named in the dispatch brief). Swept N in {4001,6000,8192,16001} and s in {0.02,0.01,0.005,0.002}.",
+      "code": "research/results/c49_blind_replication/replication/3_ht_derivative_route.py",
+      "independence_from_source": "Grid convention (cell-centered, no linspace endpoint duplication) and smoothing scheme chosen fresh per PROTOCOL.md warnings, not copied from any project script."
+    }
+  ],
+  "control": {
+    "description": "Single balanced atomic pair at t=-a,+b with M1=0 enforced is known analytically to be passive iff a+b<=1 (window half-width L=1). Swept a+b from 0.6 to 1.4 (symmetric and asymmetric pairs) through both routes.",
+    "code": "research/results/c49_blind_replication/replication/4_control_test.py",
+    "result": "PASSED - both routes reproduce the a+b<=1 threshold exactly (PASSIVE below, min~0 at boundary, GAIN above with correctly growing magnitude)."
+  },
+  "labels_resolved": {
+    "weights_A": "GAIN",
+    "weights_B": "PASSIVE"
+  },
+  "verdict": "MATCH"
+}
