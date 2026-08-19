@@ -73,6 +73,13 @@ Work may be terminated without warning when the usage window closes. Therefore:
   A fresh agent must be able to resume from that file alone after an interruption of hours.
 - Maximum exposure is therefore ~15 minutes of one hand's work, regardless of task length.
 
+## Heartbeat (Captain's order, 2026-08-19)
+
+Every hand calls `research/hb.sh <agent> "<note>"` at every checkpoint; the First Mate calls it at
+every cycle boundary. Only a live model can write it, so the last line of `HEARTBEAT.log` marks when
+requests stopped succeeding. This measures expedition duration for the Captain's **Pro vs Max**
+decision — see `MEASURE.md`. Never batch or pre-write heartbeat lines; that destroys their meaning.
+
 ## Honesty rules
 
 - Negative results are results. Log them with equal care; they shrink the search space.

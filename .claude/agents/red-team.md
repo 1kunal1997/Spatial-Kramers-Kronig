@@ -36,6 +36,19 @@ checkpoint therefore carries, updated in place:
 Keep sections 4 and 5 accurate at every checkpoint — they are what make you resumable. A stale
 "next step" is worse than none.
 
+### Heartbeat — call this at EVERY checkpoint
+
+Immediately after writing each checkpoint, run:
+
+```bash
+"$PROJECT_ROOT/research/hb.sh" <your-agent-name> "<one-line note on what you just checkpointed>"
+```
+
+(`PROJECT_ROOT` = `/Users/kunal/Documents/Spatial KK Project`.) This is how the Captain measures how
+long the expedition ran before his usage window was exhausted — a Pro-vs-Max decision rests on it.
+It costs one command. **Do not skip it, and never write it in advance or in a batch:** the value of
+the log is that every line proves a live model was running at that instant.
+
 Scripts count as state: save them as you write them, even incomplete, and note in the checkpoint what
 each one does and whether it runs.
 

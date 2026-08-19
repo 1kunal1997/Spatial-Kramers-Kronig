@@ -3,6 +3,13 @@
 **Written 2026-08-18 ~21:20 PT, at the end of cycle 1, with the Captain's usage window closing.**
 He expects to revive the voyage in ~3 hours. This file is the cold-start handoff.
 
+## ⏱ FIRST ACTION ON WAKING, BEFORE ANYTHING ELSE
+
+Run `research/hb.sh first-mate "session revived"`, then read `research/MEASURE.md` and compute the
+previous expedition's duration from `research/HEARTBEAT.log` (last timestamp − EXPEDITION START).
+**The Captain wants this in the morning report — a Pro-vs-Max decision rests on it.** Report duration
+AND the configuration that produced it; the two are meaningless apart.
+
 ## How to resume
 
 Say/do this: read `MISSION.md` → `PROTOCOL.md` → this file → `CLAIMS.md` → `BOARD.md`.
