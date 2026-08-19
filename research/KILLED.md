@@ -1,0 +1,19 @@
+# Graveyard
+
+Dead hypotheses and **why they died**. Inherited from Waves 1–3; check before adding to `BOARD.md`.
+Re-running a corpse requires a written reason why the kill no longer applies.
+
+| ID | Hypothesis | Killed by | Date | Why it died | Revivable? |
+|----|-----------|-----------|------|-------------|-----------|
+| K1 | "Passive profiles form a convex cone; find its extreme rays" is novel | lit review | Aug 2026 | It is Ivanenko et al., *SIAM J. Appl. Math.* **79**, 436 (2019) — passive approximation on a finite union of intervals. | Yes, if the spatial problem's unequal endpoints (ramp decomposition) fall outside their setting |
+| K2 | "Toeplitz eigenvalue is a cheap test avoiding the HT" | Wave 2 | Aug 2026 | Multiplying coefficients by −i·sgn(m) **is** the Hilbert transform; λ_min carries the same information as reading min ε″ directly. **This is the Captain's specific objection.** | Only via a test reading finitely many moments — i.e. H4 |
+| K3 | "DiHiTI's blindness to a linear ramp makes the on-axis test unsound" | Wave 2 | Aug 2026 | Blindness is real and published (Waters et al., *IEEE UFFC* **50**, 68 (2003), "shape invariance w.r.t. subtraction constants") but harmless. | Yes, if a case exists where the ramp changes physical reflectance or stability while DiHiTI reports no change |
+| K4 | "DiHiTI leaks 17% of power into the forbidden half-plane" | Wave 2 | Aug 2026 | **Wrong.** Artifact of a raw FFT across the periodic wrap, where the sawtooth ramp alone contributes 50%. Forbidden power → machine zero (1.1e−9 → 0.0 as N: 2048 → 32768). `skk_spectral_fom` is correct. | No. Recorded because the mistake is easy to repeat |
+| K5 | Eigenvalue screening for the Longhi instability | Wave 2 | Aug 2026 | Longhi's demo sits at an **exceptional point** (A₄ = −20/k₀²) where Im(E) = 0 and growth is algebraic — eigenvalues are blind. Dirichlet boundaries also trapped the convective case into a spurious absolute instability. | Yes, via beam propagation with PML, or a pseudospectral/propagator-norm diagnostic catching algebraic growth |
+| K6 | "No cheap **sufficient** condition exists" | Wave 2 | 2026-08-13 | **BROKEN.** Monotone + middle-half support + M₁ = 0 ⟹ passive. Proven, sharp at L/2, 400/400 MC. | — |
+| K7 | "No **single scalar** test exists" | Wave 2 | 2026-08-13 | **BROKEN.** σ = ∫g·ln(2cos(πt/2L))dt is orientation-sensitive and necessary; it alone breaks the mirror tie offered as evidence of impossibility. | — |
+| K8 | "No **local** condition can exist" | Wave 2 | 2026-08-13 | **BROKEN as stated.** Correct version: no *translation-invariant* local test exists (an off-centre step is locally identical to a centred one yet fails, with closed-form gain). Position relative to the domain is admissible data. | — |
+| K9 | "Exactness needs the **entire** coefficient sequence" | Wave 2 | 2026-08-13 | **SURVIVES in refined form.** A finite battery of *smooth* functionals can be necessary but never sufficient (§4 cosine dressing). This is the technical core that stood. | This is now repurposed as **H1**, the lower-bound route |
+| K10 | `cheap_screen.py` Part B: the D-term is physically vacuous because a coating is "clamped" outside its edges | Wave 2 | Aug 2026 | **Superseded.** The continuation is periodic, not clamped. Part A (the screen) is unaffected. | No |
+| K11 | Mode-by-mode safe-sign rule bₙ(−1)ⁿ ≤ 0 in `passivity_constraint_notes.tex` | Wave 2 | Aug 2026 | **Sign typo.** Its own derivation two lines earlier gives bₙ(−1)ⁿ ≥ 0. Harmless downstream. Recorded so nobody chases it. | No |
+| K12 | Wave-1 approach: trial-and-error profile sweeps to spot conditions | Wave 1 outcome | May 2026 | Mid-Apr → mid-May produced figures and intuition but **no conditions**. Unstructured search does not converge here. | No — superseded by the potential-theory framing |
