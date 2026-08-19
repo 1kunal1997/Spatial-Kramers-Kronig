@@ -105,6 +105,31 @@ cannot read the source, restate it and then say explicitly: *"this is a restatem
 ambiguous, flag it rather than guessing."* A blind agent cannot check your paraphrase — that is the
 whole point of blinding it, and it makes the dispatcher's precision load-bearing.
 
+## 🔴 VERIFY THE HARNESS BEFORE REPORTING A NUMBER (learned the hard way)
+
+The single most expensive class of error in this voyage was **reporting a measurement of something
+that was not actually running or not actually what was measured**:
+
+- an accuracy figure for a cascade that the code computed, printed, and **never used**;
+- a speedup that was a grid-convention bug, reproduced independently by two agents;
+- a blind replication that measured at a point where the answer is **identically zero by parity**.
+
+**Before reporting any number, prove the thing you think you measured was the thing that ran.** Assert
+a control that would FAIL if your harness were wrong — disable the component and check the number
+moves; compare against a closed form; check a case whose answer you know independently. State the
+control in your report. **A number without a control is a conjecture.**
+
+## 📏 Scope: ONE question per hand
+
+Hands given three loose tasks explore more, compress more, and drift more than hands given one sharp
+question. Prefer several narrow dispatches over one broad one — it costs the same tokens and produces
+verifiable work instead of a survey.
+
+## 📕 Do NOT read `LOG.md` end-to-end
+
+It is long append-only history. Read **`STATE.md`** (current truth, short), `MISSION.md`, `BOARD.md`,
+and this file. Read specific log sections only when you need a particular cycle's detail.
+
 ## Honesty rules
 
 - Negative results are results. Log them with equal care; they shrink the search space.

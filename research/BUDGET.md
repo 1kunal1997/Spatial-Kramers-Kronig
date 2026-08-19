@@ -39,6 +39,30 @@ Cycle 1 burned ~75% of a 5-hour window. The cause was **not** model quality. It 
 seats above and there is no evidence a larger model would have changed those outputs. If any of these
 seats produces work that looks limited by the model rather than the task, raise it and say so.
 
+## 🛑 DISPATCH BUDGET — the Captain's stop-at-75% control
+
+The First Mate **cannot see usage telemetry**. So the budget is enforced by **counting dispatches**,
+not by reading a meter.
+
+**Measured costs (Pro plan, 5-hour window):**
+| Hand | Approx. share of one Pro window |
+|---|---|
+| opus / xhigh (theorist, red-team) | **~15%** each |
+| sonnet (numericist, auditor, replicator, librarian) | **~7%** each |
+| First Mate integration per cycle | ~5% |
+
+So **4 parallel hands (2 opus + 2 sonnet) ≈ 45–50%** of a Pro window, plus integration.
+On Max (5×), divide all figures by ~5.
+
+**How the Captain sets a cap:** state a budget at the start of a session —
+*"you get 60% of this window"* or *"you get 6 hand-dispatches."* The First Mate keeps a running tally
+below, **stops when the cap is reached regardless of progress**, and reports rather than continuing.
+
+**Default cap if the Captain says nothing: 60% of a window.** Never spend the whole window — the
+Captain needs headroom to work interactively.
+
+**Tally (reset each session):** dispatches used: 0
+
 ## Circuit breakers (unchanged)
 - Per-agent `maxTurns` caps in each agent definition
 - Adversaries fire on **promotion attempts**, not every cycle
