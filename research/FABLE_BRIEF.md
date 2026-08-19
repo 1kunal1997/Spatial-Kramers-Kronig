@@ -29,9 +29,10 @@ that none exist. That session answered **both halves** and the Captain has read 
 **The Captain's amendment (this is the important part — `MISSION.md`, "Captain's Amendment"):**
 The end goal is now two sequential goals.
 
-- **GOAL A (V7):** since N&S conditions appear not to exist, deliver a **mathematically rigorous
-  and exact proof of why they cannot**. "Proved modulo a numerically-certified ingredient" does not
-  satisfy V7. **The crew is finishing this right now — see §4. It is not your task.**
+- **GOAL A (V7): ✅ the proof landed while this brief was being written.** Theorem 2 is **proved
+  outright** — `research/theory/lemmaE_closure.md` (claim C55). Your numerically-certified Lemma E
+  window is superseded; see §4. **Not your task** — the only thing left on Goal A is a red-team pass,
+  which is a crew seat.**
 - **GOAL B (V8):** **your task.** See §3.
 - **V6 amended:** the two-sidedness requirement is withdrawn (C49 makes it unachievable). The
   **parsimony** requirement is retained in full and now binds Goal B.
@@ -125,19 +126,40 @@ decomposition into pieces where balance is restored only in aggregate, which is 
 unimodal g through; (iv) balayage — but note the full subharmonic/CFM order was **refuted** (C52), so
 only the log-potential cone is available.
 
+### ⭐ A LEAD HANDED TO YOU BY THE CREW — start here for B1
+
+Board item F1 threw off a by-product it did not chase, recorded as **C56**, and it points straight at
+B1. In one line, for **every** positive drop measure:
+
+    Δ″_g(η) = −Σ_j w_j/(η−ξ_j)² − W(1−η²)/(1+η²)²
+
+Both terms are negative **iff |η| < 1** — and η ∈ (−1, 1) is exactly **|t| < L/2, the middle half**.
+So −πε″ is strictly concave on precisely the middle half of the window, universally, with no
+hypothesis on g beyond positivity.
+
+I verified this independently over 300 random measures: the maximum of Δ″ inside |η| < 1 is −1.1e−3,
+and **261 of the 300 go positive somewhere outside** — so the middle-half boundary is *sharp*, not an
+artifact of a lazy bound. The theorist's parting note: *"that may be the natural home for C3
+(middle-half) under Goal B/V8."*
+
+That is suggestive rather than conclusive, and the obvious objection is that concavity alone is not
+passivity. But it is the first structural explanation anyone has offered for **why L/2 is the
+constant in C3**, and a parent condition that explains its own sharp constant is exactly the shape
+V8 is asking for. Test it early; if it does not carry, kill it early and say so.
+
 ---
 
 ## 4. 🚧 WHAT IS NOT YOURS — the crew owns these, do not touch them
 
 Duplicated effort is the one thing that would make this handoff net-negative.
 
-- **Lemma E / the thickening step / Theorem 2's analytic closure (board F1, Goal A).** A crew
-  theorist is finishing it now and has a complete analytic route: a symmetric reciprocal-pair base
-  point p₀ (atoms ξ = ±2, ±½, weight ½ each) with Δ_{p₀}(η) = ½ln[|η²−4||η²−¼|/(1+η²)²], touching
-  zero **only** at η = 0, with Δ″(0) = −25/4 exactly and an IFT continuation with non-vanishing
-  Jacobian determinant −(25/4)ln2. I verified all of it independently. It lands in
-  `research/theory/lemmaE_closure.md`. **Leave it alone.**
-- **Red-teaming C49.** A crew adversary gets this once F1 lands. You wrote the theorem; you are the
+- **Lemma E / the thickening step / Theorem 2's analytic closure (board F1, Goal A). ✅ DONE — closed
+  while this brief was being written.** `research/theory/lemmaE_closure.md` (569 lines) proves
+  **Theorem 2 outright**: no "modulo", no numerically-certified ingredient. Your grid-certified
+  window [1.45, 2.96], the asymmetric triple and the measured Δ″ range are **superseded** (a banner
+  now says so in `ns_answer.md` §4). Read it — it is short and it is now the ground truth — but do
+  not re-open it.
+- **Red-teaming C49.** A crew adversary has this next; F1 has landed. You wrote the theorem; you are the
   wrong seat to attack it.
 - **P0 (the seam convention) and the C53 fix.** Crew items.
 

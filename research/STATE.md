@@ -9,10 +9,13 @@ full log.** Reading the log end-to-end wastes context and is a hallucination sou
 The Captain has read the solo-session answer and **adjusted the end goal**. Full text in
 `MISSION.md` ("Captain's Amendment"), new victory conditions **V7** and **V8**. In brief:
 
-- **GOAL A (V7, critical path):** since N&S conditions appear not to exist, the deliverable is a
-  **mathematically rigorous and exact proof of why they cannot**. C49's current label —
-  *"proved modulo a numerically-certified constructive ingredient"* — **does not satisfy V7**.
-  Close Lemma E analytically, discharge the thickening hypotheses, and take C49 to `hardened`.
+- **GOAL A (V7): ✅ THE PROOF IS DELIVERED (2026-08-19, board F1).** Theorem 2 is now **proved
+  outright** — `research/theory/lemmaE_closure.md`, claim **C55**. The numerically-certified Lemma E
+  window is gone: an explicit symmetric reciprocal-pair base point (Δ″(0) = −25/4 as an identity)
+  plus one implicit-function step that does the sweep and the thickening together. Lemma A reproved
+  real-variable, so Theorem 2 is entirely real analysis.
+  **V7 IS NOT YET MET:** it requires C49 at `hardened`, which requires `red-team: SURVIVED`.
+  Replicator MATCH ✅ and auditor CLEAN ✅ are in; **red-team is the last gate and has not run.**
 - **GOAL B (V8, after A):** the **cleanest, most succinct** set of one-sided conditions
   (sufficient-not-necessary and/or necessary-not-sufficient). This is a demand for **fewer**
   statements: the minimal spanning set, with the existing dozen recovered as corollaries. A
