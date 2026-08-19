@@ -1,0 +1,70 @@
+{
+  "experiment": "C25 / Cor 4.B replication -- a+b<=L iff passivity threshold for DiHiTI",
+  "agent": "replicator",
+  "timestamp": "2026-08-19T00:00:00Z",
+  "git_sha": "c707084a5483b4dc8eed5af6a6d044d587f51bfe",
+  "verdict": "MATCH",
+  "blind": true,
+  "files_not_opened": [
+    "research/theory/h9_potential_domination.md",
+    "research/theory/h9_domination_check.py",
+    "research/theory/h9_fixes.py",
+    "theory/passivity_2026Aug/Responsive Notes - Derivation - 081826.pdf",
+    "theory/passivity_2026Aug/potential_theory_findings.md",
+    "theory/passivity_2026Aug/verify_passivity.py",
+    "theory/passivity_2026Aug/potential_criterion.py",
+    "theory/passivity_2026Aug/profile_generator.py (allowed but deliberately not used, to maximize independence)"
+  ],
+  "files_read": [
+    "research/MISSION.md",
+    "research/PROTOCOL.md",
+    "tmm_helper.py"
+  ],
+  "routes": [
+    {
+      "id": 1,
+      "name": "analytic two-atom closed form",
+      "strength": "strongest (analytic)",
+      "script": "route1_analytic.py",
+      "results": "route1_results.json",
+      "n_cases": 29,
+      "n_agree": 29,
+      "summary": "Fourier-series-derived closed form for eps''(x) under a two-point-mass drop density at the box corners t0=-a,t1=+b; sign/scale calibrated against scipy.signal.hilbert (median ratio 1.000663); threshold a+b<=L reproduced exactly, sign flips at (a+b)/L=1.0000 to machine precision in every family including a=L/4,b=3L/4."
+    },
+    {
+      "id": 3,
+      "name": "direct O(N^2) cotangent-kernel discrete Hilbert transform cross-check",
+      "strength": "cross-check (validates route 1 & 2's use of scipy.signal.hilbert)",
+      "script": "route3_cross_check.py",
+      "summary": "Independent from-scratch O(N^2) circular-convolution DHT vs scipy.signal.hilbert on random signals N=64/128/256; max relative error 6e-16 to 4e-15."
+    },
+    {
+      "id": 2,
+      "name": "smooth profile sweep through production tmm_helper.ht_derivative",
+      "strength": "numeric, own construction",
+      "script": "route2_numeric.py",
+      "results": "route2_results.json",
+      "n_cases": 184,
+      "sufficiency_pass_cases": 104,
+      "sufficiency_mismatches": 0,
+      "necessity_fail_cases": 80,
+      "necessity_apparent_mismatches_initial": 76,
+      "necessity_resolution": "diagnosed as non-adversarial/diffuse construction (effective support narrower than nominal box), not a real theorem violation -- see route2b"
+    },
+    {
+      "id": "2b",
+      "name": "mass-normalized narrow-bump width-limit convergence study",
+      "strength": "numeric, own construction (resolves route-2 apparent discrepancy)",
+      "script": "route2b_width_limit.py",
+      "results": ["route2b_results.json", "route2b_mass_normalized_convergence.json"],
+      "summary": "Two Hann bumps at t0=-a+w,t1=b-w, amplitude ~1/w (fixed total mass), N scaled so w/dx>=80 up to N=1.6e6; as w->0 min eps'' from ht_derivative converges toward route-1 exact values for 3 (a,b) pairs, correct sign in all cases, magnitude within 2% for 2 of 3, third (near-threshold, strongly asymmetric) at ~80% of target magnitude and monotonically closing at the resolution reached."
+    }
+  ],
+  "convergence_in_N": {
+    "file": "convergence_check.json",
+    "tolerance": "<1% change between N=16001 and N=32001",
+    "result": "met in all 3 spot-checked cases"
+  },
+  "agreement_tolerance_stated_before_looking": true,
+  "checkpoint_file": "CHECKPOINT.md"
+}

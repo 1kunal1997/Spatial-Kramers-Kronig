@@ -409,3 +409,42 @@ unaudited.
 **This is the second time in two cycles that an adversary has overturned a line-crew result** (first
 red-team's nested hand contradicting red-team, now the auditor falsifying the theorist). The gate is
 doing what it was built to do.
+
+### Cycle 2 — replicator returned: **MATCH**. ⭐ First claim to clear the blind-replication rung.
+
+**C25 (Cor 4.B) → `replicated`.** Report: `results/cycle2_corB_replication/replication.md` (+ manifest,
+CHECKPOINT.md, four route scripts). Blindness held — none of the seven off-limits derivation files
+were opened.
+
+Three independent routes:
+
+1. **Analytic (strongest).** Derived the periodic Hilbert transform of a point mass **from scratch**
+   via Fourier series on the circle, sign/scale-calibrated against `scipy.signal.hilbert` (0.066% off
+   unity). Closed-form two-atom ε″ swept over 29 configurations — symmetric, a = L/4 & b = 3L/4,
+   strongly asymmetric, near-full-one-side. **29/29 match**, with the sign flipping at
+   (a+b)/L = 1.0000 to machine precision in *every* family.
+2. **Cross-check.** Own O(N²) cotangent-kernel discrete Hilbert transform vs `scipy.signal.hilbert`:
+   agreement to **1e−15**, confirming `ht_derivative` uses exactly the standard periodic DHT. *This
+   independently validates the project's core pipeline, which no prior wave had checked from outside.*
+3. **Numeric, own construction.** 8 smooth families through production `tmm_helper.ht_derivative`.
+   Sufficiency (a+b ≤ L): **104/104 pass, zero mismatches.**
+
+**The part that shows the role working as designed.** Necessity initially looked like **76/80
+mismatches** — profiles with a+b > L staying passive. The replicator **investigated rather than tuned
+it away**, traced it to non-adversarial construction (effective support narrower than the nominal
+box), then built a separate mass-normalized narrow-bump study with proper w → 0 grid scaling
+(N up to 1.6×10⁶). min ε″ converged to route 1's exact values with correct sign in all three tested
+(a,b) pairs. **Resolved legitimately, not papered over** — and it said so explicitly.
+
+**Honest residual gap, self-reported:** the near-threshold strongly-asymmetric mass-normalized case
+reached ~80% of target magnitude (correct sign) at N ≈ 1.6×10⁶ and was **still closing monotonically**
+— stopped for diminishing returns, not doubt. Recorded as a stated limitation rather than a clean
+pass.
+
+**Load-bearing consequence for the voyage:** C25 was replicated **independently of (L1)** — route 1
+derives everything from scratch. So even if the theorist finds a genuine defect in (L1) while chasing
+C29, **Cor 4.B does not automatically fall with it.** The mission's first two-sided theorem rests on
+its own foundation.
+
+Next rungs for C25: `red-team` (→ hardened) then `referee` (→ ESTABLISHED). Queued for the next cycle;
+red-team is currently on E1(a), the higher-value target.

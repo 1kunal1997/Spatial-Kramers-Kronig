@@ -148,13 +148,13 @@ MISSION.md, PROTOCOL.md, and tmm_helper.py only (all explicitly allowed).
   itself clipping real interior structure for profiles with support reaching near +/-L
   (discovered in route 1, applied throughout route 2 before drawing conclusions from route 2).
 
-## CURRENTLY IN PROGRESS
-Writing final replication.md and manifest.json. All three routes complete, verdict: MATCH.
+## STATUS: TASK COMPLETE
+`replication.md` and `manifest.json` written. VERDICT = MATCH. All three routes done,
+convergence checked in N and (for route 2b) in width w. Nothing further planned.
 
-## NEXT STEP
-Write research/results/cycle2_corB_replication/replication.md (VERDICT + route summaries +
-numbers + convergence) and manifest.json, then final heartbeat. This IS the last step of the
-task -- nothing further planned unless replication.md review reveals a gap.
+## NEXT STEP (only if resumed)
+None -- task is finished. If a fresh agent picks this up, just re-read replication.md; no
+outstanding work.
 
 ## OPEN QUESTIONS / BLOCKERS
 None blocking. One soft note for the write-up: the near-threshold strongly-asymmetric
