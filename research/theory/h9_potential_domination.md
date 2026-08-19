@@ -2,10 +2,9 @@
 
 **Author:** theorist (crew), Cycle 1. **Date:** 2026-08-18.
 **Script:** `research/theory/h9_domination_check.py` (self-contained, ~2 min).
-**Status of this file:** CHECKPOINT — the mathematics below is complete and the
-central claims are numerically verified; three numerical sub-checks are known-broken
-for identified quadrature reasons (§8, "Known numerical defects"), not for
-mathematical reasons.
+**Scripts:** `h9_domination_check.py` (main, 23 blocks) and `h9_fixes.py` (quadrature-corrected
+re-runs of blocks B/C/E/F). Both in `research/theory/`, both run clean.
+**Status of this file:** COLD-START HANDOFF. Read §12 first if you are resuming with no memory.
 
 ---
 
@@ -282,7 +281,12 @@ first run; the 6 failures are quadrature artefacts with identified causes, liste
 | H | depth law `−M₁²/(2πM₂)` at `x₀ = .02, .05, .10 L` | 3× ✔ (e.g. `−0.00752` vs `−0.00758`) |
 | H | single atom `−(D/π)ln sec(πx₀/2L)` | `−0.015973` vs `−0.015973`, `−0.110318` vs `−0.110318` ✔ |
 
-**Known numerical defects (mathematically inert, fix is mechanical):**
+> **UPDATE — all three defects fixed in `h9_fixes.py`; see §12.1 for the corrected residuals.**
+> Block B now passes at 1.2e-4–1.5e-3; block C rises 152/240 → **233/240** (remaining 7 diagnosed,
+> §12.5.5); block E necessity confirmed to 4 decimals against the closed form; block F `deg Q − n ≤ 0`
+> on 400/400. The original defects were:
+
+**Known numerical defects (now fixed; recorded for the audit trail):**
 1. Blocks A/B/C evaluate `ln|η − ξ(t)|` on the *same* grid that carries `η`, so the integrand
    hits `−∞` at one node and `np.trapezoid` returns `−inf`. Fix: excise the singular cell and
    add its analytic contribution `∫ln|η−ξ|` over that cell, or evaluate `Δ` at midpoints. The
@@ -370,3 +374,118 @@ special case.
 5. **Primary-source check owed:** Khinchin's theorem statement, and the Richter/Rogosinski/
    Shohat–Winkler extreme-point theorem, should be cited from primary sources. Saff–Totik and
    Landkof were not accessible; **no theorem number from either is cited here.**
+
+---
+
+# 12. COLD-START HANDOFF (read this first)
+
+## 12.1 What I established — with status labels
+
+| # | Result | Status |
+|---|---|---|
+| 1 | **(L1)** Passivity ⟺ `Φ_P ≤ Φ_ω` on ℝ, `Φ_μ(η)=∫ln|η−ξ|dμ`, `ω` = Cauchy `(1/π)dξ/(1+ξ²)`. Identity `πε″(x) = D(Φ_ω−Φ_P)(ξ(x))`. | **proved** (algebraic rearrangement of C1) + **verified**: max rel err **2.2e−4** (logistic `w=.08`, N=4001), **1.2e−4** (`w=.05`, N=8001), **1.5e−3** (`w=.20`) — `h9_fixes.py` block B |
+| 2 | `ω = Bal(δ_i,ℝ)` = harmonic measure of ℂ₊ at `i` = **push-forward of window Lebesgue (equilibrium) measure** under `ξ=tan(πt/2L)`. So the "point mass at i" is just the seam. | **proved** + verified (`0.679190` vs `0.679205`) |
+| 3 | Domination on ℝ ⟺ domination on ℂ (minimum principle, `h→0` at ∞). | **proved** |
+| 4 | **(L2)** Reduction principle: `𝒦` convex weak-∗ compact, (H) uniform ⟹ `𝒦⊆𝒫 ⟺ ext(𝒦)⊆𝒫`. Bauer max principle; `P↦Φ_P(η)` affine u.s.c. | **proved**, modulo the truncation step near the seam being written out in full |
+| 5 | Hypothesis **(H)** `∫ln sec(πt/2L)dP < ∞` (finite mean loss `σ`) is what makes (L2) legitimate. Never stated in the corpus. | **proved** it is needed for u.s.c.; not proved that it is necessary for (L1) |
+| 6 | **One-line proof of Lemma 4.1**: reduces to `A+B ≤ π/2 ⟹ sinA ≤ cosB and sinB ≤ cosA ⟹ both logs in (★) ≤ 0`. | **proved** |
+| 7 | **Cor 4.A — exact two-atom law.** Balanced pair at `t₊, −t₋` is passive **iff `t₊+t₋ ≤ L`**, with closed-form depth (★). Contains Cor 4.3 and Cor 4.4/C10. | **proved** + verified: 10/10 verdicts; bisected threshold `S*=1.00000L` at asymmetry ratios 1,2,5; closed-form depth matches DiHiTI to 4–5 decimals (`−0.05018` vs `−0.05021`; `−0.04785` vs `−0.04786`; `−0.02551` vs `−0.02550`; `−0.02430` vs `−0.02433`) |
+| 8 | **Cor 4.B — sharp balanced-support law.** `g≥0`, `M₁=0`, `supp g ⊆ [−a,b]` ⟹ passive **iff `a+b ≤ L`**. Strictly generalises Thm 4.2 (which is `a=b=L/2`); `[−L/4,3L/4]` is passive. | **proved** given the classical extreme-point theorem (item 12.5.3) + verified: 5 shapes × 200 MC balanced densities with `a+b=L`, worst `min ε″/D = 0.0`; necessity confirmed for `a+b>L` |
+| 9 | C8 edge cascade + C9 depth law + C13 endpoint are the **`η→∞` Taylor expansion of (L1)**. `Δ(∞)=0` ⟹ `ε″(±L)=0`; `O(1/η)` ⟹ `M₁=0`; PV-convergence of `M₁` ⟹ `g(+L)=g(−L)`; two-term max ⟹ `min ε″ ≈ −M₁²/(2πM₂)` at `η*=−M₂/M₁`. | **proved** + verified (3 offsets, 2–3 digits; single atom to 6 digits) |
+| 10 | **(L3) Node collapse.** `n`-atom drop measure ⟹ `Δ′ = Q/[(1+η²)∏(η−ξ_k)]` with `deg Q ≤ n` (leading `η^{n+1}` terms both `= D`, cancel) ⟹ **≤ n candidate `η`, exact grid-free test.** | **proved** + verified: max abs diff **9.1e−11** vs 4·10⁵-point kernel sum over 300 random atomic profiles; `deg Q − n ≤ 0` on 400/400 |
+| 11 | **No fixed finite node set suffices.** Any `η₁…η_k` can be defeated via the inverse map (Thm 6.1). | **proved** + verified (5 nodes all `>0`, global min `−0.0403`) |
+| 12 | `{1, ln\|ξ−η₁\|, …, ln\|ξ−η_k\|}` **is** a Chebyshev system in `ξ` off the poles (`f′ = N/∏`, `deg N ≤ k−1` ⟹ ≤`k` zeros). | **proved** |
+| 13 | Corpus count **14 → 3** (L1, L2, + L3 as the one net addition, itself a reduction of L1). | bookkeeping, §10 |
+
+## 12.2 What I ruled out — do not re-walk
+
+* **Cartan's domination principle and balayage are false friends.** One-way sufficiency
+  ("true on supp μ ⟹ true everywhere"). They do NOT close the N&S question. Balayage enters
+  here only as the *identification* `ω = Bal(δ_i,ℝ)`, a computation.
+* **It is NOT the full Choquet / Cartier–Fell–Meyer order.** Riesz decomposition gives
+  `∫f dP − ∫f dω = ∫(Φ_P−Φ_ω)dλ + ∫h d(P−ω)`; the harmonic term does not vanish in general.
+  Anyone claiming CFM applies directly is overclaiming.
+* **No profile-independent finite node test exists** (item 11). Any exact `η`-side reduction
+  must scale with profile complexity. This closes the naive reading of H4.
+* **H4's Chebyshev hope is on the wrong side.** The Chebyshev property lives in `ξ` (the
+  measure side, powering Markov–Krein / extreme-point counts), not in `η`.
+* **(L3) is not yet a speed win.** At `n=40` atoms: node test 4.56 ms vs DiHiTI@2¹⁴ 0.98 ms
+  = **0.2×, slower** (`np.roots` is O(n³)). Exact and grid-free, but **does not defeat C15**.
+* **Wave 3's "Thm 4.2 and 5.2 are genuinely complementary" is misleading** — see §12.4.
+
+## 12.3 The Choquet / dilation-order question — my read
+
+**Read: it is a *specialization* of the dilation order, but only to the sub-cone of
+logarithmic potentials — and that specialization is, as the librarian found, not in the
+literature.** Concretely:
+
+* The relation IS an order comparison of two measures against a test-function cone. That much
+  is Choquet-shaped and the vocabulary (dilation/balayage order, `∫f dP ≤ ∫f dω ∀ f ∈ H`) is
+  the right vocabulary.
+* The cone here is `H = cone{ln|η−·| : η ∈ ℂ}` = the logarithmic potentials, **strictly smaller**
+  than the subharmonic cone of CFM. So CFM's N&S machinery does not transfer for free.
+* **Hunch, explicitly labelled conjecture:** on the admissible class the gap may be vacuous,
+  because `ω` is Cauchy (all moments `≥1` infinite) so any harmonic test function with a
+  convergent `ω`-integral is essentially affine, and the affine part is killed by the necessary
+  condition `M₁ = 0`. If that can be made rigorous, (L1) **would** be the full Choquet order and
+  CFM would apply verbatim. **I did not attempt this. It is a clean, self-contained target.**
+* **HLP majorization is the ancestor, not the tool.** HLP is the `(η−ξ)₊` kernel on ℝ; ours is
+  `ln|η−ξ|`. Structurally parallel (both "potential of one measure dominates another's"), but
+  HLP theorems do not apply.
+
+## 12.4 Did Thm 4.2 and Thm 5.2 fall out of one relation? — **YES**
+
+Both are `(L2)` applied to a convex family, differing only in which family:
+
+* **Thm 4.2**: `𝒦₁ = {P ≥ 0, |ξ| ≤ 1, E_P ξ = 0}`. Two linear constraints ⟹ `ext(𝒦₁)` = balanced
+  ≤2-atom measures (Richter–Rogosinski–Shohat / Winkler). Check on extreme points = Lemma 4.1
+  = item 6 above, one line.
+* **Thm 5.2**: `𝒦₂ = {P ≥ 0, even, unimodal}`. **Khinchin's theorem** gives the *explicit*
+  Choquet representation with `ext(𝒦₂) = {1_{[−a,a]}/2a}`. Check on extreme points = Thm 5.1's
+  Clausen margin `M(α,θ) ≥ 0`.
+
+**Why they looked complementary, resolved:** a plateau `1_{[−a,a]}` *is* a mixture of symmetric
+pairs `½(δ_s+δ_{−s})`, and by Cor 4.A every pair with `s > L/2` is **not** passive. Convexity is
+one-way, so the pair decomposition certifies nothing for `a > L/2` while the plateau
+decomposition does. **The two theorems differ in the choice of extreme-point decomposition, not
+in their content.** "Neither contains the other" is a remark about two subsets `𝒦₁, 𝒦₂ ⊂ 𝒫`,
+not about two theories. This is the H9 unification and it holds.
+
+**Bonus that vindicates the framing:** running (L2) on `𝒦₁` *properly* (i.e. evaluating (L1)
+on the extreme points instead of only bounding it) produces **Cor 4.B**, a two-sided law that
+strictly supersedes Thm 4.2. The unification is not cosmetic — it generated a sharper theorem.
+
+## 12.5 Exact next steps, in priority order, executable without me
+
+1. **[1 h, highest value] Close Wave 3 Open Problem 8.1 (skew tolerance).**
+   It is now a finite computation. Take `𝒦₃ = {P ≥ 0, M₁ = 0, ∫ξ²dP = m₂}` (or a skew
+   constraint) — three linear constraints ⟹ `ext(𝒦₃)` = ≤3-atom measures. Evaluate (L1) on a
+   3-atom measure: by (L3), `Δ′ = Q/[…]` with `deg Q ≤ 3`, so the criterion is
+   "all ≤3 real roots of an explicit cubic give `Δ ≤ 0`" — closed form via Cardano.
+   **This should close 8.1 completely and give the exact interpolation between Thms 4.2 and 5.2.**
+   Code skeleton already exists: `nodes()` and `atomic_gap()` in `h9_domination_check.py`.
+2. **[30 min] Try to prove the §12.3 hunch** (harmonic test functions are vacuous against Cauchy
+   `ω` once `M₁ = 0`). If it works, (L1) IS the Choquet order and CFM applies verbatim — a
+   citable classical N&S theorem instead of a bespoke one.
+3. **[promotion] Send Cor 4.B to `replicator` with parameters only**, no code path:
+   *"`g ≥ 0` on `[−L,L]`, supported in `[−a,b]`, tangent-balanced `∫g tan(πt/2L)dt = 0`.
+   Claim: DiHiTI partner `ε″ ≥ 0` everywhere iff `a+b ≤ L`."* It is the mission's first
+   two-sided, non-trivial, cheap-to-test claim.
+4. **[owed]** Cite Khinchin's theorem and the Richter/Rogosinski–Shohat/Winkler extreme-point
+   theorem from primary sources. **No Saff–Totik or Landkof theorem number is cited in this
+   document** (both were paywalled); keep it that way until verified.
+5. **[caveat to chase]** Block C (labelled corpus) agrees **233/240**. The 7 disagreements are
+   all families with **unmatched edge slopes** (`tanh_slopes` ×3, `lorentzian`, `opposite_bumps`,
+   `logistic` ×2 at `min ε″ ≈ 0`). Diagnosis: when `g(+L) ≠ g(−L)` the Cayley integral for
+   `Φ_P` is only conditionally convergent, and my `|x| < 0.97L` truncation cuts off exactly the
+   near-seam region where the minimum lives. **This is a defect of the ξ-space *quadrature*,
+   not of (L1)** — (L1) is an algebraic identity verified to 1e−4 on edge-regular profiles.
+   Fix: evaluate in `t`/circle coordinates near the seam, or impose (H) + edge matching as a
+   pre-screen (it is a *necessary* condition anyway, so those profiles are already labelled GAIN
+   by the cascade). Worth 20 minutes; until then treat block C as **233/240, cause identified**.
+
+## 12.6 Files written (all under `research/`)
+
+* `research/theory/h9_potential_domination.md` — this document.
+* `research/theory/h9_domination_check.py` — 23-block verification (A–H).
+* `research/theory/h9_fixes.py` — quadrature-corrected re-runs of blocks B, C, E, F.

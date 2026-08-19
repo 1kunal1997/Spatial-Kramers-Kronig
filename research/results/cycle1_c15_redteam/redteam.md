@@ -1,3 +1,231 @@
+# COLD-START HANDOFF — Cycle 1 Red Team — Claim C15
+*Written 2026-08-18 under a closing context window. Reader assumed to have NO memory of this work.
+Everything below the horizontal rule marked "FULL REPORT" is the long-form evidence. This block is
+self-contained: you can act on it without reading further.*
+
+**TARGET C15** (Wave 3 §7, `theory/passivity_2026Aug/Responsive Notes - Derivation - 081826.pdf`):
+> "On cost, the honest position stands: as a test of a given profile, nothing beats running DiHiTI and
+> taking the minimum (O(N log N), two FFTs)."
+
+---
+
+## 0. LATE-BREAKING CORRECTIONS — hand B landed after §1-§5 were written. **It contradicts me twice. Read this BEFORE acting on anything below.** (full data: `margin.md`, `m1_raw.csv`)
+
+**C-1. My attack 2.2/E4 FAILS. The baseline threshold IS grid-robust.** M3: alpha* for the opposite-bumps
+family converges — 0.61403 (N=2^11) -> 0.61369 (N=2^14, **unchanged at 2^15 and 2^16**). Relative spread
+**0.056%**. So the PASS->FAIL threshold is real physics, not discretisation noise.
+**Consequence: attack 2.2 is weaker than I claimed.** The `dihiti`-vs-`onehilb` sign disagreements on
+5/32 profiles are a *near-seam* artifact of where the min is taken, NOT evidence that the underlying
+decision problem is ill-posed. **E4 is already answered — do not run it.** I overstated 2.2; the
+"deepest crack" label belongs to 2.5, not 2.2. **This is a point for C15.**
+
+**C-2. My §3 verdict on H1 is PARTLY WRONG.** M4 measured how localized a label-flipping perturbation can
+be: a_min **decreases ~13x** as sigma/L shrinks 0.5 -> 0.02 (0.024 -> 0.0019), and
+||perturbation||_1/(D.L) falls by **three orders of magnitude**, monotonically. **Narrow perturbations get
+CHEAPER, not more expensive.** I predicted the opposite direction would be needed for H1 to survive.
+So: **Omega(N) is genuinely provable here** — H1 is *not* dead for lack of an adversary construction.
+**But my core §3 argument still stands and is the operative one:** Omega(N) does **not** establish C15,
+whose entire content is the *log factor*, and convexity blocks every known route to superlinear.
+**Corrected status of H1: PROVABLE BUT INSUFFICIENT — not "dead".** Downgrade to low priority rather than
+KILLED. And note M4 is bad news for any *sublinear*-query test: don't chase one.
+
+**C-3. C14 needs a qualifier (new finding, not mine).** M5: the "min eps'' ~ -0.20 independent of m"
+cosine-dressing claim holds only for **m >= 16** (spread 0.004 over m=16..128). At m=4 and m=8 — never
+tested in the original write-up — min eps'' is **-0.115 and -0.162**, clearly m-dependent.
+**C14 requires an unstated "for sufficiently large m".** Flag on CLAIMS.md.
+
+**C-4. My Finding 2.5 is CONFIRMED and strengthened.** M1 (266 profiles): **95.5% of passive profiles have
+their global minimum literally at the endpoint** (|x|/L > 0.99). Interior margin/D percentiles:
+1st **-6.0e-4**, 5th **+2.7e-4**, 50th **+1.08e-3**, 95th **+9.5e-3**. Bounded away from zero for the bulk.
+(Note the negative 1st percentile — a small tail of profiles genuinely has negative interior margin;
+those are true FAILs, not a contradiction, but any split test must not assume positivity.)
+M2 confirms the seam asymptotic `eps''(-L+s) ~ c1.s.ln(1/s) + c2.s` in closed form (predicted vs fitted
+c1 agree to **2.2%**, R^2 = 0.999998 on an asymmetric profile). **Bonus for the split test:** for the
+logistic w=0.05 *both* coefficients vanish by symmetry and the decay is **O(s^2)** (fitted exponent
+1.998) — the seam is even better behaved than the generic law predicts.
+
+**Net effect on the verdict: unchanged at NARROWED.** C-1 is a point for C15, C-4 is a point against it,
+C-2 refines rather than reverses §3. **§5's next step (E1a) is unaffected and remains correct.**
+
+
+---
+
+## 1. VERDICT: **NARROWED** (not killed, not survived)
+
+C15 is **indefensible as written** — it is an unproved assertion in a summary table, with no algorithm
+class, input model, precision, or worst-vs-typical specified. Four independent cracks are demonstrated
+with numbers. But its **practical core is substantially vindicated**: I built two candidate cheap tests
+and **both lost on wall clock**. So:
+
+- **Not KILLED**: no test beat the baseline at N=2^14 while staying safe. V1 is NOT achieved.
+- **Not SURVIVED**: the sentence's strongest defence (the "margin 0" sharpness argument) is **false**,
+  the baseline is reducible by 1.7x, and the baseline's own verdict is **implementation-dependent at the
+  threshold** (5/32 profiles flip).
+
+**Narrowed statement the evidence supports:**
+> Among exact, transform-based, worst-case algorithms resolving eps' on the full N-point grid, two-FFT
+> DiHiTI is within a small constant of the best *measured* method at N ~ 2^14 in NumPy. No Omega(N log N)
+> lower bound is known or reachable. "Nothing beats" is unearned.
+
+**Separate, and the most important single result of the cycle: mission objective V2 is UNREACHABLE as
+written** (see §3 below). Recommend the Captain rewrite it. This is a Captain checkpoint item.
+
+**Ledger:** C15 stays `conjecture`, flagged CONTESTED-AND-NARROWED; **may not be cited to abandon the
+primary objective.** C13/V5 **verified** (see 2.5). H1 -> low priority (provable but insufficient, per C-2), NOT killed. H3 -> demote. H2 -> top of board.
+
+---
+
+## 2. EVERY ATTACK, INCLUDING FAILURES
+
+### Attacks that LANDED (C15 falls on these)
+
+**2.1 The baseline is not minimal.** DiHiTI's `gradient -> HT -> integrate -> de-tilt` is algebraically
+ONE Hilbert transform of the ramp-periodized profile. `p = u + (D/2L)x` with D = u[0]-u[-1]; then
+`v = Im hilbert(p); v -= v[0]`. Agrees to rel. rms 1.6e-4 (N=2^14, logistic w=0.02/0.05/0.15).
+**Measured 1.70x speedup.** (`e1b.py`)
+
+**2.2 [SEE CORRECTION C-1 — THIS ATTACK FAILED] The incumbent has no well-defined answer at the threshold.** Those two algebraically-identical
+routes **disagree on the PASS/FAIL sign for 5 of 32 profiles**, all with interior min ~1e-5
+(logistic w=0.05: +7.7e-5 PASS vs -1.3e-4 FAIL). **This is the deepest crack**: C15 demands exactness of
+challengers at a boundary where the incumbent itself is ambiguous.
+
+**2.3 Decision/design conflation.** §7 asserts C15 then immediately argues from the design loop
+("no candidate is ever rejected"). That is the PARKED generation problem, not evidence about the
+decision problem.
+
+**2.4 Unquantified scope.** No model, no proof, no literature (nothing known either way).
+
+**2.5 KILLED A MISSION PREMISE — the "margin 0" sharpness objection is FALSE.** This is the finding that
+unblocks H2/H3 and it is the one to carry forward. Two facts (`e2.py`, `e3.py`, `e4.py`):
+- **DiHiTI is exactly linear** (checked to 6.2e-15). The passive set is a closed **convex polyhedral
+  cone** {eps' : A eps' >= 0}, A an explicit N x N matrix.
+- **Building A explicitly at n=512: rows 0 and n-1 are IDENTICALLY ZERO, rank = n-2.** So
+  **eps''(+-L)=0 is an OPERATOR IDENTITY, not a facet.** *This verifies C13 / mission objective V5
+  outright — V5 is free and can come off the board.*
+- Therefore "every profile sits at margin 0" is an **artifact of including the two structurally-zero
+  endpoints in the min**. At a *fixed* window fraction the margin converges to a positive,
+  N-independent constant:
+
+| profile | N=1024 | 4096 | 16384 | 65536 |
+|---|---|---|---|---|
+| logistic w=0.05, min/D at \|x\|<=0.95L | 1.076e-3 | 1.026e-3 | **1.0085e-3** | **1.0054e-3** |
+| logistic w=0.30, same | 1.978e-3 | 1.895e-3 | **1.866e-3** | **1.861e-3** |
+| logistic w=0.05, min/D at \|x\|<=(1-2/N)L | 9.2e-6 | 5.7e-7 | 3.6e-8 | 2.2e-9 |
+
+The zero lives **entirely at the seam**, where the notes' own edge cascade (8) gives it in closed form.
+**Conclusion: split the problem — seam analytically, interior numerically. Never resolve the seam on a grid.**
+
+### Attacks that FAILED (C15 survives these — real evidence, do not discard)
+
+**2.6 H3 branch-and-bound loses on constants.** Adaptive coarse-to-fine on the log potential: verdicts
+**32/32 correct**, only **0.61N** evaluations — the pruning physics is real — but **0.39x wall clock** vs
+one-shot `onehilb` (924us vs 562.6us at N=2^14). Per-level FFT dispatch overhead in Python/NumPy kills it.
+
+**2.7 rfft/irfft buys nothing.** Hand-rolled real-FFT Hilbert: exact match (diff = 0), **0.98x**.
+Halving the FLOPs is arithmetically correct and practically worthless.
+
+**2.8 My O(N) Sobolev tail certificate is UNSOUND.** `cert.py`'s `tail_bound` uses repeated central
+differences, whose symbol (i sin(m.theta)/h)^k **decays** at high m instead of growing — it
+*under*-estimates exactly the modes it must bound. Also 3 orders too loose to ever certify a PASS
+(3.1e-3.D at n=1024 vs a 1.0e-3.D margin). **Do not reuse it. Rebuild spectrally or via total variation.**
+
+**2.9 The SPLIT TEST I built is SAFE but SLOW.** (`split_test.py` — the key artifact.) Seam by analytic
+cascade + interior (|x|<=0.95L) by decimated single-Hilbert at n=512, vs full-N ground truth at N=2^16,
+24 profiles. **20/24 sign-correct, and all 4 misses are adversarial cosine dressings.** Every physical
+profile correct, down to |margin|/D = 2.5e-4 (rand5). **But 601.1us vs 527.0us baseline = 0.88x.**
+The cascade's own O(N) cost — one `np.gradient`, three `trapezoid`s, N evaluations of `tan`/`cos`/`log`
+— exceeds the FFT it replaces.
+
+**2.10 H1 (Omega(N) query lower bound): PROVABLE BUT INSUFFICIENT — see §3 and correction C-2.**
+
+### Bonus: the cascade and decimation cover each other's blind spots
+Edge-slope mismatch |g(-L)-g(+L)|/D for the 4 profiles decimation misses: **0.39, 0.40, 1.58, 6.31**.
+For every logistic/bump: **~1e-11**. Ten orders of separation. An O(N) slope screen defers the adversary
+before decimation runs. **Indicated, not proven** — this is experiment E2 in §4.
+
+---
+
+## 3. MOST PROMISING ROUTE: **H2, decisively. H3 demote. H1 dead.**
+
+**H1 is PROVABLE BUT INSUFFICIENT** (corrected by C-2; hand B's M4 supplies the adversary I doubted). Do not send it to KILLED.md — send it to low priority. Reason:
+1. In an unrestricted input model, Omega(N) is **free** (an unread coordinate can be set adversarially)
+   — and Omega(N) **does not establish C15**, whose entire content is the *log factor*.
+2. The passive set is **convex** (2.5). Every standard algebraic/linear-decision-tree lower bound
+   (Ben-Or; Bjorner-Lovasz-Yao; Dobkin-Lipton) is driven by connected components or face counts. A convex
+   set has **one** component; face-counting for a simple cone with N facets caps at Theta(N).
+   **Convexity is fatal to the entire lower-bound toolkit.**
+3. Stripped down, C15 asserts: *deciding nonnegativity of a degree-N/2 trigonometric polynomial from its
+   coefficients requires Omega(N log N)*. Classical, well-studied, best-known O(n log n), **no known
+   superlinear lower bound.** C15 is an open complexity conjecture in disguise.
+4. K9's cosine dressing rules out finite batteries of *smooth functionals* — strictly weaker than
+   pointwise queries, and the bridge would only yield the Omega(N) that is already free.
+
+=> **Mission objective V2 ("prove no sub-O(N log N) procedure exists") is unreachable with present
+technique.** Reachable replacement, already ~90% established here: *"Omega(N) queries are necessary, and
+the passive set's convexity obstructs every known route to a superlinear bound."* Publishable, closes
+the question. **CAPTAIN CHECKPOINT.**
+
+**H3: demote, do not kill.** Correct (32/32) and information-efficient (0.61N evals) but 0.39x wall
+clock. Revive only compiled (numba/C) and at much larger N. At the N in play it is a loss.
+
+**H2: promote to top of board — but only in the SPLIT form from 2.5.** It is the only route where a
+measured win exists (10-30x for decimation alone) and the only failure is engineering constants, not
+information. Two things stand between it and V1: (a) close the 0.88x -> 3x gap; (b) make it *sound*
+rather than empirically safe.
+
+---
+
+## 4. EXPERIMENT SPEC — run these, do not re-derive
+
+Ground truth throughout: `dihiti` at N=2^16 on L=1.0, nb=1.7, A=nb^2-1=1.89, min over |x|<=0.95L.
+`split_test.py` in this directory already builds the profile suite and the harness — **start from it.**
+
+**E1 (HIGHEST VALUE, ~1 hour, decides V1).** Close the constant-factor gap on the split test. Three
+independent levers, try in this order:
+  (a) evaluate the cascade on the **decimated** grid (n=512) instead of N — it only needs edge slopes
+      and low moments; the O(N) pass may be entirely unnecessary;
+  (b) precompute `tan(pi x/2L)`, `cos`, `log` tables once per N (they are profile-independent);
+  (c) numba/`@njit` the cascade.
+  **Target: >=3x vs the 527.0us baseline at N=2^14, holding >=20/24 accuracy on `split_test.py`'s suite.**
+  If (a) alone works, V1 is achieved and C15 is KILLED.
+
+**E2 (soundness, ~1 hour).** Prove or bound the complementarity seen in 2.9: does
+|g(-L)-g(+L)|/D < tau imply spectral decay fast enough that decimation at n is safe? Numerically: sweep
+tau and n, on the cosine-dressed adversaries m = n/2 +- 1, n, 2n, 4n and on 200 random smooth draws;
+report the (tau, n) region with zero false ANSWERS (false *defers* are fine). This converts the split
+test from "empirically safe" to "certified".
+
+**E3 (replaces my failed 2.8).** Rebuild the tail certificate soundly: bound
+sum_{|m|>n/2} |p_hat_m| by ||p||_TV / (pi m) — O(N), no FFT, and sound (unlike central differences).
+Acceptance: certifies the logistic w=0.05 PASS at n <= 1024 (needs bound < 1.0e-3.D).
+
+**E4 — ALREADY ANSWERED BY HAND B (M3), DO NOT RUN. See C-1.** ~~(cheap, closes attack 2.2)~~ Does the *baseline's own* threshold converge? Sweep alpha in [0.5,1.2]
+for `u = logistic(x,0.05) + alpha*A*(exp(-((x+0.45)/0.22)^2) - exp(-((x-0.45)/0.22)^2))`, locate alpha*
+at N = 2^11..2^16, interior |x|<=0.95L. Report spread of alpha* across N. If it drifts, C15 holds
+challengers to a standard the incumbent fails — and that is quotable.
+
+**E5 (ledger hygiene).** Validate the split test against the labelled corpus
+`theory/figures/2026Apr27/` and `2026May07/`.
+
+---
+
+## 5. EXACT NEXT STEP IF I HAD ONE MORE HOUR
+
+**Run E1(a) — move the cascade onto the decimated grid — and nothing else.**
+
+Rationale: the split test is already **20/24 accurate and safe on every physical profile**. Its *only*
+deficiency is 0.88x wall clock, and the profiler points at one culprit: N transcendental evaluations in
+the cascade. The cascade needs edge slopes and two low-order moments; there is no obvious reason it
+needs the full grid. If it survives on n=512, the whole test becomes O(N) read + O(n log n) decide with
+a small constant, which is **10-30x** territory — clearing V1's 3x bar and **killing C15 outright**.
+
+That is a ~20-line change to `split_test.py`. It is the highest-leverage hour available on this board.
+
+---
+---
+
+# FULL REPORT (long-form evidence follows)
+
 # RED TEAM — Cycle 1 — Target C15
 ### "On cost, the honest position stands: as a test of a given profile, nothing beats running DiHiTI and taking the minimum (O(N log N), two FFTs)." — Wave 3 §7
 

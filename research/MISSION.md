@@ -42,9 +42,17 @@ partner is gain-free (ε″ ≥ 0 everywhere), with ε″ = 0 at the endpoints.
 **V1 (primary).** A decision procedure that, for any ε′ sampled on N points, returns PASSIVE /
 GAIN agreeing with `ht_derivative`'s verdict on ≥ 99.9% of a held-out adversarial test set including
 near-threshold cases, at asymptotic cost **strictly below O(N log N)**, or O(N) with a measured
-wall-clock speedup ≥ 3× over the two-FFT baseline at N = 2^14. Sharpness at the boundary is
-mandatory: every DiHiTI profile sits *exactly* on the passive cone boundary (margin 0), so any
-criterion that is merely approximate misclassifies precisely the profiles of interest.
+wall-clock speedup ≥ 3× over the two-FFT baseline at N = 2^14. ~~Sharpness at the boundary is mandatory: every DiHiTI profile sits *exactly* on the passive cone
+boundary (margin 0), so any criterion that is merely approximate misclassifies precisely the profiles
+of interest.~~ **🚩 STRUCK 2026-08-18 — this premise is FALSE.** It was an artifact of including the
+structurally-zero endpoints (C21/K16). The interior margin is positive and N-independent (~1e−3·D).
+Approximate cheap certificates are back in play (H12).
+
+**V2 🚩 CONTESTED — UNREACHABLE AS WRITTEN, AWAITING CAPTAIN.** Red-team (cycle 1) finds this asks
+for a superlinear time lower bound on a problem reducing to nonnegativity testing of a degree-N/2
+trigonometric polynomial — not provable as stated. A reachable restatement is ~90% established in
+`results/cycle1_c15_redteam/redteam.md`. The First Mate does not rewrite victory conditions; this
+needs the Captain. Original text follows.
 
 **V2 (equally acceptable as a primary-tier result).** A **proof** that no such sub-O(N log N)
 procedure exists — a genuine lower bound, not an assertion. An adversary/information-theoretic

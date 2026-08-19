@@ -190,3 +190,148 @@ its `notes.md`. Note honestly: that general form is O(N), i.e. **Fallback-1 tier
 certificate** — it would satisfy V3, not V1.
 
 Files: `research/results/cycle1_h6_crossover/`, `research/results/cycle1_h7_endpoints/`.
+
+---
+
+## Cycle 1 — red-team returned. VERDICT on C15: **NARROWED**. A mission premise is dead.
+
+Report: `results/cycle1_c15_redteam/redteam.md` (559 lines) + `bench.md`, `margin.md`, full script
+suite. It hired a nested hand ("Hand B") which **contradicted it twice**; both contradictions are
+recorded at the top of its own report. The adversarial architecture worked as designed — on itself.
+
+### C15 → NARROWED (not killed, not survived)
+
+Indefensible **as written**: an unproved assertion naming no algorithm class, input model, or
+precision. But red-team built two candidate cheap tests and **both lost on wall clock**. So V1 is not
+achieved either. Honest middle verdict.
+
+**Attacks that landed:**
+- DiHiTI's `gradient → HT → integrate` is algebraically **one** Hilbert transform of the
+  ramp-periodized profile (rel. rms 1.6e−4). Measured **1.70×** speedup. *The baseline C15 defends is
+  itself reducible* — the incumbent was never optimal.
+
+**Attacks that failed — recorded as evidence FOR C15** (a claim surviving named attacks is evidence):
+- H3 branch-and-bound: 32/32 correct, 0.61N evaluations, but **0.39×** wall clock. Constants kill it.
+- rfft/irfft: exact, **0.98×**.
+- Split test (analytic seam + decimated interior): 20/24 correct, all 4 misses adversarial cosine
+  dressings, safe to |margin|/D = 2.5e−4 — but **0.88×**.
+- ⚠ Its own O(N) Sobolev tail certificate is **UNSOUND** — central differences under-estimate the very
+  modes they bound. **Do not reuse.** → `KILLED.md` K13.
+
+### ⭐ A FOUNDATIONAL MISSION PREMISE IS KILLED
+
+`MISSION.md` V1 asserted: *"every DiHiTI profile sits exactly on the passive cone boundary (margin 0),
+so any criterion that is merely approximate misclassifies precisely the profiles of interest."*
+This was inherited from Wave 2 §3 and used to argue that no approximate test can ever work.
+
+**It is an artifact.** DiHiTI is exactly linear (6e−15), so the passive set is a convex polyhedral
+cone; building the matrix explicitly, **rows 0 and N−1 are identically zero — rank N−2**. So
+ε″(±L) = 0 is an *operator identity*, not a facet of the cone. The "margin 0" was measuring the
+structurally-zero endpoints. **At a fixed window fraction the interior margin converges to a positive,
+N-independent ~1e−3·D.**
+
+Consequences, and they are large:
+1. **The sharpness objection against approximate tests is void.** There is real margin to work with.
+   This reopens the entire class of cheap approximate certificates that the premise had ruled out.
+2. **C13/V5 verified outright by an independent route** — operator rank, not the numerical pipeline.
+3. **C19 independently corroborated by Hand B**: 95.5% of passive profiles have their global minimum
+   literally at the endpoint; interior margin/D median +1.08e−3. Two hands, two routes, same finding.
+
+### Hand B contradicted red-team twice — recorded honestly
+
+- The baseline's threshold **is** grid-robust (α* spread 0.056%), so red-team's "the incumbent is
+  ambiguous" attack **fails** — a point *for* C15.
+- Localized perturbations get **cheaper** as they narrow, so **Ω(N) is genuinely provable**; red-team
+  was wrong to call H1 dead. **H1 revived.**
+
+Red-team's core argument survives both: Ω(N) does not establish C15, whose content is the *log
+factor*, and convexity blocks every known superlinear route.
+
+### 🚩 CAPTAIN CHECKPOINT — V2 is unreachable as written
+
+Red-team's finding: **V2 asks for a superlinear time lower bound on a problem that reduces to testing
+nonnegativity of a degree-N/2 trigonometric polynomial.** That is not provable as stated. The report
+claims to ~90% establish the *reachable* version. **This requires the Captain's decision — the First
+Mate does not rewrite victory conditions.** Queued; V2 flagged contested in `MISSION.md`, not edited.
+
+### Next step, specified and cheap
+
+**E1(a): move the cascade onto the decimated grid (~20 lines, ~1 hour).** The split test is already
+safe on every physical profile; its only deficiency is N transcendental evaluations. If the cascade
+survives at n = 512, the test lands in **10–30× territory and C15 dies outright.** This is the single
+highest-value item on the board and it is cheap.
+
+---
+
+## Cycle 1 — theorist returned. **H9 CONFIRMED. The unification landed. 14 statements → 3.**
+
+Report: `theory/h9_potential_domination.md` (cold-start handoff in §12) + `h9_domination_check.py`,
+`h9_fixes.py`.
+
+### The law (L1) — proved, verified to 1.2e−4
+
+Passivity ⟺ **Φ_P ≤ Φ_ω on ℝ**, where Φ_μ(η) = ∫ln|η−ξ|dμ and ω is the Cauchy measure. The key
+identification: **ω = Bal(δ_i, ℝ) = harmonic measure of ℂ₊ at i = the push-forward of the window's own
+equilibrium measure** under ξ = tan(πt/2L). *The "point mass at i" is not an extra object — it is the
+seam.* Exact identity: πε″ = D(Φ_ω − Φ_P). Domination on ℝ ⟺ on ℂ by the minimum principle.
+
+### The key test PASSED — Thm 4.2 and Thm 5.2 are ONE theorem
+
+Both are **(L2), the extreme-point reduction** (Bauer/Choquet: 𝒦 ⊆ 𝒫 ⟺ ext(𝒦) ⊆ 𝒫) applied to two
+convex families: middle-half → ≤2-atom extreme points (Richter/Winkler) → Lemma 4.1; unimodal →
+plateau extreme points (**Khinchin's theorem**) → Clausen margin. **They differ only in the
+decomposition chosen, not in content.** Wave 3's "genuinely complementary, neither contains the other"
+is explained and dissolved: a plateau is also a mixture of symmetric pairs, and pairs with s > L/2 are
+individually non-passive — convexity being one-way, that decomposition simply certifies less.
+
+### The unification generated a sharper theorem — not cosmetic
+
+- **One-line proof of Lemma 4.1**: reduces to A + B ≤ π/2 ⟹ sin A ≤ cos B and sin B ≤ cos A ⟹ both
+  logs ≤ 0. Replaces Wave 3's AM–GM + Cauchy–Schwarz.
+- **Cor 4.A (exact, two-sided)**: a balanced 2-atom drop is passive **iff t₊ + t₋ ≤ L**, closed-form
+  depth. Contains Cor 4.3 and 4.4.
+- ⭐ **Cor 4.B — SUPERSEDES Thm 4.2**: g ≥ 0, M₁ = 0, supp g ⊆ [−a, b] ⟹ passive **iff a + b ≤ L**.
+  The middle half is merely the symmetric case; **[−L/4, 3L/4] is equally passive** — a fact the
+  middle-half rule could not see. Verified: bisected threshold 1.00000L at asymmetry ratios 1/2/5;
+  5×200 MC at a+b = L worst min ε″/D = 0.0; necessity matches closed form to 4 decimals.
+  **This is the mission's first two-sided non-trivial claim → `replicator` next cycle.**
+- C8 cascade + C9 depth law + C13 endpoint = **one Taylor expansion of (L1) at η → ∞**.
+
+### Parsimony (V6): 14 statements → 3
+
+(L1) the law, (L2) the reduction, (L3) node collapse. (L3) is the single net addition and is a
+*reduction of* (L1), not a new sufficient condition. **Nine former theorems are now corollaries.**
+
+### The librarian's trap was avoided — and honestly labelled
+
+Cartan/balayage are **not** leaned on (only the harmonic minimum principle). And this is **NOT** the
+full Choquet/CFM order: the test cone is only the logarithmic potentials, not all subharmonic
+functions, and the harmonic Riesz term does not vanish in general. Labelled **conjecture**: since ω is
+Cauchy (all moments ≥ 1 infinite), harmonic test functions with convergent ω-integral may be
+essentially affine, and the affine part is killed by the necessary M₁ = 0 — if provable, CFM applies
+verbatim. Not attempted; next-step #2.
+
+### Part 3 (finite reduction) — partial, and honest about the speed
+
+- **Proved negative**: no *profile-independent* finite node set works (5 nodes all positive, global
+  min −0.0403). **This closes the naive H4** → K17.
+- **Proved positive (L3)**: an n-atom drop gives Δ′ = Q/[(1+η²)∏(η−ξ)] with deg Q ≤ n ⟹ **≤ n
+  candidate η — an exact, grid-free test.** Verified to **9.1e−11** against a 4×10⁵-point kernel sum
+  on 300 profiles.
+- **Honest negative on speed**: at n = 40 the node test is **0.2×** (slower) than DiHiTI @ 2¹⁴.
+  **It does not defeat C15.** Structural win, not a speed win.
+- H4's Chebyshev property is real but on the **wrong side**: {ln|ξ−η_j|} is a Chebyshev system in ξ
+  (the measure side, which powers the extreme-point counts), not in η.
+
+### ⚠ Known defect, recorded
+
+Corpus verdict agreement **233/240**. All 7 disagreements are edge-slope-unmatched families
+(g(+L) ≠ g(−L)) where the Cayley integral is only conditionally convergent and the 0.97L truncation
+cuts the near-seam minimum. Diagnosed as a ξ-space **quadrature** defect, not a defect of (L1); those
+profiles already fail the necessary cascade. 20-minute fix, next-step #5. **Not yet fixed — the
+auditor should confirm the diagnosis rather than take it on faith.**
+
+### Top next step
+
+**Open Problem 8.1 (skew tolerance) is now a finite computation**: 3 linear constraints ⟹ ≤3-atom
+extreme points ⟹ degree-3 Q ⟹ **Cardano**. It should close completely.
