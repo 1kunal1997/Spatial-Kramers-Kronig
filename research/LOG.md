@@ -895,3 +895,16 @@ C31 (V2b) untouched — and still never adversarially tested (P2).
 
 **Process fix already in force:** `PROTOCOL.md` now requires verbatim quoting of a claim from its
 source when dispatching blind replication. This adjudication is what that rule was written to prevent.
+
+---
+
+## ⚓ ALL STOP — 2026-08-19. Captain aboard; voyage paused for discussion.
+
+Both cron jobs **deleted** (hourly autonomous heartbeat `3b72d1d7`; 5-hour summary `cf43a4e9`).
+Nothing will auto-resume. No crew are running — all cycle-3 hands returned, except P0 which was
+terminated by the session limit **after checkpointing** ("E1 confirms my closed forms exactly.
+Checkpointing before continuing"), so its partial work is on disk at
+`results/cycle3_p0_seam_convention/`.
+
+**To resume later:** re-create the hourly cron and re-dispatch from `BOARD.md` (P0 first — it still
+gates every numerical claim). `RESUME.md` and this log are the handoff.
