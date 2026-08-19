@@ -1,0 +1,53 @@
+{
+  "exp_id": "cycle3_v2a_replication",
+  "claim_tested": "C30 (empirical core of the V2a lower-bound proof)",
+  "agent": "replicator",
+  "date": "2026-08-19",
+  "git_sha_at_run": "869a6e9928d808179689fb4d911b610203b4337e",
+  "blind": true,
+  "files_read": [
+    "research/MISSION.md",
+    "research/PROTOCOL.md",
+    "tmm_helper.py (ht_derivative source only)"
+  ],
+  "files_explicitly_not_read": [
+    "research/theory/v2_lower_bound.md",
+    "research/results/cycle2_v2a/*",
+    "research/results/cycle2_e1a/*",
+    "research/results/cycle1_c15_redteam/*"
+  ],
+  "environment": {
+    "python_scipy": "1.15.3",
+    "python_numpy": "2.2.6"
+  },
+  "scripts": [
+    {
+      "file": "part1_analytic_check.py",
+      "purpose": "Analytic (Route 1) cross-check of ht_derivative pipeline against a hand-derived closed form for finite trig-sum profiles; also sanity-checks the endpoint=False grid convention against the known endpoint-duplication bug.",
+      "output": "stdout only (recorded in replication.md)"
+    },
+    {
+      "file": "part2_width_independence.py",
+      "purpose": "Crux test: delta-independence of the bump-induced depression, for a bump centered exactly at the measurement point x0 ('centered') and for a bump offset by delta/2 from x0 ('offset', dilation-covariant).",
+      "output": "part2_width_sweep_data.json"
+    },
+    {
+      "file": "part3_proportionality.py",
+      "purpose": "Tests proportionality of a_min to local headroom (consequence a) and universality of the coefficient kappa across x0 and across 8 independent random base profiles spanning ~4.6 decades of headroom (consequence b).",
+      "output": "part3_proportionality_data.json"
+    },
+    {
+      "file": "part4_N_independence.py",
+      "purpose": "Tests N-independence (consequence c) of the offset-construction coefficient C_phi at N=4096/8192/16384 (powers of 2) and N=10000/12000/15000 (non-powers of 2).",
+      "output": "part4_N_independence_data.json"
+    }
+  ],
+  "grid_convention": "x = np.linspace(-L, L, N, endpoint=False); justified in checkpoint.md and replication.md — avoids the known endpoint-duplication period-mismatch bug recorded in PROTOCOL.md.",
+  "verdict": "MISMATCH",
+  "pre_registered_tolerances": {
+    "width_independence": "<2% relative RMS over >=1.5 decades of delta",
+    "proportionality_kappa_spread": "+/-5% across eps''_0 spanning >=3 decades",
+    "constant_value_vs_0.418": "within 10% treated as supportive, not proof of same definition",
+    "N_independence": "<1% relative variation across N tested, including non-power-of-2"
+  }
+}

@@ -599,3 +599,70 @@ seconds after the cycle-3 dispatch. All four hands are still working; nothing ha
 *Operational note for future sessions:* cron fires that fail during a lockout appear to queue and
 then release in rapid succession once the window resets. Expect a burst of near-simultaneous
 heartbeats after any lockout, and treat all but the first as no-ops rather than as cues to dispatch.
+
+### Cycle 3 — numericist returned. **V1-c CLOSED: clean negative with a mechanism. V1 is now answered.**
+
+Files: `results/cycle3_v1c_compiled/` — `dihiti_fast.c`/`libdihiti.so` (ctypes C extension, `cc -O3
+-march=native`, clang/arm64; no numba or Cython installed), `dihiti_fast.py`, `bench.py`,
+`amdahl_diagnostic.py`, manifest + notes.
+
+**The hypothesis was RIGHT about the part it named, and that is what kills it.** Red-team's closing
+line was "every loss has been a Python constant, not an information deficit." True — for the O(N)
+legs. Fused C kernels (2 passes, zero numpy temporaries, vs numpy's ~4 allocating passes) deliver
+**3.34–3.65×** there.
+
+**But those legs are not where the time goes.** The Amdahl decomposition: `scipy.signal.hilbert`
+alone is **52% of baseline wall clock at N = 2¹⁴, rising to 61% at N = 65536**. So the ceiling — the
+best speedup obtainable if the O(N) legs were **free** — is **already below 3× for every N ≥ 16384**,
+the mission's own target N included. Measured end-to-end: **1.50×**.
+
+Beating the FFT itself is the only lever left, and it was already dead: cycle 1's `onehilb_rfft`
+reached ~1.0× once full analytic-signal reconstruction was counted.
+
+Correctness **327/327 verdict match**, including **147/147 near-threshold** cases and the
+`opposite_bumps` crossover at multiple N and α. Baseline was the honest one — identical arithmetic to
+`tmm_helper.ht_derivative`, not a strawman. Grid convention chosen deliberately per the C22/K19
+warning, and since the candidate reimplements identical arithmetic rather than exploiting periodicity,
+the endpoint-duplication bug cannot enter; correctness was checked pointwise regardless.
+
+---
+
+## 🚩 SYNTHESIS — V1 is answered, and the answer is NO. Three independent levels.
+
+With V1-c closed, the mission's primary objective has a rigorous negative answer, established at three
+distinct levels rather than by exhaustion alone:
+
+1. **Information (proved).** Query complexity is **Θ(N)** — tight (C30). Any correct test must read
+   Ω(N) samples. No asymptotic shortcut exists.
+2. **Method (conditional barrier).** The remaining log factor is blocked because both known
+   superlinear techniques are entropy counts of combinatorial multiplicity, and a convex polyhedral
+   cone caps both at O(N) *by arithmetic* (C31). Stated honestly as method-relative, **not**
+   unconditional.
+3. **Implementation (measured).** The constant-factor route is capped **below 3× by Amdahl** for every
+   N ≥ 16384, because the FFT dominates and is itself irreducible (C36).
+
+**Scope stated honestly:** level 3 bounds any approach that *retains* an FFT. A genuinely FFT-free
+O(N) algorithm with good constants is not excluded in principle — but every such route attempted has
+failed (K14 branch-and-bound 0.39×, K19 decimation, K21 certificates), and **eight named challenger
+routes have now died across three cycles.**
+
+**The Captain's bonus question has an answer:** *no, there is no cheaper test than computing the
+DiHiTI — and here is precisely why, at the information, method, and implementation levels.* That is a
+publishable negative result, and a considerably stronger one than the assertion C15 started as.
+
+### Cycle 3 — navigator dispatched (strategic inflection)
+
+V1's board items are exhausted and the mission's objectives *appear* largely resolved. That is exactly
+the condition where declaring victory early is the live risk — so the navigator was spun up and
+pointed **first** at the question "is the mission actually complete, or has the crew been generous
+with itself?"
+
+It was explicitly instructed to check each victory condition against the **ladder rung** rather than
+against the crew's prose, and told to **contradict the First Mate's synthesis in this log if it
+disagrees** — that synthesis is the most likely place premature victory has crept in, and it was
+written by the agent dispatching it.
+
+Also asked: the critical path to a defensible ESTABLISHED result; what remains genuinely open (T2/CFM,
+R3, and whether an FFT-free O(N) algorithm is possible in principle — level 3 of the V1 answer only
+bounds approaches that *retain* an FFT); what the Captain should be told; and whether the natural next
+voyage is the parked flipped-optimization problem or something else.
