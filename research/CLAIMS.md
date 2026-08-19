@@ -82,6 +82,9 @@ Two outcomes are both wins, and the crew must not prefer one:
 The failure mode to guard against is *neither* — accepting C15 on the strength of its author's
 confidence. It sits at `conjecture` until a proof or a counterexample moves it.
 
+| C55 | ⭐⭐ **Theorem 2 is PROVED OUTRIGHT — the numerically-certified ingredient is gone.** Lemma E1: the symmetric reciprocal-pair base point (atoms ξ = ±½, ±2, weight ½ each; W = 2, M₁ = 0) has Δ(η) = ½ln[\|η²−4\|\|η²−¼\|/(1+η²)²], so passivity reduces to \|y−¼\|\|y−4\| ≤ (1+y)² in y = η² — three elementary rows, middle one of discriminant −175/16 < 0 — giving Δ ≤ 0 with equality **exactly** at η = 0 and nondegeneracy Δ″(0) = −25/4 as an *identity*. Lemma E2: one implicit-function step on (Δ_m, ∂_ηΔ_m) = 0, Jacobian det = −(25/4)ln2 ≠ 0, performs the sweep **and** the thickening together at rate η̇(0) = (4/25)Σ(β_j−γ_j)/(β_jγ_j) ≠ 0. Also Lemma A′: Lemma A reproved in three real-variable lines, so Theorem 2 is now entirely real analysis, and step (C) of the old proof is no longer needed at all. Supersedes the asymmetric triple, the window [1.45, 2.96] and the measured Δ″ range. `theory/lemmaE_closure.md` | theorist-F1 2026-08-19 | **supported** (proof; First-Mate-verified — see note) | — | — | — | — |
+| C56 | ⭐ **(G4) −πε″ is strictly concave on exactly the middle half, for EVERY positive drop measure, in one line.** Δ″_g(η) = −Σw_j/(η−ξ_j)² − W(1−η²)/(1+η²)²: both terms are negative iff \|η\| < 1, and η ∈ (−1,1) ⟺ \|t\| < L/2. Verified independently over 300 random measures (max Δ″ = −1.1e−3 inside; **261/300 go positive somewhere outside**, so the middle-half boundary is *sharp*, not an artifact of the bound). Discharged the last soft step of Lemma E2. **Flagged by theorist-F1 as out-of-scope: this may be the structural home of C3 (middle-half sufficiency) — a direct lead for Goal B/V8.** | theorist-F1 2026-08-19 | **supported** | — | — | — | — |
+
 ## C49 promotion scope note (First Mate, 2026-08-19)
 
 **What is `replicated`: the witness pair, not the theorem.** The blind replicator was given only the
@@ -136,3 +139,30 @@ converts C53 from a mystery into a fixable convention error. **Feeds P0 and F2 d
 
 **Standing instruction:** anything in this voyage calling `production_min_eps2` must pass
 `grid="periodic"`. The k=8 witness remains the one to quote — three independent routes agree on it.
+
+## C55 verification note (First Mate, 2026-08-19)
+
+Verified independently before recording, since V7 turns on it:
+- Base point: exact node test **and** a 3,000,001-point dense grid both give sup Δ = +6.7e−16 at
+  η = 0.000000 — machine zero at exactly the predicted location. Δ″(0) = −6.250000 = −25/4 by finite
+  differences; Δ_G(0) = −0.693147 = −ln 2, so the Jacobian entry and det = −(25/4)ln2 are right.
+- Both controls the theorist proposed *itself* fire correctly: β = 0.3 (c = 11.20 > 6) → sup Δ =
+  +4.17e−1 GAIN; broken reciprocity (2 → 3) → Δ(0) = +0.4055 ≠ 0. Its bifurcation prediction
+  β = √2−1 lands on c = 6.000 exactly.
+- **η̇(0) reproduced on a configuration of my own choosing** (different extra pairs than the
+  theorist used): Newton continuation gives η/t → 0.61887 → 0.61911 → 0.61923 as t → 10⁻³ … 2.5×10⁻⁴,
+  converging linearly on the predicted **0.61935250**.
+- Lemma A′'s argument checked by reading: real-analytic continuation within a component plus log
+  blow-up at an atom belonging to exactly one pair. Correct, and genuinely lighter than the
+  complex-analytic original.
+
+**Rung discipline:** C55 enters at `supported`, not higher. It is a *proof*, and the First Mate
+cannot promote by judgment — PROTOCOL rule 2. **V7 is NOT yet met**: it requires C49 at `hardened`,
+which requires `red-team: SURVIVED`, and red-team has not run. The proof is delivered; the gate is
+not closed.
+
+**By-product for P0:** the base point is an exactly-known point of the passive boundary — the
+equal-drop four-step staircase at t = ±0.2951672…, ±0.7048327…, with closed form
+ε″(x) = −(1/π)·½ln[|ξ²−4||ξ²−¼|/(1+ξ²)²], ξ = tan(πx/2), whose correct verdict is "passive, margin
+exactly 0, attained only at x = 0". That is a calibration profile any numerical passivity convention
+must get right, and it is the first one the voyage has had.

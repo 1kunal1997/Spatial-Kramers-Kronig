@@ -1,0 +1,78 @@
+{
+  "exp_id": "f1_lemmaE_closure",
+  "board_item": "F1",
+  "agent": "theorist-F1",
+  "timestamp_utc": "2026-08-19T23:12:34Z",
+  "git_sha": "916c4f4",
+  "question": "Close Lemma E and the thickening step of Theorem 2 (ns_answer.md \u00a74) analytically, so the theorem carries the label 'proved' with no numerically-certified ingredient (victory condition V7).",
+  "product": "research/theory/lemmaE_closure.md",
+  "code": [
+    "e2_sweep.py",
+    "e3_checks.py"
+  ],
+  "outputs": [
+    "e2_output.txt",
+    "e3_output.txt"
+  ],
+  "depends_on": [
+    "research/results/fable_ns_answer/common.py (independent evaluator: exact node test)"
+  ],
+  "params": {
+    "base_point_p0": "S(1/2)+S(2): atoms xi = {-2,-1/2,+1/2,+2}, weights 1/2 each, W=2, M1=0",
+    "base_point_t_coords": "t = +-0.2951672353 (=2/pi*atan(1/2)), +-0.7048327647 (=2/pi*atan(2))",
+    "config_n3_added_pairs_beta_gamma": [
+      [
+        1.4,
+        1.2
+      ]
+    ],
+    "config_n6_added_pairs_beta_gamma": [
+      [
+        1.15,
+        1.1
+      ],
+      [
+        1.35,
+        1.25
+      ],
+      [
+        1.7,
+        1.55
+      ],
+      [
+        2.4,
+        2.2
+      ]
+    ],
+    "t_values": [
+      "1e-4",
+      "3e-4",
+      "1e-3",
+      "3e-3",
+      "1e-2",
+      "3e-2"
+    ],
+    "precision": "mpmath mp.dps = 40 (Newton); node test in float64 via numpy.polynomial"
+  },
+  "key_predictions_checked": {
+    "Delta''_p0(0)": "-25/4 exactly; measured -6.25",
+    "eta_dot(0)_n3": "0.01904761905 predicted; Richardson-extrapolated 0.01904761888 (rel resid 9e-9)",
+    "eta_dot(0)_n6": "0.03097435761 predicted; Richardson-extrapolated 0.03097434978 (rel resid 2.5e-7)",
+    "r_dot(0)_n3": "0.3656770618 predicted; 0.3656772 measured at t=1e-4 (rel resid 4.5e-7)",
+    "node_test_sup_Delta_on_m(t)": "0 predicted; |measured| < 4e-16 at every t, argmax matches eta(t) to <5e-18"
+  },
+  "controls": {
+    "C1_cross_evaluator": "fresh mpmath Delta vs common.py Atomic.Delta: max diff 8.88e-16",
+    "C2_sign": "mirrored added pair flips sign of eta(t): +1.8943418e-4 -> -1.8943418e-4",
+    "C3_zero": "symmetric added pair (Delta'_u(0)=0) gives eta(t)=0.0 exactly while r(t) still solves",
+    "C4_boundary": "r -/+ 1e-3 flips node-test verdict GAIN/passive at rate 0.6931473 per unit r, matching the closed form -Delta_{P1}(eta*) = 0.693147270",
+    "C5_reciprocity": "S(1/2)+S(3) gives Delta(0)=+0.40546511=ln(3/2) != 0",
+    "C6_bifurcation": "S(b)+S(1/b) passive iff b >= sqrt(2)-1: b=0.30 -> sup=+4.165e-1 GAIN; b=0.5 -> -3.3e-16 passive",
+    "V6_sharpness": "universal concavity Delta''<0 holds on (-1,1) (max -4.03e-3 over 300 random measures) and FAILS outside (atom at xi=10: Delta''(1.5)=+0.1045)",
+    "A_exact_rational": "Lemma E1' rows: 90/90 residuals exactly 0 in fractions.Fraction; wrong-coefficient control gives 24/30 nonzero",
+    "B_ballast": "strictly-passive h exists (sup Delta_h = -3.04); control: bad-dominated mixture gives +0.942 GAIN. Bound C0/delta > b/a is sufficient, NOT sharp (stated)",
+    "C_corollaryA2": "smallest singular value of [Delta_j(eta_l)] on I=[-0.2,0.2] is 7.7e-2; duplicating a pair (violating H1) collapses it to 8.8e-18"
+  },
+  "hazards_avoided": "no FFT, no np.linspace grid, no production ht_derivative call; atoms specified directly in the Cayley coordinate xi so tan(pi/2) is never evaluated",
+  "verdict": "Theorem 2 of ns_answer.md is proved outright. Lemma E and the thickening step are replaced by Lemma E1 + Lemma E2 of research/theory/lemmaE_closure.md, both proved analytically."
+}

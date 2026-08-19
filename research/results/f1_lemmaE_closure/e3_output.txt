@@ -1,0 +1,36 @@
+==============================================================================
+(A) Lemma E1' rows -- EXACT RATIONAL ARITHMETIC (fractions.Fraction)
+   rows 1,2,3 residuals over 6 betas x 5 y-values: 90/90 EXACTLY ZERO  (nonzero: 0)
+   (degree <= 2 in y, so 3 distinct y per beta already force the identity in y)
+   CONTROL, deliberately wrong row1 coefficient (3+c instead of 2+c): 24/30 nonzero  (must be nonzero except at y=0)
+   row2 discriminant (2-c)^2-16 at each beta, and the c=6 threshold:
+     beta =                    1/2: c =   4.25000  (2-c)^2-16 =   -10.93750  -> passive
+     beta =                    2/5: c =   6.41000  (2-c)^2-16 =    +3.44810  -> GAIN
+     beta =      10355339/25000000: c =   6.00000  (2-c)^2-16 =    +0.00000  -> GAIN
+   c = 6 <=> beta^4 - 6 beta^2 + 1 = 0 <=> beta = sqrt(2)-1 = 0.4142135624   check: -6.66e-16
+
+(B) Section 7 ballast h -- numeric
+   a = -sup_H Delta_P1 = 0.143844 (>0 required)   b = sup_H (Delta_P2+Delta_P3) = 0.949098
+   threshold C0/delta > b/a = 6.598120
+   C0/delta =   3.2991 : sup Delta_h = -1.339753e+00  -> strictly passive (usable)
+   C0/delta =   5.9383 : sup Delta_h = -2.308084e+00  -> strictly passive (usable)
+   C0/delta =   9.8972 : sup Delta_h = -3.042831e+00  -> strictly passive (usable)
+   C0/delta =  32.9906 : sup Delta_h = -6.856677e+00  -> strictly passive (usable)
+   ^ HONEST READING: C0/delta > b/a is SUFFICIENT, not necessary -- here even ratios below the
+     bound give a passive h, because a and b are crude sup bounds. Section 7 needs only that
+     SOME strictly positive h is strictly passive, which is what is confirmed. The bound is a
+     constructive existence certificate, not a threshold, and is not claimed to be sharp.
+   CONTROL (must fail): C0/delta = 0.01 (bad pairs dominate) -> sup Delta_h = +9.4212e-01 -> GAIN, as required
+   sup Delta_gP = -6.2676e-01 (want <0)   sup Delta_gG = +6.8388e-01 (want >0)
+   lambda =  0.00 : sup(gP+lam h) = -6.2676e-01   sup(gG+lam h) = +6.8388e-01
+   lambda =  0.01 : sup(gP+lam h) = -7.0395e-01   sup(gG+lam h) = +4.6466e-01
+   lambda =  0.10 : sup(gP+lam h) = -1.3611e+00   sup(gG+lam h) = -1.2993e+00
+   lambda =  1.00 : sup(gP+lam h) = -7.5778e+00   sup(gG+lam h) = -7.9837e+00
+   lambda = 10.00 : sup(gP+lam h) = -6.9298e+01   sup(gG+lam h) = -6.9851e+01
+   ^ gP+lam h stays passive for ALL lambda (predicted: Delta_gP + lam Delta_h <= 0 exactly);
+     gG+lam h keeps its gain for small lambda only (predicted).
+
+(C) Corollary A'': span{v(eta): eta in I} = R^n  -- smallest singular value of [Delta_j(eta_l)]
+   n=3, distinct atoms (H1 holds): singular values [6.511 0.205 0.077]  -> smallest = 7.658e-02
+   n=4, DUPLICATED pair (H1 VIOLATED - control): singular values [6.689e+00 2.305e-01 9.372e-02 8.788e-18]  -> smallest = 8.788e-18
+   ^ CONTROL fires: duplicating a pair collapses the smallest singular value to ~1e-16.

@@ -142,7 +142,19 @@ it kills every "check a sparse/structured subset of positions" proposal in one s
 
 ---
 
-## 4. Theorem 2 — no finite battery of linear measurements decides passivity. PROVED (see status note) + VERIFIED.
+## 4. Theorem 2 — no finite battery of linear measurements decides passivity. **PROVED OUTRIGHT.**
+
+> 🔴 **SUPERSEDED IN PART, 2026-08-19 (board F1) — read `research/theory/lemmaE_closure.md` for the
+> current proof of step (E).** The "status note" below, step (E)'s asymmetric triple
+> (bad₁, bad₂, good), the grid-certified window **[1.45, 2.96]**, the 152-point contiguity claim and
+> the *measured* Δ″ ∈ [−0.506, −0.069] are all **replaced, not supplemented**, by Lemmas E1/E2 of
+> that document — an explicit symmetric reciprocal-pair base point (atoms ξ = ±½, ±2, weight ½ each)
+> whose passivity reduces to three elementary polynomial rows, whose nondegeneracy Δ″(0) = −25/4 is
+> an *identity* rather than a measurement, and a single implicit-function step that performs the
+> sweep and the thickening together with Jacobian determinant −(25/4)ln2 ≠ 0.
+> **Theorem 2 therefore now carries the label `proved` — no "modulo", no numerically-certified
+> ingredient.** Lemma A of §1 also has a shorter real-variable proof there (Lemma A′), keeping the
+> whole theorem inside real analysis. Do not cite the numbers struck above; they are historical.
 
 > **Theorem 2.** Let φ₁,…,φ_k : (−1,1) → ℝ be arbitrary functions, defining linear measurements
 > ℓ_i(g) = ∫φ_i dg, and let F : ℝᵏ → {PASSIVE, GAIN} be an arbitrary decision rule. Then F(ℓ(·))
@@ -341,7 +353,7 @@ are trustworthy at much lower N than absolute ones. Recorded for the P0 owner.
 | Lemma B | no exterior gain; outer branches strictly negative; closes red-team risk #3 | **proved** |
 | Thm A | staircase node test is per-profile N&S for finitely-described ε′ | **proved** in h9; controls re-run clean (e0) |
 | Thm 1 | any sound-and-complete test set is dense | **proved** + verified (e1; δ=0 control exact) |
-| Thm 2 | no finite linear battery + any rule decides passivity | **proved modulo numerically-certified Lemma E window**; witnesses explicit (e2, e4) |
+| Thm 2 | no finite linear battery + any rule decides passivity | ✅ **proved outright** (F1: `lemmaE_closure.md`, Lemmas E1/E2 — analytic, supersedes the certified window); witnesses explicit (e2, e4) |
 | Cor 2.1–2.3 | no moment / corner-mass / localized criterion | follow from Thm 1–2; killer pairs verified (e3) |
 | Prop 3 | passive cone is a simplex cone; unique certificate = ε″ | **proved** modulo inherited Thm 6.1 (conjecture rung) |
 | §7 | T2/CFM conjecture refuted; corrected order identified | **proved** (counterexample is one line) |

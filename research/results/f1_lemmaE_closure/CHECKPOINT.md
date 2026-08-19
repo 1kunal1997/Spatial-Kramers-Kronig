@@ -75,16 +75,35 @@ Global passivity of m(t) for small t>0: (i) outside H, Δ_{m(t)}<0 by Lemma B (a
   "positivity interval shrinks" trick does not apply at fixed pair set. Dead.
 - Asymmetric-pair base points: Δ′(0)≠0 breaks the free nondegeneracy; symmetric is the right choice.
 
-## IN PROGRESS
-Nothing half-done in the algebra. Next is verification + writing.
+## PROGRESS LOG
+- 2026-08-19 (run 1): algebra (P1)-(P4) derived. Terminated by window close.
+- 2026-08-19 (run 2, resumed): First Mate independently confirmed ALL of (P3) numerically:
+  sup Δ_{p₀} = +6.7e-16 at η=0 (node test AND 3,000,001-pt grid), Δ''(0) = -6.250000 = -25/4,
+  Δ_G(0) = -ln2, both controls PASS (β=0.3 -> sup Δ = +4.17e-1 GAIN; reciprocity broken 2->3 ->
+  Δ(0) = +0.4055), bifurcation β=√2-1 -> c = 6.000 exactly. So e1_basepoint.py is OPTIONAL.
+- **DOCUMENT WRITTEN**: `research/theory/lemmaE_closure.md` (424 lines), complete proof.
+  Contains: Lemma A' (NEW shorter real-variable proof of Lemma A, replaces harmonic continuation),
+  Lemma B (re-derived), symmetric-pair calculus (G1)(G2)(G3), Lemma E1 (base point, elementary),
+  Lemma E1' (whole family: passive iff β >= √2-1, bifurcation at c=6), Lemma E2 (IFT sweep +
+  thickening in ONE step), Theorem 2 restated as **proved**, hypothesis table (what breaks),
+  parsimony check, splice text for ns_answer.md §4, referee-demands list.
+  ONLY REMAINING HOLE IN THE DOC: the string `**RESULTS-PLACEHOLDER**` in §8 must be replaced by
+  the numerical table from e2_sweep.py.
 
-## NEXT STEP
-Write `results/f1_lemmaE_closure/e1_basepoint.py`: (a) verify p₀ is on ∂𝒫 with unique max at η=0
-via the exact node test in `results/fable_ns_answer/common.py` AND a dense independent grid;
-(b) verify Δ″(0) = −25/4 by finite differences; (c) CONTROL: β=0.3 (< √2−1) must come out NOT
-passive (sup Δ > 0), and β=1/2 with the balance broken (β_B = 3 instead of 2) must give Δ(0) ≠ 0.
-Then e2_sweep.py: numerically continue (η(t), r(t)) for an explicit n=3 (or 5) configuration,
-confirm componentwise positivity, sup Δ = 0 attained at η(t), and match η̇(0) = (4/25)Δ′_u(0).
+## IN PROGRESS
+Nothing. Task complete; writing the final report to the First Mate.
 
 ## BLOCKERS
-None.
+None. 
+
+## FINAL STATE
+- `research/theory/lemmaE_closure.md` (570 lines): Theorem 2 = **proved** outright.
+- `e2_sweep.py`, `e3_checks.py`, `e2_output.txt`, `e3_output.txt`, `manifest.json` all on disk.
+- Recommended follow-up for the First Mate (NOT done by me, out of scope): splice §10 of the
+  document into `ns_answer.md` §4 (replacing step (E) and the Status note), set Thm 2 to `proved`
+  in its §9 table, and delete the open item in its §10. Then C49 needs only red-team for `hardened`.
+- One-line note for the Captain (tempting, out of scope, NOT chased): (G4) says
+  Delta''_g < 0 on the whole Cayley interval (-1,1) for EVERY positive drop measure, i.e. -pi eps''
+  is strictly concave on the MIDDLE HALF of the window, universally. That is a free, universal,
+  one-line structural fact about the middle half -- it may be the natural home for the C3
+  middle-half theorem under Goal B/V8.
