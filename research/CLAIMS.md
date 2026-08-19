@@ -61,12 +61,12 @@ a convention error in the pipeline itself. `replicator` must use an independent 
 | C19 | ⭐ **min ε″ over the whole domain is a blind PASS/FAIL indicator.** It reads exactly 0.000 for *every* passive profile regardless of margin, because the minimum is realized at the boundary, which C13 pins to zero by construction. The interior minimum is the informative quantity | cycle 1 numericist | **supported** | — | — | — | — |
 | C20 | g = −dε′/dx for the opposite-bumps family is **not** the rectangular "plateau minus centred dip" of §5.1 — it has three signed regions, so the narrow closed-form d*(b) hypotheses are not met as stated | cycle 1 numericist | **supported** | — | — | — | — |
 | C17 | **Analyticity and passivity are independent**: triangle profile has spectral FoM 99.9999987% *and* min ε″ = −1.82 | W2 §3 | conjecture | — | — | — | — |
-| C48 | ⭐ **Theorem 1 (density)**: any test set of positions that is sound AND complete for passivity (over balanced positive atomic g) must be **dense** — a violation can be confined inside any open window (boundary pair + inflation; positivity window shrinks ∝ √s onto the target). Upgrades C27/K17 from "no finite node set" to "no non-dense set". `ns_answer.md` §3, `e1_density.py` (δ=0 control exact at machine precision) | solo Fable 2026-08-19 | **supported** | — | — | — | — |
-| C49 | ⭐⭐ **Theorem 2 (no finite battery)**: for ANY finite set of linear functionals of ε′ (arbitrary kernels: moments, samples, corner masses, mass/M₁/M₂/σ, …) and ANY decision rule on their values, there exist two positive balanced atomic profiles with the SAME atoms, identical readings, opposite verdicts. Proof = saturation/convexity (Lemma D) + active-point interval (Lemma E, numerically certified window [1.45, 2.96], Δ″<0 throughout) + independence via log singularities (Lemma A). Explicit witnesses: k=8 battery **containing the entire known necessary cascade** (match 6e−16, GAIN −7.8e−3 vs PASSIVE, production-corroborated) and k=16 (match 8e−12, GAIN −1.6e−5, production-confirmed at N=2²⁰–2²²). **Kills the "clean finite conditions" program on continuum profiles**; closes V3/V6 downward. `ns_answer.md` §4, `e2_battery.py`, `e4_lemmaE.py`, `witness_k*.npz` | solo Fable 2026-08-19 | **replicated** (witness pair only — see scope note) | **MATCH** `results/c49_blind_replication/` 2026-08-19 | — | — | — |
+| C48 | ⭐ **Theorem 1 (density)**: any test set of positions that is sound AND complete for passivity (over balanced positive atomic g) must be **dense** — a violation can be confined inside any open window (boundary pair + inflation; positivity window shrinks ∝ √s onto the target). Upgrades C27/K17 from "no finite node set" to "no non-dense set". `ns_answer.md` §3, `e1_density.py` (δ=0 control exact at machine precision) | solo Fable 2026-08-19 | **supported** | — | — | **CLEAN** `results/f5_audit_fable/` | — |
+| C49 | ⭐⭐ **Theorem 2 (no finite battery)**: for ANY finite set of linear functionals of ε′ (arbitrary kernels: moments, samples, corner masses, mass/M₁/M₂/σ, …) and ANY decision rule on their values, there exist two positive balanced atomic profiles with the SAME atoms, identical readings, opposite verdicts. Proof = saturation/convexity (Lemma D) + active-point interval (Lemma E, numerically certified window [1.45, 2.96], Δ″<0 throughout) + independence via log singularities (Lemma A). Explicit witnesses: k=8 battery **containing the entire known necessary cascade** (match 6e−16, GAIN −7.8e−3 vs PASSIVE, production-corroborated) and k=16 (match 8e−12, GAIN −1.6e−5, production-confirmed at N=2²⁰–2²²). **Kills the "clean finite conditions" program on continuum profiles**; closes V3/V6 downward. `ns_answer.md` §4, `e2_battery.py`, `e4_lemmaE.py`, `witness_k*.npz` | solo Fable 2026-08-19 | **replicated** (witness pair only — see scope note) | **MATCH** `results/c49_blind_replication/` | — | **CLEAN** (exact evaluator; caveat on k=16 *production* corroboration — see C53) | — |
 | C50 | **Lemma B (no exterior gain)**: a balanced positive drop measure has Δ < 0 strictly outside the convex hull of its Cayley support (per-pair outer-branch monotonicity, numerator bound γ(1+β²) > 0, + mean-zero pair decomposition). In x-space: ε″ > 0 strictly between the outermost drop and the seam. **Discharges red-team residual risk #3** of `cycle3_c25_hardening/redteam.md` | solo Fable 2026-08-19 | **supported** (proof is elementary and self-contained) | — | — | — | — |
 | C51 | **N1 CLOSED — corner mass cannot be a criterion.** λ* is exact per family but ranges **0.030–0.383** for one and the same corner geometry (−0.4,+0.9) as the bulk moves; killer pair: identical corner distribution (fraction 0.25), bulk (±0.2) → PASSIVE (margin 5.3e−3) vs bulk (−0.24,+0.74) → GAIN (−2.0e−2, production-confirmed). Controls 4/4 vs red-team/handA (0.2620/0.2778/0.0872/0.0009). ⚠️ red-team's λ*(a+b) table mixed unrecorded corner splits — its 1.40L/1.94L rows match neither convention tried; re-derive before reuse. `e3_n1_closure.py` | solo Fable 2026-08-19 | **supported** | — | — | — | — |
 | C52 | **T2/N2 (CFM/Choquet conjecture) REFUTED.** f = cos(x)e^{−y} is harmonic entire, bounded on ℂ₊, ω-integrable (∫f dω = e^{−1}); P = δ₀ is passive yet ∫f dP = 1 > e^{−1}. The log-potential order is **strictly weaker** than the subharmonic/CFM order; CFM does not apply verbatim. Corrected form: the test cone is exactly the log-potential cone (+constants); sub-logarithmic growth on ℂ is the growth condition that makes the repaired statement true (and nearly tautological). `ns_answer.md` §7 | solo Fable 2026-08-19 | **supported** (counterexample is one line, checkable by hand) | — | — | — | — |
-| C53 | ⚠️ **Production `ht_derivative` carries a profile-dependent additive O(h) offset on smoothed staircases** (+3.55e−5 → +1.76e−5 → +0.85e−5 → +0.4e−5 at N = 2¹⁹…2²², s-independent below s ≈ 6e−4) that **cancels exactly in differences** (differential = 3.382e−5 = 2×closed-form at every N, 4 digits). At corpus-historical N ≈ 2048 the scale is ~1e−3 — same order as C21's interior margin. Near-threshold absolute production verdicts are convention-limited. **Feeds P0.** Mechanism unidentified | solo Fable 2026-08-19 | **supported** (verified numerically; mechanism open) | — | — | → P0 owner | — |
+| C53 | ⚠️ **Production `ht_derivative` carries a profile-dependent additive O(h) offset on smoothed staircases** (+3.55e−5 → +1.76e−5 → +0.85e−5 → +0.4e−5 at N = 2¹⁹…2²², s-independent below s ≈ 6e−4) that **cancels exactly in differences** (differential = 3.382e−5 = 2×closed-form at every N, 4 digits). At corpus-historical N ≈ 2048 the scale is ~1e−3 — same order as C21's interior margin. Near-threshold absolute production verdicts are convention-limited. **Feeds P0.** Mechanism unidentified | solo Fable 2026-08-19 | **supported, MECHANISM NOW IDENTIFIED — see refinement below** | — | — | **CLEAN, refined** `results/f5_audit_fable/` | — |
 | C54 | **Prop 3 (simplex rigidity)**: the passive cone is a linear image of the nonnegative cone — a lattice/simplex cone whose extreme rays are the unit-gain-atom profiles and whose **unique** extremal representation of any passive g is ε″[g] itself. Explains why CT / potential / Fejér–Riesz all turned out to be re-representations: for this cone there is nothing else to be. Leans on inherited Thm 6.1 (conjecture rung) | solo Fable 2026-08-19 | **supported** (elementary, modulo Thm 6.1) | — | — | — | — |
 
 ## C15 is the mission's central target
@@ -104,3 +104,35 @@ Lemma E remains numerically certified rather than analytic, and the thickening s
 continuity argument stated with hypotheses — that is board item **F1**, dispatched, and victory
 condition **V7** turns on it. C49 must not be quoted as a proved theorem until F1 lands and
 `red-team` + `auditor` sign it to `hardened`.
+
+## ⚠️ C53 REFINED by the F5 audit (2026-08-19) — it is the linspace endpoint bug, again
+
+The auditor traced C53's "profile-dependent additive O(h) offset in `ht_derivative`" to its cause,
+which Fable had left unidentified. It decomposes into two pieces:
+
+1. **The dominant term is NOT a property of `ht_derivative` at all — it is the `grid="linspace"`
+   convention.** `np.linspace(-L, L, N)` duplicates the endpoint, so the FFT-based Hilbert transform
+   sees period `2L + dx` instead of `2L`. Verified directly, and independently re-confirmed by the
+   First Mate: `N·dx − 2L` is **exactly `+dx`** for linspace and **exactly `0`** for the periodic
+   grid, at N = 2048, 2049 and 4096. This is the **same defect PROTOCOL.md already names as the
+   voyage's most expensive error class** — it produced a bogus 1.70× speedup that survived an
+   independent audit because both implementers reached for the same idiom. It reappeared, undetected,
+   inside the solo session's own harness.
+2. A smaller grid-independent residual (~−8.3e−7 at the tested s), still unidentified, too small to
+   threaten any reported verdict.
+
+**Consequence for C49's k=16 witness — narrow margin, no change in truth.** With the shipped default
+grid, one power of two below the range Fable quoted (**N = 2¹⁹**, a value used elsewhere in that same
+session), production returns **PASS for a witness that genuinely has GAIN**. `grid="periodic"` —
+already implemented in the same function, simply not the default — is correct at N = 2¹⁴ and is
+~3 orders of magnitude more accurate at matched N (N = 2048: linspace error +8.03e−3, periodic
+−3.47e−5). The **"cancels in differences"** half of C53 is robust: it holds to 4 significant figures
+under *both* grid conventions at every N from 2¹⁹ to 2²².
+
+**Blast radius: zero change to any claim's truth value.** Every C48/C49 verdict rests on the exact,
+grid-free node test, which the auditor independently reconfirmed to 9–10 digits via mpmath. What
+changes is how much weight the phrase "production-confirmed" can carry for the k=16 witness, and it
+converts C53 from a mystery into a fixable convention error. **Feeds P0 and F2 directly.**
+
+**Standing instruction:** anything in this voyage calling `production_min_eps2` must pass
+`grid="periodic"`. The k=8 witness remains the one to quote — three independent routes agree on it.

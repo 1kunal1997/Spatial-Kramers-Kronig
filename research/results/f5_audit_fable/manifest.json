@@ -1,0 +1,39 @@
+{
+  "audit": "F5 numerical-hygiene audit of research/results/fable_ns_answer/",
+  "auditor": "auditor-F5",
+  "timestamp_utc": "2026-08-19T21:20:26Z",
+  "git_sha": "9c1b0d2d8e9abfce406d5e0853a3068326001186",
+  "code_audited": [
+    "research/results/fable_ns_answer/common.py",
+    "research/results/fable_ns_answer/e0_controls.py",
+    "research/results/fable_ns_answer/e1_density.py",
+    "research/results/fable_ns_answer/e2_battery.py",
+    "research/results/fable_ns_answer/e3_n1_closure.py",
+    "research/results/fable_ns_answer/e4_lemmaE.py",
+    "research/results/fable_ns_answer/witness_k8.npz",
+    "research/results/fable_ns_answer/witness_k16.npz",
+    "research/theory/ns_answer.md (sections referenced: Sec 1 Lemma A/B, Sec 3 Thm1, Sec4 Thm2, Sec5 Prop3, Sec7 N2/T2)"
+  ],
+  "read_only": true,
+  "no_edits_made_to_audited_code": true,
+  "independent_methods_used": [
+    "mpmath 50-decimal-digit precision, closed-form Delta'(eta) sign-change scan + bisection (NOT numpy.polynomial polyroots) to re-derive sup Delta for witness_k8.npz and witness_k16.npz",
+    "hand-written reimplementation of the 8-functional battery readings (mass, M1(xi), sec^2, log, t..t^4) directly from raw witness_k8.npz atoms/weights, not reusing common.apply_battery",
+    "independent t-space (x-space) recomputation of e1_density.py's positivity-set widths via common.t_of_xi, to check the eta-space non-monotonicity artifact",
+    "direct calls to tmm_h.ht_derivative (bypassing common.production_min_eps2) with hand-built linspace and periodic grids, N swept 2048..2^25, to isolate the O(h) offset mechanism",
+    "scipy.optimize.minimize_scalar local refinement plus a 10x-denser grid, independent of e3_n1_closure.py's lam_star grid search, on the most sensitive N1-closure case",
+    "scipy.integrate.quad numerical check of the C52 counterexample identity (integral of cos(x) against the Cauchy/Poisson harmonic measure = e^-1), and a direct grid scan confirming delta_0 passivity"
+  ],
+  "params": {
+    "witness_k16_atoms": 36,
+    "witness_k8_atoms": 20,
+    "erf_smoothing_s_used_in_C53_checks": 6e-4,
+    "N_sweep_for_C53": [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432],
+    "target_x_for_C53_offset_check": 0.4859,
+    "tolerance_sweep_critical_etas": {
+      "trim_tol": [1e-14, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4],
+      "imag_tol": [1e-11, 1e-9, 1e-7, 1e-5, 1e-3],
+      "atom_tol": [1e-14, 1e-12, 1e-10, 1e-8, 1e-6]
+    }
+  }
+}
