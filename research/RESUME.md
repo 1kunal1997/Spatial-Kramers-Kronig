@@ -1,5 +1,48 @@
 # RESUME — read this first on waking
 
+## 🔴 CURRENT STATE — cycle 4, written 2026-08-19 at 82% of the usage window
+
+**The Captain amended the mission today. Read `MISSION.md` "Captain's Amendment" and V7/V8 BEFORE
+acting on anything below this section — the older text in this file predates it.**
+
+**Where the voyage stands:**
+- **V7 (Goal A, critical path):** prove *rigorously and exactly* that no N&S condition exists.
+  Turns entirely on board item **F1** — closing Lemma E analytically + discharging the thickening
+  step in `research/theory/ns_answer.md` §4. Until F1 lands, C49 is **not** a proved theorem and
+  must not be quoted as one.
+- **V8 (Goal B):** minimal spanning set of one-sided conditions. **F3** dispatched (the common
+  parent of middle-half + unimodality); **F4** (collapse the necessary cascade) still queued.
+- **C49's witness is `replicated`** — blind replicator MATCH, verified independently three ways
+  (`results/c49_blind_replication/`, and the scope note at the bottom of `CLAIMS.md`). The WITNESS
+  is replicated; the THEOREM is not. Do not conflate them.
+
+**Hands in flight when this was written** (check their CHECKPOINT.md files first — each was ordered
+to keep a resumable state on disk, so a cold session resumes from those, not from scratch):
+| Hand | Board item | Working dir |
+|---|---|---|
+| `theorist-F1` (opus) | F1 / V7 — Lemma E analytic closure | `results/f1_lemmaE_closure/` |
+| `theorist-F3` (opus) | F3 / V8 — minimal sufficient condition | `results/f3_minimal_sufficient/` |
+| `auditor-F5` (sonnet) | F5 — audit the fable evaluator | `results/f5_audit_fable/` |
+
+**Next actions, in order, if you wake to a finished or dead cycle:**
+1. Read the three CHECKPOINT.md files above. Re-dispatch anything that died mid-derivation using
+   its own checkpoint as the brief — that is what they are for.
+2. **`red-team` on C49 is DELIBERATELY HELD until F1 lands.** Half of what it would attack is the
+   ingredient F1 is closing; firing it early aims an opus hand at a moving target. Once F1 returns,
+   dispatch it — plus `auditor` sign-off — to take C49 `replicated → hardened`, which V7 requires.
+3. Then **F4** (minimal necessary condition) to finish Goal B's second half.
+4. `red-team` should be given the three blemishes the First Mate found and logged in `LOG.md`
+   cycle 4 (rank-7 battery; k=16 witness delicacy — quote k=8 instead; η-space non-monotonicity at
+   η₀=8 which is a Cayley artifact). They are its cheapest openings.
+
+**Burn data point for `MEASURE.md`:** cycle 4 reached **82% of the window** running 2× opus
+theorists + 1× sonnet replicator (completed, ~5 min) + 1× sonnet auditor, plus the First Mate's own
+verification work. Roughly 40 minutes of wall clock. Consistent with the ~33-min/window estimate for
+4-way parallel work; the Captain's Pro-vs-Max threshold is unchanged by this cycle.
+
+---
+
+
 **Written 2026-08-18 ~21:20 PT, at the end of cycle 1, with the Captain's usage window closing.**
 He expects to revive the voyage in ~3 hours. This file is the cold-start handoff.
 
