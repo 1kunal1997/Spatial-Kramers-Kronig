@@ -61,6 +61,18 @@ conjecture → supported → replicated → hardened → ESTABLISHED
 Everything else queues in `CAPTAIN_QUEUE.md`. **Work continues regardless of whether he answers.**
 Silence from the Captain is never a reason to stop.
 
+## Interruption discipline (Captain's order, 2026-08-19)
+
+Work may be terminated without warning when the usage window closes. Therefore:
+
+- **No caps on how long a hand may work.** If the theorist needs 20 minutes it gets 20 minutes. Turn
+  limits have been removed from every charter. Never hand out artificially small tasks to bound loss —
+  that trades research quality for a saving the checkpoint protocol already provides.
+- **Every hand writes a RESUMABLE WORK STATE to disk at least every ~15 minutes.** Not a findings
+  dump: goal / established / ruled out / in progress / next step / blockers, kept accurate in place.
+  A fresh agent must be able to resume from that file alone after an interruption of hours.
+- Maximum exposure is therefore ~15 minutes of one hand's work, regardless of task length.
+
 ## Honesty rules
 
 - Negative results are results. Log them with equal care; they shrink the search space.
