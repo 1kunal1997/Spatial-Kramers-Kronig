@@ -335,3 +335,31 @@ auditor should confirm the diagnosis rather than take it on faith.**
 
 **Open Problem 8.1 (skew tolerance) is now a finite computation**: 3 linear constraints ⟹ ≤3-atom
 extreme points ⟹ degree-3 Q ⟹ **Cardano**. It should close completely.
+
+---
+
+## Cycle 2 — 2026-08-19 09:10 UTC — EXPEDITION UNDERWAY. Autonomous overnight run.
+
+Captain asleep, terminal open, full autonomy authorized. Parallel dispatch authorized ("work as
+naturally and optimally as possible"). **V2 restated per Captain's decision (option A)** — see
+MISSION.md V2a/V2b: prove the Ω(N) query bound, and characterize the log-factor barrier honestly as
+*structural/conditional*, never as an unconditional lower bound.
+
+Standing orders now in force: **no model downgrades** (`BUDGET.md`), **no task-length caps** — hands
+take as long as the work needs — with exposure bounded instead by **resumable 15-minute checkpoints**
+plus `hb.sh` heartbeats. Hourly cron installed (fires at :47): integrates returns, dispatches the next
+cycle, commits. When the window is exhausted its fires simply fail; **the first fire after the window
+resets resumes the voyage automatically.**
+
+**Dispatched (4 in parallel):**
+
+| Hand | Task | Why |
+|---|---|---|
+| theorist (opus/xhigh) | T3 fix (233/240 defect) → T1 (skew tolerance via Cardano) → T2 (CFM conjecture) | T3 is the weakest point in the strongest result and pure referee-bait. T1 should close Open Problem 8.1 outright. |
+| red-team (opus/xhigh) | **E1(a)** decimated cascade → write up **V2a/V2b** | E1(a) is the highest-value item on the board: if the cascade survives at n = 512, the test reaches 10–30× and **C15 dies** → V1. |
+| replicator (sonnet) | **BLIND** replication of **Cor 4.B** (C25) | The mission's first two-sided non-trivial claim. Explicitly barred from all seven originating files. |
+| auditor (sonnet) | Audit C28, C18/C19, C21/C22 | C28 is a self-diagnosis by the agent whose result is at stake — precisely the situation the auditor exists for. Also checks whether K13's unsound reasoning leaked elsewhere. |
+
+Deliberate design note: the theorist is fixing C28 *while* the auditor independently checks its
+diagnosis, and neither may defer to the other. Cycle 1 showed the value of this — red-team's own
+nested hand contradicted it twice, and both contradictions made it into its report.

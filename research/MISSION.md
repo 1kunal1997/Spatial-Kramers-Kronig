@@ -48,17 +48,27 @@ of interest.~~ **🚩 STRUCK 2026-08-18 — this premise is FALSE.** It was an a
 structurally-zero endpoints (C21/K16). The interior margin is positive and N-independent (~1e−3·D).
 Approximate cheap certificates are back in play (H12).
 
-**V2 🚩 CONTESTED — UNREACHABLE AS WRITTEN, AWAITING CAPTAIN.** Red-team (cycle 1) finds this asks
-for a superlinear time lower bound on a problem reducing to nonnegativity testing of a degree-N/2
-trigonometric polynomial — not provable as stated. A reachable restatement is ~90% established in
-`results/cycle1_c15_redteam/redteam.md`. The First Mate does not rewrite victory conditions; this
-needs the Captain. Original text follows.
+**V2 (RESTATED 2026-08-19 by Captain's decision — option A).** The original V2 asked for a proof
+that no sub-O(N log N) procedure exists. Red-team established that this is **unreachable as written**:
+it bundles two very different claims, and the second is a *superlinear time* lower bound on a problem
+reducing to "is this degree-N/2 trigonometric polynomial nonnegative?" — the same barrier as circuit
+lower bounds, and not a problem in this field. The reachable version, which red-team reports as ~90%
+established, is:
 
-**V2 (equally acceptable as a primary-tier result).** A **proof** that no such sub-O(N log N)
-procedure exists — a genuine lower bound, not an assertion. An adversary/information-theoretic
-argument showing any correct decision must read Ω(N) samples or perform a transform-equivalent
-computation. *A proven impossibility closes the question and is a publishable result; an unproven
-assertion of impossibility is not.*
+  **V2a.** Prove the **Ω(N) query lower bound**: any correct passivity decision must read Ω(N) samples
+  of ε′. (Hand B supplied the key step — localized perturbations get *cheaper* to hide as they narrow.)
+
+  **V2b.** Characterize precisely **why the remaining log factor resists**: identify what would have to
+  change to beat O(N log N), and show that convexity blocks every known superlinear route. This is a
+  structural/conditional barrier result, stated honestly as such — **not** an unconditional lower bound,
+  and it must never be written up as one.
+
+Together these support the honest headline *"the transform is optimal up to a log factor, and here is
+exactly what would have to give for that factor to fall."*
+
+**V2 and V1 are compatible, not alternatives.** A constant-factor win (e.g. E1(a)'s hoped-for 10–30×)
+coexists with an Ω(N) asymptotic bound. The best outcome is **both**: a materially faster practical
+test, plus a proof that no fundamentally better one exists.
 
 **V3 (fallback 1).** Exact N&S conditions stated as an explicit, checkable property of ε′ — not a
 restatement of "compute the transform and look at its sign" — with proof and numerical verification.
