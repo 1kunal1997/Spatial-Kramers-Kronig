@@ -760,3 +760,78 @@ auditor mid-flight with three specific checks.
 **Free results also registered:** C40 threshold depth law (5-digit match), C41 (only the interval hull
 matters; Cayley form is the *product* ξ₊|ξ₋| ≤ 1), C42 (the a+b = L negative minimum is quadrature,
 O(h²) — a referee will ask).
+
+### Cycle 3 — navigator returned: **THE MISSION IS NOT COMPLETE.** `NAVIGATION.md`, 439 lines.
+
+It was dispatched to check whether the crew had been generous with itself, and told to contradict the
+First Mate's synthesis. **It did.**
+
+**It independently detected two adverse verdicts from disk artifacts alone** — C25's break and C30's
+MISMATCH — while the ledger still carried them as good. (Both have since been integrated; it read a
+snapshot from minutes earlier.) That it found them from `HEARTBEAT.log` and checkpoint files, with no
+conversational context, is itself evidence the ledger-based handoff works as designed.
+
+#### 🚨 The critique that matters most: **V3 is NOT met**
+
+> (L1) is derived as an **identity**, so "passive ⟺ Φ_P ≤ Φ_ω" is ε″ ≥ 0 **in a change of variables** —
+> logically the same move as Carathéodory–Toeplitz, **the very thing the Captain rejected** as "merely
+> a re-representation of the HT in Fourier space."
+
+The real content is **(L2)**, the extreme-point reduction — not (L1). And H9's actual deliverable, the
+*minimal checkable characterization*, was never found. **The First Mate reported H9's unification to
+the Captain in terms that implied V3; that was wrong, and the error is the same one the Captain
+warned against in his very first substantive instruction.** Recorded as C43.
+
+**V6 is only partially met.** 14 → 3 is real. But the Captain's critique (B) — *nothing is necessary
+AND sufficient* — is unanswered again now that C25 has broken.
+
+#### 🚨🚨 P0: the project has no certified numerical definition of PASSIVE (C44)
+
+Whole-domain min is blind at the boundary (C19); a fixed interior mask is blind at the seam (C39).
+That undecided convention sits underneath **the corpus labels, C18's α_c, C33's 240/240, and C36's
+327/327**. Where ground truth and a candidate evaluator share a convention, their agreement is
+**common-mode, not evidence** — the same failure that let the C22 bug pass an independent audit.
+
+**Nobody owned this. Dispatched immediately at opus, since it gates every numerical claim.**
+
+#### Objective audit of the victory conditions
+
+| | Navigator's verdict |
+|---|---|
+| **V4, V5** | genuinely met (V4's *number*, not a closed form) |
+| **V1** | substantially answered, but only **one** of its three levels is a theorem — and that one (C30) is contested |
+| **V2a** | contested — "PROVED and tight" not supportable right now |
+| **V2b** | met and correctly labelled, but **never adversarially tested** |
+| **V3** | **NOT met** (C43) |
+| **V6** | partially met |
+
+Its read on C30: probably a **specification** failure — Lemma 1 takes the min over the bump
+*neighbourhood*, while the ledger's compressed phrasing reads as evaluation at the bump *centre*,
+where parity forces zero exactly. Consistent with the First Mate's paraphrase error. But it holds the
+line: *a MISMATCH is a MISMATCH.*
+
+#### Critical path (adopted)
+
+**P0** seam adjudication (blocks all) → **P1** restate + re-replicate C30 → **P2** red-team C31, never
+attacked → **P3** harden C36 → **P4** re-scope (L1) as a *frame* and gate (L2) as the theorem → **P5**
+one referee pass. Further V1 speedup work **deprioritized**.
+
+#### Still genuinely open — including one the crew had written off
+
+- **N1 (new, best lead):** per-profile necessity may be about **mass concentration near the corners,
+  not support** — from red-team's λ(a+b) corner-mass curve. The only live route to V6 as written.
+- **N2:** T2/CFM — the highest-value untouched theory item, and precisely the gap C43 names.
+- **N3:** **FFT-free O(N) is NOT excluded.** K14/K19/K21 died on quadrature and uncertified bounds,
+  **not** on the absence of an FFT. The V1 negative's level 3 only bounds FFT-retaining approaches.
+
+#### For the Captain
+
+This is a **trigger-2 checkpoint** — board exhausted, direction needed — **not** trigger 1 (victory).
+Publishable unit: **one paper, three parts** — I potential-theoretic structure, II the cost result
+(*the novel half*), III Longhi's instability, **on which this voyage has done nothing**. Part III's
+inclusion is the Captain's call because it decides **physics journal vs. math/CS**. Estimate: **two to
+four more windows, not one.**
+
+**And a note for `PARKED.md`:** the parked generation problem got materially easier *because of this
+voyage* — (L2) + Bauer gives closed-form extreme points for the frontier optimization, replacing the
+LP/SDP inner loop that made it expensive.

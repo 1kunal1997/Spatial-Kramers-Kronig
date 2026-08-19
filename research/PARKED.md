@@ -33,3 +33,11 @@ its own crew.
   the adversarial crew, or as a source of near-threshold adversarial cases. That is not drift.
 - Optimizing reflectance over the passive cone **is** drift. If a cycle starts heading there, the
   First Mate stops it and logs the temptation here.
+
+## Update 2026-08-19 — this voyage built the parked problem's tool
+
+Navigator's finding: the frontier optimization no longer needs an LP/SDP inner loop. **(L2), the
+extreme-point reduction, plus Bauer's maximum principle gives closed-form extreme points**, which is
+exactly the expensive inner step Open Problem 8.2 assumed would need convex programming. The parked
+voyage is now materially cheaper than when it was parked — worth telling the Captain when he chooses
+the next mission.
