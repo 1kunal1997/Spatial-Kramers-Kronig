@@ -363,3 +363,49 @@ resets resumes the voyage automatically.**
 Deliberate design note: the theorist is fixing C28 *while* the auditor independently checks its
 diagnosis, and neither may defer to the other. Cycle 1 showed the value of this — red-team's own
 nested hand contradicted it twice, and both contradictions made it into its report.
+
+### Cycle 2 — auditor returned: **FINDINGS**. The gate caught a bad diagnosis in flight.
+
+Report: `results/cycle2_audit/audit.md` + independent reimplementations `audit_c28.py`, `audit_c28b.py`.
+Nothing existing was modified; every check was a fresh implementation, not a re-run of the original.
+
+**HIGH severity — C28's diagnosis is falsified (K18).** The theorist attributed (L1)'s 7/240 corpus
+disagreements to a 0.97L truncation cutting the near-seam minimum on edge-slope-unmatched families,
+and called it a 20-minute fix. The auditor reproduced 233/240 exactly, then tested the stated
+mechanism directly:
+
+- **Truncation is not the cause.** Swept 0.90 → 0.99999, a ~30,000× tightening. **5 of 7 profiles are
+  frac-invariant to the last decimal**; the other 2 move but **plateau at a stable nonzero
+  disagreement**. Tightening cannot close the gap.
+- **"All 7 are edge-slope-unmatched" is false.** Only **3 of 7** have g(+L) ≠ g(−L). The other 4 —
+  **both `logistic` cases, `opposite_bumps`, `lorentzian`** — match to machine precision.
+
+**This matters more than a quadrature nuisance: those four are the project's core profiles.** The
+paper's logistic and the Captain's own opposite-bumps family are exactly what (L1) exists to explain.
+
+**Acted on immediately** — the theorist was mid-flight building the fix on the false diagnosis, and
+was redirected before wasting the cycle. It was also handed a hypothesis that could exonerate (L1)
+entirely: **the corpus labels may be wrong.** They were produced by the C19 *blind* indicator, which
+reads exactly 0.000 for every passive profile and cannot resolve near-threshold cases — precisely
+where a disagreement would appear. If (L1) is right and the labels are wrong, this is (L1) *catching
+errors in the corpus*, which is a result rather than a defect. Tracked as **C29**, open.
+
+**Everything else audited came back CLEAN**, each independently reimplemented rather than re-run:
+- **C18** (α_c = 0.66623) — convergence reproduced, plus an 8× interior-window sweep *not* in the
+  original notes showing it is more robust than claimed.
+- **C19** (blind indicator) — confirmed.
+- **C13** (endpoints) — clean O(1/N) decay, ratio 1.999–2.000 across N-doublings.
+- **C21** (rank N−2, zero endpoint rows, exact linearity) — operator matrix rebuilt independently at
+  several N and L; all three sub-claims hold.
+- **C22** (DiHiTI ≡ one Hilbert transform) — both pipelines reimplemented; **1.58× on the auditor's
+  machine** vs red-team's 1.70×. Same order, same conclusion, still **below the 3× bar for V1**.
+  Recorded as an honest discrepancy in the measurement, not a contradiction.
+- **K13 leak check** — the unsound Sobolev certificate is flagged everywhere it appears; no other
+  finding depends on it.
+
+Coverage stated honestly: C1–C12, C14–C17, C20, C23–C27 were out of scope this cycle and remain
+unaudited.
+
+**This is the second time in two cycles that an adversary has overturned a line-crew result** (first
+red-team's nested hand contradicting red-team, now the auditor falsifying the theorist). The gate is
+doing what it was built to do.
