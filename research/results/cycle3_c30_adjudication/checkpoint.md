@@ -1,47 +1,33 @@
-# CHECKPOINT — adjudicator, C30 / V2a dispute
+# CHECKPOINT — adjudicator, C30 / V2a dispute — **COMPLETE**
 ## GOAL
-Adjudicate: cycle-2 red team claimed C30 (V2a, Theta(N) query complexity for DiHiTI passivity) PROVED
-(research/theory/v2_lower_bound.md). Cycle-3 blind replicator returned MISMATCH
-(results/cycle3_v2a_replication/replication.md), arguing the "local law" (bump of any width delta
-depresses eps'' by -a/(pi C_phi), delta-independent) is provably false because H[even]=0 at the
-bump centre. Determine: PROOF STANDS / NARROWED / BROKEN / PARAPHRASE ERROR.
+Adjudicate cycle-2 red team (C30 / V2a proved) vs cycle-3 blind replicator (MISMATCH).
 
-## ESTABLISHED SO FAR
-1. **[read, decisive]** The cycle-2 numerics DO NOT measure the depression at x0. `v2a_compact.py`
-   and `v2a_hard_family.py` both bisect on `imin(dihiti(u0 + a*bump))` where
-   `imin(v,x) = v[|x|<=0.95L].min()` -- the MINIMUM OVER THE WHOLE INTERIOR WINDOW.
-   Lemma 1 in v2_lower_bound.md likewise states `min_x [A(u0+p)](x)` and its proof evaluates
-   Delta(x0 + delta*sigma) = -a H[phi](sigma) and then takes `min_sigma`, explicitly noting
-   min_sigma Delta = -a max_sigma(-H[phi](sigma)). So the proof's probe point tracks a FIXED
-   RELATIVE position sigma* inside the bump -- i.e. the replicator's "offset" construction, NOT its
-   "centered/measured-at-x0" construction.
-   => The replicator's headline MISMATCH tests a construction the proof never used.
-   => H[phi](0)=0 is TRUE and CONSISTENT with the proof (sigma*=0 is not the min; it's a zero).
-2. **[read, real defect]** v2_lower_bound.md contains an internal arithmetic inconsistency:
-   it states kappa = pi*C_phi ~ 1.31 AND "C_phi = 1/0.418 ~ 2.39". pi*2.39 = 7.5 != 1.31.
-   From the table a_min/(pi eps0)=0.418 => kappa=1.31 => C_phi = 0.418. The "1/0.418" is wrong.
-3. **[read, suspicious]** In v2a_compact.py, at FIXED N=16384, k=4->8->16 (delta x4) moves the
-   uniform bound 1.680 -> 1.500 -> 1.447 (14%), i.e. a_min GROWS as delta shrinks; but at FIXED k,
-   4x change in N (delta shrinks 4x physically) leaves it at 1.680 to 4 digits. That pattern says
-   a_min depends on GRID POINTS PER BUMP, not on physical delta -> possible discretization lock.
-   NEEDS TESTING (see NEXT STEP).
+## VERDICT (final, written to adjudication.md)
+**PARAPHRASE ERROR** primary + **PROOF NARROWED** secondary.
+
+## ESTABLISHED (all verified numerically, scripts in this dir)
+1. Lemma 1 measures `min_x` of the perturbed eps'', NOT the value at x0. Cycle-2 code bisects on
+   `imin(...)= v[|x|<=0.95L].min()`. The replicator tested value-at-x0. Wrong construction.
+2. H[phi](x0)=0 exactly (both bump shapes) — TRUE, and consistent with the proof: sigma=0 is a ZERO
+   of the depression profile; Lemma 1 uses its MINIMUM at sigma*=-0.7231.
+3. Lemma 1 VERIFIED: min_x Delta/a = -0.79758 = -max(-H[phi]) exactly; flat to 0.1% over 256x in
+   physical delta (adj1_law.py); Gaussian at fixed x0 flat to 0.2% over 50x (adj3 part ii).
+4. x0-independence holds: 3.6% in min_x Delta/a, kappa spread 1.078x / 1.8% RMS (adj2).
+5. Replicator's factor-2.6, 15% drift and 1.64x x0-spread are ONE artifact: probing at sigma~-1
+   (bump edge) where -H = 0.388 instead of the max 0.661/0.798; max/edge ratio = 1.64-1.70 (adj4).
+6. Cycle-2's r/D=1.680 explained exactly: 1.1411/0.67910 (k=4 discrete bump). k-drift is resolution,
+   converging UP to 1.431, direction opposite to the document's stated reading.
+7. C22 endpoint bug irrelevant here (6th sig fig).
+8. M4 (hand B) non-monotonicity is a WINDOW-EDGE artifact (easiest x0*=+0.97L, outside the 0.95L
+   scored window); the document's "under-resolved at 82 grid points" excuse is FALSE.
+9. NARROWINGS: (N1) C_phi constants self-contradictory, pi spurious, correct kappa=1/h_phi=1.2538;
+   (N2) TV bound vacuous for bumps, any N-independent Lipschitz bound collapses Theta(N) to Theta(1);
+   (N3) intervals must be inset by 2kh from the scored window; (N4) x0-independence only O(delta).
 
 ## RULED OUT
-- (nothing yet)
+- Grid convention / endpoint duplication as a cause. - N-dependence of any kind (0.003%).
+- Any fatal flaw in Theorem 2 / Cor 3 / Cor 4 logic.
 
-## CURRENTLY IN PROGRESS
-Writing `adj1_law.py`: with the cycle-2 dihiti, measure for a compact C^inf bump at x0:
- (a) Delta(x0)/a  vs delta      [expect ~0, replicator's fact]
- (b) min_x Delta /a vs delta    [Lemma 1's actual quantity; expect plateau]
- over decades of PHYSICAL delta at fixed large N with the bump always well resolved.
-Also: recompute max(-H[phi]) directly for the cbump shape and compare to 1/(pi C_phi).
-
-## NEXT STEP
-Run adj1_law.py. Then adj2: a_min vs delta at fixed N with k from 4 to 512 to see whether the
-14% "drift" is resolution (small k) or genuine O(delta) (large k).
-
-## OPEN QUESTIONS
-- Does the uniform bound r stay finite as delta->0 in the CONTINUUM (not just at fixed k)?
-  The theorem only needs boundedness, not exact delta-independence.
-- Is the L^inf+TV ball actually a smoothness constraint? TV(bump)=2a regardless of width, so TV
-  adds nothing for single bumps -- possible overreach in the doc's rhetoric.
+## NEXT STEP (for whoever follows)
+Update CLAIMS.md: C30 -> `supported` reworded per adjudication.md §8/§9; C37 -> RESOLVED, not upheld.
+Edit theory/v2_lower_bound.md per N1-N4.

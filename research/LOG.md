@@ -835,3 +835,63 @@ four more windows, not one.**
 **And a note for `PARKED.md`:** the parked generation problem got materially easier *because of this
 voyage* — (L2) + Bauer gives closed-form extreme points for the frontier optimization, replacing the
 LP/SDP inner loop that made it expensive.
+
+### Cycle 3 — auditor **CLEAN** (C33/C34/C35); adjudicator: **PARAPHRASE ERROR + PROOF NARROWED**
+
+**Auditor: CLEAN on all three.** Verified the trigamma-DFT Clausen identity from scratch against
+`mpmath` (machine precision, several M including non-powers of two); checked `gap_clausen`'s per-cell
+integration against a fully independent **40-digit mpmath reference with no grid at all**, confirming
+clean **O(h²)** convergence (ratio 4.00 over 7 doublings) versus DiHiTI's O(h). Reproduced 240/240,
+then **5200 further agreements across 8 seeds × 5 power-of-two N × 5 non-power-of-two N — zero
+disagreements**. C34's mechanism and C35's universal negative both reproduced, the latter by a fully
+independent construction (exact δ-atoms, mpmath Clausen, exact closed-form balance) matching to 5–6
+significant figures, with a deliberate counterexample hunt down to c = −0.01π finding none.
+
+It also cleared the First Mate's mid-flight worry: the corpus uses **whole-domain min**, *not* the
+fixed-interior-window convention C39 attacks, and refining all 240 profiles 8× and 16× produced **zero
+label flips**. Flagged honestly as **empirical, corpus-specific clearance, not a general proof.**
+
+**Ladder discipline:** C33/C34/C35 stay at `supported`. The auditor's mpmath work is replication-grade
+in quality, but the ladder requires the *replicator* to sign the `replicated` rung, and consistency
+matters more than convenience (C13 was held the same way).
+
+#### C30 adjudication: **the error was the First Mate's, and it is confirmed**
+
+Lemma 1 reads **`min_x [A(u₀+p)](x)`** — the minimum over the interior window. **The paraphrase
+dropped "min_x".** The bump *is* symmetric about x₀, but the depression is *not* evaluated there. The
+replicator rigorously tested a construction the proof never used.
+
+**The replicator's fact was true and worth having.** σ = 0 really is a zero of the depression profile
+(−ℋ[φ](0) = 0 to machine precision for *both* bump shapes). Lemma 1 uses the **minimum**, at
+σ* = −0.723. And **all three** of its reported mismatches collapse to **one artifact**: it probed at the
+bump *edge* rather than the extremum, where −ℋ is 0.388 vs 0.661 — ratio **1.70**, which reproduces the
+κ factor 2.6, the 15% drift, and the 1.64× spread exactly. Measured properly κ spreads **1.078×**.
+
+**Lemma 1 verified independently:** min_x Δ/a = −0.79758, flat to **0.1% over a 256× sweep in δ**, and
+equal to the separately computed −max(−ℋ[φ]) to five digits.
+
+**⭐ The cycle-1 contradiction dissolves (C45): all three measurements were right, of different
+things.** Hand B measured L¹ mass (∝ δ — narrower *is* cheaper); the replicator measured Δ at the
+centre (≡ 0 by parity); Lemma 1 measures L^∞ amplitude (flat). Nobody erred. And Hand B's
+non-monotonic rise is a **window-edge artifact** — not the "under-resolved at 82 grid points"
+explanation cycle 2 offered, **which was false**.
+
+#### 🚨 The adjudicator's own narrowings matter more than the replicator's (C46, C47)
+
+Attacking as instructed rather than merely refereeing, it found defects the replicator never reached:
+constants self-contradictory (**the π is spurious — correct κ = 1/h_φ = 1.254**); `TV(p) ≤ 2r`
+**vacuous** for bumps, so §1 contradicts its own §3.5; Theorem 2's intervals need insetting by 2kh.
+
+**And the deep one (C46):** *any N-independent Lipschitz bound collapses Θ(N) to Θ(1)*, since a
+flipping bump must eat the margin m₀ ≈ 1e−3·D. **Real ε′ profiles are smooth.** So V2a's lower bound
+holds for a class admitting arbitrarily narrow features — which may **exclude the physically
+realizable case entirely**. That partially revives **H2 and N3** (bandwidth; FFT-free O(N)), both
+demoted on weaker grounds — and it means the mission's V1 "no" and V2 "yes" may both be answers about
+a function class the Captain does not actually care about.
+
+**Standing V2a result, honestly stated:** Θ(N), tight, for the finite (M+1)-input family in the
+L^∞/BV ball of radius 1.68·D, **conditional on the class admitting O(1)-grid-point features.**
+C31 (V2b) untouched — and still never adversarially tested (P2).
+
+**Process fix already in force:** `PROTOCOL.md` now requires verbatim quoting of a claim from its
+source when dispatching blind replication. This adjudication is what that rule was written to prevent.
