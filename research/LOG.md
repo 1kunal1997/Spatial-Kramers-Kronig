@@ -448,3 +448,82 @@ its own foundation.
 
 Next rungs for C25: `red-team` (→ hardened) then `referee` (→ ESTABLISHED). Queued for the next cycle;
 red-team is currently on E1(a), the higher-value target.
+
+### Cycle 2 — red-team returned. E1(a) **FAILED** (clean negative). **V2a PROVED.** C22 self-narrowed.
+
+Files: `results/cycle2_e1a/redteam.md`, `theory/v2_lower_bound.md`, `results/cycle2_v2a/`.
+
+**It killed its own proposal, found an error in its own cycle-1 report, and withdrew its own attack.**
+That is the behaviour the seat exists for, and it cost the mission its most promising V1 lead.
+
+#### E1(a) → KILLED (K19). Three independent causes.
+
+1. **Cycle 1 never wired the cascade in.** `split_verdict()` returns the decimated minimum and never
+   uses `cascade()`. So "20/24 correct, misses only the adversarial cosines" was the accuracy of
+   **decimation alone**, and the 0.88× was paid for a screen that bought nothing.
+2. **The screen dies on the decimated grid in *both directions at once*.** Edge-slope mismatch
+   1.2e−11 → **2.3e−3** at n = 512 (false defers); adversary cos m=257 goes 3.98e−01 → **3.5e−9** — it
+   aliases away, **reads cleaner than the logistic**, and answers with the wrong sign. Blind to exactly
+   what it exists to catch.
+3. **No threshold rescues it.** 230 profiles × n ∈ {128…2048} × τ ∈ {1e−5…∞}: every zero-false-answer
+   configuration is **≤ 1.11×**; everything above 3× admits false answers.
+
+Best honest number: **2.86×, below the 3× bar, with an uncertified gate. V1 not achieved.**
+
+#### ⚠️ C22 narrowed by its own author — and the audit missed it
+
+`np.linspace(-L,L,N)` **duplicates the endpoint**, so `hilbert` saw period 2L·N/(N−1). Fixing it makes
+the identity *exact* (4 digits, better than claimed) — but N−1 = 65535 = 3·5·17·257 is FFT-hostile,
+and the correct version runs at **0.44×**. **The 1.70× was an artifact of the bug**, surviving only
+because N was a power of two.
+
+**The auditor had independently reimplemented this and returned CLEAN at 1.58×.** Both wrote the same
+`linspace` idiom, so both carried the same bug. **Independent reimplementation is not immunity when
+implementers share a language, a library, and an obvious idiom.** Recorded as a standing caution in
+`PROTOCOL.md`.
+
+Consequently **cycle-1 attack 2.2 is WITHDRAWN (K20)**. With Hand B having already withdrawn the other
+crack, **both of cycle 1's live cracks against C15 are gone.** C15's practical core has now defeated
+**seven named challenger routes.**
+
+#### ⭐⭐⭐ V2a is PROVED — query complexity is Θ(N), tight (C30)
+
+Not merely formalized. The key step is a clean local law: **a bump of amplitude a and *any* width δ
+depresses ε″ by −a/(πC_φ), independent of δ** — because the singular part of the DiHiTI kernel is the
+Hilbert kernel, and ℋ commutes with dilation. So a_min(x₀) = κ·ε″₀(x₀) with κ/π = 0.418, constant to
+±3% while ε″₀ varies over **three decades**.
+
+That yields Θ(N) disjoint compact supports with a **uniform, N-independent** amplitude bound
+(r/D = 1.680, identical to four digits at N = 4096/8192/16384; 41/41 positions flip) → pigeonhole →
+Ω(N). The bound holds against the **finite** (M+1)-input family, which forecloses the "permissive
+input class" objection; Yao's principle extends it to randomized algorithms. Since the baseline reads
+N, **query complexity is Θ(N) — tight.**
+
+#### V2b written as a strict conditional (C31) — sharper than cycle 1's version
+
+Cycle 1 said "convexity is fatal to the toolkit." The written version is precise: **both known
+superlinear techniques are entropy counts of combinatorial multiplicity** — Ben-Or counts components,
+Björner–Lovász–Yao counts faces — and a convex polyhedral cone with Θ(N) facets has **1 component** and
+≤2^Θ(N) faces, so both are capped at O(N) **by arithmetic**. Element distinctness draws its N log N
+from N! orderings; there is no analogue here. Morgenstern's Ω(N log N) concerns *computing* the DFT in
+bounded-coefficient linear circuits and does not transfer to deciding one bit.
+
+Carries a scope statement forbidding the unconditional reading, an explicit non-claims section, and
+three named escape routes — **R3 (bounded-coefficient linear decision trees) flagged as the
+crew-sized one.**
+
+§3.5 also explains E1(a)'s failure abstractly: a bandwidth promise defeats the lower bound, but
+*verifying* one is itself Ω(N), and bounding between-sample behaviour from samples is impossible
+without an a priori class. **That is why every certificate came out unsound** — H2 demoted accordingly.
+
+#### The narrative that is emerging
+
+Two cycles, seven challenger routes, all failed; the query complexity is now **proved tight at Θ(N)**;
+and the log factor is blocked by a method-relative barrier stated honestly as conditional. The honest
+headline is *"the transform is optimal up to a log factor, and here is exactly what would have to give
+for that factor to fall."* **This is V2 achieved, and V1 looking genuinely hard rather than merely
+unsolved.**
+
+**One untested lever remains on V1**: every loss across two cycles has been a **Python constant, not an
+information deficit**. A compiled inner loop is the only thing never tried, and 2.86× sits just under
+the bar. Logged as **V1-c**, top V1 item.

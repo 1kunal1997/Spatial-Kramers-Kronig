@@ -80,6 +80,18 @@ every cycle boundary. Only a live model can write it, so the last line of `HEART
 requests stopped succeeding. This measures expedition duration for the Captain's **Pro vs Max**
 decision — see `MEASURE.md`. Never batch or pre-write heartbeat lines; that destroys their meaning.
 
+## ⚠️ Common-mode error — a limit of independent replication (learned 2026-08-19)
+
+The auditor independently reimplemented C22's benchmark and returned **CLEAN** (1.58× vs the reported
+1.70×). Both were **wrong in the same way**: both wrote `np.linspace(-L, L, N)`, which duplicates the
+endpoint, so `scipy.signal.hilbert` saw period 2L·N/(N−1). Independent reimplementation did not catch
+it because both implementers reached for the same idiom.
+
+**Independent ≠ immune.** When two implementations share a language, a library, or an obvious idiom,
+they can share a bug. Guard against it explicitly: vary the *construction*, not merely the author —
+grid conventions, endpoint handling, N's factorization (the bug hid because N was a power of two),
+and where possible check against a closed form rather than a second numerical route.
+
 ## Honesty rules
 
 - Negative results are results. Log them with equal care; they shrink the search space.

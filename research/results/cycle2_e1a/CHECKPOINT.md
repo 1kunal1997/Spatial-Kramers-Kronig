@@ -58,3 +58,47 @@ grid it collapses TWO WAYS at once:
   Omega(N)) says no sublinear-query procedure can be correct in the worst case. So E1(a) can at best
   be a heuristic for a smoothness class, NOT a decision procedure. Need to state the input model
   under which any V1 claim is made.
+
+---
+## TASK 1 CLOSED (2026-08-19). Verdict written to `results/cycle2_e1a/redteam.md`.
+E1(a) KILLED. V1 not achieved (best 2.86x, uncertified). C15 stronger. C22 narrowed. Cycle-1
+attack 2.2 withdrawn (it was the endpoint-duplication bug F7).
+
+## TASK 2 IN PROGRESS — V2 write-up, `research/theory/v2_lower_bound.md`
+Backbone experiments in `results/cycle2_v2a/`:
+- `v2a_hard_family.py` (Gaussian bumps, sigma = c*h): a_min/D = 8.95e-3 at c=2, **identical to 3
+  digits across N = 2^11..2^15** (8.974e-3 -> 8.952e-3). a_min/m0 ~ 9.0. TV(p)/D = 1.79e-2,
+  N-independent. ||p||_1/(D L) -> 0 like 1/N. 25/25 tested positions flip the label.
+- `v2a_compact.py` (C^inf COMPACTLY supported bumps on exactly 2k grid points, k=4/8/16):
+  41/41 positions flip at every N. max a/D = **1.680 / 1.680 / 1.680** at N = 4096/8192/16384
+  (k=4) -- a UNIFORM, N-INDEPENDENT amplitude bound, which is exactly what the pigeonhole needs.
+  Number of DISJOINT supports = floor(0.95 L/(k h)) = Theta(N) (1945 at N=2^14, k=4).
+  min a/D ~ 1.4e-3 (cheap positions, near the seam where eps''_0 is small); the spread between
+  min and max is explained by a_min(x0) ~ pi * eps''_0(x0) -- being confirmed.
+NEXT: position-resolved a_min(x0) vs eps''_0(x0) at N=2^13, then write the doc.
+
+## TASK 2 CLOSED (2026-08-19). `research/theory/v2_lower_bound.md` (400 lines, standalone).
+- **V2a PROVED.** Lemma 1 (local flip law a_min(x0) = kappa*eps''_0(x0), kappa/pi = 0.418, INDEPENDENT
+  of bump width) proved analytically from the master identity C1 -- the singular part of the DiHiTI
+  kernel is the Hilbert kernel, which commutes with dilation, so the dip depth is width-independent.
+  Verified to +-3% over three decades of eps''_0 and to 0.3% over N = 2^11..2^15.
+  Theorem 2 (deterministic pigeonhole, Theta(N)) + Remark (holds against the FINITE M+1 input family)
+  + Corollary 3 (Yao, randomized) + Corollary 4 (TIGHT: query complexity is Theta(N)).
+- **V2b written as a CONDITIONAL/method-relative barrier**, with an explicit scope statement at the
+  top forbidding the unconditional reading. Core: both known superlinear techniques (Ben-Or
+  component counting, Bjorner-Lovasz-Yao face counting) are entropy counts of combinatorial
+  multiplicity; a convex polyhedral cone with Theta(N) facets has 1 component and <=2^Theta(N)
+  faces, so both are capped at O(N) BY ARITHMETIC. Element distinctness gets N log N from N!
+  orderings; there is no analogue. Morgenstern's O(N log N) is for COMPUTING the DFT in
+  bounded-coefficient linear circuits and does not transfer to deciding one bit.
+  Three named escape routes R1/R2/R3, with R3 (bounded-coefficient linear DECISION trees) flagged as
+  the one this crew could actually attempt. Explicit non-claims section.
+- Section 3.5 states the honest boundary and, importantly, explains TASK 1's failure abstractly:
+  a bandwidth promise defeats the lower bound, but VERIFYING a bandwidth promise is itself Omega(N),
+  and bounding between-sample behaviour from samples is impossible without an a priori class --
+  which is exactly why F5/F8's certificates were unsound.
+
+## STATUS: BOTH TASKS COMPLETE. Nothing in progress.
+## NEXT STEP for a successor: O2 (compiled/numba implementation of the split test -- the only
+untested lever on V1) or O1/R3 (Morgenstern-type bound for bounded-coefficient linear decision
+trees, the crew-sized version of V2b).
