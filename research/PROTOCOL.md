@@ -92,6 +92,19 @@ they can share a bug. Guard against it explicitly: vary the *construction*, not 
 grid conventions, endpoint handling, N's factorization (the bug hid because N was a power of two),
 and where possible check against a closed form rather than a second numerical route.
 
+## ⚠️ Dispatch hygiene: QUOTE claims, never paraphrase them (learned 2026-08-19)
+
+The C30 replication was dispatched with a statement of the claim that the **First Mate paraphrased**
+from a summary rather than quoting from the source document. The replicator then did careful,
+pre-registered, rigorous work — possibly against a construction the proof never used. Hours of opus
+and sonnet time now hang on which.
+
+**When dispatching a replicator or an adversary against a claim, quote the claim verbatim from its
+source document**, with the file and section. If the claim must be restated for a blind agent that
+cannot read the source, restate it and then say explicitly: *"this is a restatement; if it is
+ambiguous, flag it rather than guessing."* A blind agent cannot check your paraphrase — that is the
+whole point of blinding it, and it makes the dispatcher's precision load-bearing.
+
 ## Honesty rules
 
 - Negative results are results. Log them with equal care; they shrink the search space.

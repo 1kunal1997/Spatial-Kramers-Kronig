@@ -114,26 +114,40 @@ point, and I need to also test offset/asymmetric bumps.
   distinct, vanishing, boundary-driven O(a*delta) effect). Do not re-test this construction — it is
   settled.
 
-## CURRENTLY IN PROGRESS
-Moving to part 3: test consequence (a)/(b) — proportionality of a_min to local headroom, and
-x0-independence / profile-independence of the coefficient kappa — using the "offset" (dilation-
-covariant) construction at a FIXED, moderate, well-resolved delta (since delta-independence itself
-already failed strictly; the interesting remaining question is whether the coefficient is at least
-UNIVERSAL across x0 and profile at fixed delta). NOTE: proportionality of a_min to headroom AT FIXED
-delta is a near-trivial consequence of ht_derivative's LINEARITY as an operator on eps' (Delta eps''
-is exactly linear in a for fixed bump shape/position) — so consequence (a) is not really an
-independent thing to verify beyond linearity; what's nontrivial and worth checking is whether the
-proportionality CONSTANT (kappa) is the same across different x0 and different base profiles.
+## TASK COMPLETE
 
-## NEXT STEP
-Write part3_proportionality.py: for several base profiles (varying overall amplitude scale across
-~3 decades) and several interior x0 per profile, fix delta (moderate, e.g. delta=0.02*L, resolved),
-measure the local slope d(Delta eps'')/da via two-point (or few-point) finite difference (exploiting
-exact linearity — no need for expensive bisection search for a_min; slope alone gives a_min =
-headroom/slope directly). Report kappa = -1/(pi*slope) style constant, its spread across x0 and
-profiles (headroom spanning 3 decades), and compare loosely to 0.418. Then part4: repeat the slope
-measurement (offset construction, fixed delta *in absolute grid-spacing multiples*, i.e. delta/dx
-held fixed so resolution keeps pace) at N=4096/8192/16384/10000/12000 to test N-independence.
+All four parts run. Results:
+- Part 1 (analytic pipeline sanity): PASSED, O(1/N) convergence, non-power-of-2 N fine.
+- Part 2 (width independence, crux): MISMATCH for the natural "centered" construction — depression
+  scales as delta^1.00 (measured log-log slope 1.0015), vanishing as delta->0, matching the
+  pre-registered parity-argument prediction exactly. An "offset" (dilation-covariant) construction
+  shows a much better but still imperfect plateau (~15% drift over 1.5 decades, ~40% over the full
+  2.5 decades tested) — fails the pre-registered 2% tolerance.
+- Part 3 (proportionality/universality): a_min ~ headroom confirmed (near-trivial, from linearity).
+  Coefficient is exactly profile-independent (8 seeds, identical kappa at fixed x0) but NOT
+  x0-independent (0.852 to 1.401 across interior x0, ~12% RMS spread, outside +/-5% tolerance).
+  kappa/pi measured ~1.07-1.10, vs claimed 0.418 — off by factor ~2.6x.
+- Part 4 (N-independence): CONFIRMED, 0.0034% spread across N=4096/8192/16384 (pow2) and
+  N=10000/12000/15000 (non-pow2). No common-mode power-of-2 bug detected.
+
+Final outputs written: `replication.md` (full writeup with all tables and verdict), `manifest.json`.
+
+## OVERALL VERDICT: MISMATCH
+Width-independence — the mission's own stated priority-1 crux — fails under the natural/literal
+construction (bump centered at, and measured at, x0), for a clean mathematical reason (Hilbert
+transform of an even function is odd, hence exactly zero at its own symmetry center, for any delta).
+A weaker offset construction produces something closer to a plateau but not to the claimed precision,
+and its associated constant (kappa/pi ~1.1) does not match 0.418 (off by ~2.6x). N-independence of my
+own analogous coefficient IS confirmed to high precision. See replication.md for full detail,
+hypotheses on the discrepancy, and the honest caveat that "C_phi"/"r/D" definitions were not known to
+me (blind by design) so exact-value disagreement on the constant carries a construction-dependent
+caveat — but the crux delta-scaling result (exponent 1.00, not 0) is construction-independent and
+airtight.
+
+## NEXT STEP FOR ANY SUCCESSOR
+None — task complete. If resuming for follow-up: the open thread would be to ask the crew what the
+*exact* original bump/offset construction was (post-hoc, after this MISMATCH is filed) to see if it
+matches my "offset" construction, which is the only one of mine that gets qualitatively close.
 
 ## OPEN QUESTIONS / BLOCKERS
 - "C_phi" and "r/D" in the original claim are undefined to me (by design — blind). I will define my

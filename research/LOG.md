@@ -666,3 +666,48 @@ Also asked: the critical path to a defensible ESTABLISHED result; what remains g
 R3, and whether an FFT-free O(N) algorithm is possible in principle — level 3 of the V1 answer only
 bounds approaches that *retain* an FFT); what the Captain should be told; and whether the natural next
 voyage is the parked flipped-optimization problem or something else.
+
+### Cycle 3 — replicator returned: 🚨 **MISMATCH on C30. V2a's empirical core is contested. C30 DEMOTED.**
+
+Report: `results/cycle3_v2a_replication/replication.md` (+ checkpoint, 4 scripts, raw JSON).
+
+**This lands directly on the claim the First Mate reported to the Captain as "proved and tight" one
+cycle ago. That report was premature and is hereby corrected.**
+
+**The crux.** Under the literal reading — a bump added at x₀, symmetric about x₀, depression measured
+at that same x₀ — width-independence is **provably false**, not merely numerically absent. The
+periodic Hilbert transform maps even functions to **odd** functions about their own centre, so
+ℋ[bump](x₀) = **0 exactly**, for any width and any amplitude.
+
+The replicator **pre-registered this prediction before running any bump numerics** — then confirmed
+it: the depression scales as **δ^1.0015 over 2.5 decades** of width, a 375× change end to end, with
+**no trace of a plateau**.
+
+Sub-findings:
+- A weaker "offset" construction (probe at fixed *relative* position, scaling with δ) does approach a
+  plateau — but drifts **~15% over 1.5 decades and ~40% over the full range**, outside its
+  pre-registered 2% tolerance.
+- **κ/π measured 1.07–1.10 vs the claimed 0.418 — off by a factor of ~2.6.**
+- κ is exactly profile-independent (8 random profiles, identical at fixed x₀) but **not**
+  x₀-independent: ~12% RMS, **1.64× across interior locations**. The claimed uniformity is not there.
+- Proportionality of a_min to headroom: confirmed, but **near-trivial** — it follows from exact
+  linearity of the DiHiTI operator (verified to ~1e−12).
+- N-independence: **confirmed** to 0.0034%, at powers of two *and* non-powers of two. No common-mode
+  power-of-two bug.
+
+**Why this may be fatal.** V2a's pigeonhole argument needs Θ(N) disjoint supports carrying a
+**uniform, N-independent amplitude bound**. If the depression scales linearly in δ, narrower bumps are
+*weaker*, so a uniform bound over shrinking supports is exactly what fails.
+
+**And it contradicts an earlier crew finding.** Cycle 1's Hand B asserted that "localized perturbations
+get **cheaper** as they narrow, so Ω(N) is genuinely provable" — which is why H1 was revived. The
+replicator finds narrower ⟹ **weaker** ⟹ more expensive. Both cannot be right.
+
+**⚠️ The First Mate's own error is in scope here.** The dispatch prompt's statement of the claim was
+*paraphrased by the First Mate* from red-team's summary, not quoted from `theory/v2_lower_bound.md`.
+So there are two live possibilities and they must not be conflated:
+  (a) V2a's proof is genuinely broken; or
+  (b) the paraphrase misstated the construction and the replicator rigorously tested the wrong thing.
+
+Either way the replicator's work stands — it found a real, sharp, pre-registered result. But **C30
+cannot be promoted or dismissed until someone reads the actual proof.** Adjudicator dispatched.

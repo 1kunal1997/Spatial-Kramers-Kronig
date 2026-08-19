@@ -68,3 +68,10 @@ print()
 print("=== other mode positions ===")
 for cf, qf in [(-0.25, 0.995), (-0.75, 0.99), (-0.1, 0.999)]:
     analyze(cf, qf)
+
+print()
+print("=== does gain appear for ARBITRARILY SMALL skew c, as q -> pi? (tests 'tolerance IS zero') ===")
+for cf in [-0.30, -0.10, -0.03, -0.01, -0.003]:
+    print(f"--- c = {cf}pi ---")
+    for qf in [0.999, 0.9999, 0.99999, 0.999999]:
+        analyze(cf, qf)
