@@ -18,11 +18,16 @@ name** (`theorist`, `numericist`, `red-team`, `replicator`, `auditor`, `referee`
 The Captain is on **Claude Pro**, not Max. Cycle 1 burned **~75% of a 5-hour window in ~25 minutes**
 running 4 agents in parallel (2× opus at xhigh effort). **That configuration is not sustainable.**
 
-**LEAN CONFIG IS THE DEFAULT NOW** unless the Captain says otherwise:
-- **One agent at a time**, sequential — not parallel
-- **sonnet by default**; opus only for genuinely hard theory, and at `high` not `xhigh`
+**⚠️ CAPTAIN'S ORDER 2026-08-19 — DO NOT DOWNGRADE MODELS. Quality is the priority.** The earlier
+"lean = sonnet by default" policy is **RESCINDED**. See `BUDGET.md`. The judgment seats
+(`theorist`, `red-team`, `referee`, `navigator`) stay on **opus**, theorist and red-team at
+**xhigh**. If speed becomes binding the Captain upgrades the plan — that is his lever, not the crew's.
+
+**Control cost by SEQUENCING and SCOPE, never by tier:**
+- **One agent at a time**, sequential — not parallel. This is the dominant lever.
+- Sharp, bounded questions rather than three loose jobs per hand
 - Adversaries fire only on **promotion attempts**, not every cycle
-- Estimated 5–10× cheaper per cycle → roughly one solid cycle per 5-hour window
+- Never re-derive context that is already in `LOG.md` / `RESUME.md`
 
 Cycle 1 was also front-loaded with one-time costs (reading 3 waves of prior work, two long PDFs, 98
 figures, building the ledger). Steady-state cycles should be cheaper than it regardless.
