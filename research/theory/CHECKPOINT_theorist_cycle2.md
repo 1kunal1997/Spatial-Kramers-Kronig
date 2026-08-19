@@ -135,3 +135,113 @@ C28 should be REWRITTEN, not merely promoted:
              DC quadrature defect at t=+-L, proportional to g(+L)+g(-L) and O(h); it is
              unrelated to truncation and to edge-slope mismatch. Corpus labels verified
              sound (0/240 change under interior-min relabelling)."
+
+---
+## T1 — Open Problem 8.1 (skew tolerance). IN PROGRESS.
+
+### Exact statement of 8.1 (extracted from the Wave-3 PDF, verbatim)
+"Skew tolerance. Quantify how far an M1-balanced unimodal density may be skewed before
+failure (Fig. 2c shows failure exists); conjecturally an interpolation between Theorems 4.2
+and 5.2 controlled by the mass outside [-L/2,L/2] weighted by the margin (12)."
+
+### Machinery built (PROVED identities, VERIFIED numerically)
+`research/theory/t1_arcs.py` (reference) and `t1_fast.py` (vectorised).
+CIRCLE FORM of (L1): phi = pi t/L in (-pi,pi), seam at +-pi, mu = drop measure / D.
+    eps''(phi) = (D/pi)[ Phi_mu(pi) - Phi_mu(theta) ],  Phi_mu(t)=int ln|2 sin((t-phi)/2)| dmu
+    PASSIVE <=> Phi_mu(theta) <= Phi_mu(pi) for all theta.
+    Balance: int tan(phi/2) dmu = 0.
+KHINCHIN (layer cake): mu unimodal <=> mixture of UNIFORM ARCS whose level sets are
+intervals all containing the mode. With mass + M1 constraints, Dubins-Klee gives
+ext = mixtures of AT MOST TWO overlapping arcs. So (L2) reduces 8.1 to a 4-parameter check.
+Closed forms (both verified against 4e5-point quadrature to 6e-6 / 4e-9):
+    Phi_arc(theta;[p,q]) = [Cl2(theta-q) - Cl2(theta-p)]/(q-p)
+    M1_arc([p,q])        = ln[cos(p/2)/cos(q/2)]/((q-p)/2)
+Cl2 implemented two ways, both 1e-15: (i) exact trigamma-DFT on the uniform grid
+(t3_clausen.py), (ii) the Lewin series Cl2 = th - th ln th + sum zeta(2n) th^(2n+1)
+/(n(2n+1)(2pi)^(2n)) (t1_arcs.py / t1_fast.py). Verified vs Gieseking + Catalan.
+The whole circle/arc closed form was validated against DiHiTI on 4 built profiles:
+max|pred - DiHiTI| = 1.2e-5 .. 1.8e-4 (t1_validate.py).
+
+### RULED OUT / CORRECTIONS TO MY OWN CYCLE-1 PLAN
+* **"3 linear constraints => <=3 atoms => degree-3 Q => Cardano" DOES NOT APPLY to the
+  unimodal family.** The extreme points of a unimodal family are ARCS (Khinchin), not
+  atoms, so Phi'_mu(theta) = sum_k rho_k ln|sin((theta-p_k)/2)/sin((theta-q_k)/2)| is
+  TRANSCENDENTAL, not a polynomial. (L3)'s polynomial collapse is for atomic measures only.
+  My cycle-1 §12.5.1 prediction of a Cardano closed form was WRONG. Retract it.
+* **First search was ill-posed.** Letting an arc endpoint reach the seam (+-pi) makes
+  M1 = int tan(phi/2) dmu DIVERGE (logarithmically), so the "balanced" configurations the
+  optimiser found (gain 0.32 at phi_m=0) are balanced only in a regularised sense. They
+  satisfy (H) (sigma finite) but not M1 finite. This is exactly the cycle-1 remark that M1
+  converges only as a principal value, requiring g(+L)=g(-L). The family must therefore be
+  posed with support strictly inside (-pi,pi) (equivalently g(+-L)=0), which makes M1
+  absolutely convergent.
+
+### REFORMULATED TARGET (this is the well-posed version of 8.1)
+For mu unimodal, M1 = 0, supp mu = [P,Q] subset (-pi,pi):
+  * Cor 4.B (no unimodality) => passive iff Q - P <= pi.
+  * Thm 5.2 (even unimodal, P=-Q) => passive for every Q < pi.
+  Find the PASS/FAIL boundary in the (P,Q) plane. That curve IS the skew tolerance.
+Extreme points to check: two arcs [p1,q1],[p2,q2] subset [P,Q] that OVERLAP (disjoint arcs
+would make the mixture bimodal), balanced.
+
+### NEXT STEP
+Run the (P,Q) scan: for each (P,Q) on a grid in (-pi,pi)^2 with P<Q, maximise the gain over
+overlapping balanced 2-arc mixtures inside [P,Q] (differential evolution, t1_scan.py has the
+optimiser skeleton). Map the zero-gain contour. Then guess + prove the closed form.
+
+---
+## T1 RESULT — Open Problem 8.1 CLOSED, with a NEGATIVE answer. [verified numerically]
+
+**THE SKEW TOLERANCE IS ZERO.** For every mode position c != 0 there exist unimodal,
+M1-balanced drop densities whose DiHiTI partner has gain. So Thm 5.2's evenness hypothesis
+CANNOT be weakened to "unimodal + balanced", and the interpolation Wave 3 conjectured
+("controlled by the mass outside [-L/2,L/2]") does not exist as stated.
+
+### MECHANISM (proved, elementary)
+M1 = int tan(phi/2) dmu is a xi-MOMENT, and xi = tan(phi/2) blows up at the seam phi=+-pi.
+So a mass eps placed within O(eps) of the seam contributes O(1) to M1 but only
+O(eps ln(1/eps)) -> 0 to the logarithmic potential Phi_mu. Hence the balance constraint can
+be satisfied VACUOUSLY, and in the limit the measure is potential-indistinguishable from the
+single atom delta_c, whose gain is ln sec(c/2) > 0 (that is exactly Cor 4.4 / C10, the
+off-centre step). Unimodality does not obstruct this: put the atom at the LEFT END of a wide
+arc reaching to the seam -- the density is still unimodal (peak at c, plateau to the right).
+
+### THE COUNTEREXAMPLE FAMILY (explicit)
+  mu = lam * (narrow arc at c) + (1-lam) * U[c, q],   q -> pi^-,
+  lam fixed by lam*tan(c/2) + (1-lam)*(2/(q-c))*ln[cos(c/2)/cos(q/2)] = 0.
+Verified against the scipy DiHiTI pipeline AND against the fixed (L1) evaluator (N=65536):
+   c/pi   q/pi     lam      M1      gain(closed form)   min eps'' DiHiTI   min eps'' (L1)
+  -0.50  0.9000  0.4069  2.2e-03        0.000000           -0.000000        -0.000000
+  -0.50  0.9700  0.5398  2.8e-03        0.000000           -0.000000        -0.000000
+  -0.50  0.9950  0.6571  3.8e-03        0.090341           -0.028372        -0.028380
+  -0.50  0.9990  0.7218  4.8e-03        0.142034           -0.044784        -0.044793
+  -0.50  0.9999  0.7812 -2.3e-03        0.186300           -0.058832        -0.058841
+  -0.25  0.9950  0.8548 -2.2e-03        0.012973           -0.004261        -0.004264
+  -0.75  0.9900  0.3261  4.3e-03        0.108993           -0.034157        -0.034171
+  -0.10  0.9990  0.9593  1.0e-03        0.002356           -0.000732        -0.000733
+(all three columns agree to 1e-5; gain -> ln sec(c/2) = 0.3466 for c = -pi/2 as q -> pi.)
+
+### WHY THIS IS A COROLLARY, NOT A NEW STATEMENT (V6)
+It is (L1) + Khinchin (already used by Thm 5.2 via (L2)) + the C10 off-centre-step formula,
+which cycle 1 already showed is the eta = -1/xi_0 value of the same Delta. Corpus count
+unchanged at 3.
+
+### CONJECTURED SHARPENING (NOT yet verified)
+sup{ -pi*min eps''/D : mu unimodal with mode c, M1 = 0 } = ln sec(c/2), i.e. the off-centre
+step is the WORST unimodal balanced profile with that mode. Attained only in the seam limit.
+STATUS: conjecture -- the lower bound (>=) is established by the family above; the upper
+bound (<=) is not proved and not yet numerically probed.
+
+### NEXT STEP
+1. probe the upper bound sup = ln sec(c/2) numerically (search unimodal balanced mu with
+   mode c for gain > ln sec(c/2));
+2. give the REPAIRED criterion: unimodal + M1=0 + supp bounded away from the seam. Map the
+   sharp (P,Q) boundary with the dense 2-arc search (t1_dense.py is the working search;
+   t1_pq.py's differential_evolution was too weak and reported spurious all-zeros).
+
+### FILES
+t1_arcs.py (reference Cl2 + arc closed forms, self-tested), t1_fast.py (vectorised),
+t1_validate.py (arc form vs DiHiTI, 1e-4), t1_dense.py (dense random search -- FINDS the
+failures), t1_boundary.py (atom-at-end boundary scan), t1_verify.py (the table above).
+WARNING: t1_pq.py and t1_scan.py under-optimise; t1_scan.py's phi_m search is ILL-POSED
+(lets arcs touch the seam, where M1 diverges). Do not trust their outputs.

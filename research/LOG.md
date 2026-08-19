@@ -527,3 +527,65 @@ unsolved.**
 **One untested lever remains on V1**: every loss across two cycles has been a **Python constant, not an
 information deficit**. A compiled inner loop is the only thing never tried, and 2.86× sits just under
 the bar. Logged as **V1-c**, top V1 item.
+
+### Cycle 2 — theorist: **T3 DONE (240/240)**, T1 closed negatively. Then terminated by session limit.
+
+**T3 → 240/240 (C33).** New evaluator `theory/t3_clausen.py`, singularity-free by construction: the
+drop measure is treated as piecewise-constant on grid cells with **exact** masses
+w_j = ε′(t_j) − ε′(t_{j+1}); the log kernel is integrated **exactly** over each cell (all
+antiderivatives are Clausen Cl₂); and Cl₂ is evaluated exactly on the uniform grid by aliasing
+Σ sin(nθ)/n² into a **trigamma-weighted DFT** — verified to 1e−15 against Catalan's constant. The
+whole 240-profile corpus now runs in **0.3 s**. Pointwise vs DiHiTI: median rel err 5.3e−4.
+
+**⚖️ The C28 dispute resolved — and neither party had it right.** The auditor was correct that the
+stated *mechanism* was false (truncation irrelevant; only 3/7 edge-slope-unmatched — the theorist
+independently reproduced both refutations, plus a third: the DiHiTI minimum of the 5 gain cases sits
+at |x|/L = 0.80–0.91, **inside** the mask). But the theorist's *conclusion* — "quadrature defect, not a
+defect of (L1)" — was **correct**, as 240/240 now demonstrates.
+
+**The true mechanism (C34) is better than either story.** The error is an **η-independent additive DC
+constant**, O(h), proportional to g(+L)+g(−L): the ratio is **−0.0331…−0.0352 across all seven**, a
+universal constant across offsets spanning −0.0055 → +0.289. Root cause: at t = ±L, `tan(π/2)`
+evaluates in float to **1.633e16**, so ln|η−ξ| is recorded as **37.33** instead of the correct
+half-cell average **8.17**. That single node supplies **one third** of the offset; the remaining two
+thirds is accumulated trapezoid error on the same log singularity. Halving h halves it (ratios 2.05
+across N = 1024…16384). *A floating-point overflow at one grid node, masquerading for a full cycle as a
+defect in a theorem.*
+
+**T1 / Open Problem 8.1 → CLOSED, NEGATIVELY (C35). Skew tolerance is ZERO.** Unimodal + M₁ = 0 admits
+gain for **every** mode c ≠ 0 — balance is *vacuous near the seam*, because ξ = tan(φ/2) diverges
+there. Verified against DiHiTI. The theorist also **retracted its own cycle-1 plan**: it had promised
+Cardano, then found that unimodal extreme points are **arcs, not atoms**, hence transcendental rather
+than degree-3. Second self-retraction of the voyage.
+
+Terminated mid-flight by the session limit at ~09:50 UTC. **The checkpoint protocol worked** — T3 and
+T1 were both fully on disk with a resumable state; nothing was lost.
+
+---
+
+## ⏱ EXPEDITION MEASUREMENT — window exhausted 09:50 UTC, reset 12:50 UTC, **auto-resume fired**
+
+- **START** 09:10:31Z → **last crew heartbeat** 09:49:51Z ⟹ **~40 minutes of active work**
+- Then ~3 h locked out. The hourly cron retried, failed harmlessly, and **the first fire after the
+  reset resumed the voyage automatically, exactly as designed.**
+- **Config**: 4 hands in parallel — theorist (opus/xhigh), red-team (opus/xhigh), replicator (sonnet),
+  auditor (sonnet), plus First Mate integration on opus.
+- 29 heartbeats from 6 distinct agents.
+- ⚠️ **Caveat**: the window was *not* fresh at START — the V2 restatement, heartbeat setup and cycle-2
+  dispatch had already drawn on it. A fresh window at this configuration would plausibly give ~50–60
+  min, not 40.
+
+---
+
+## Cycle 3 — 2026-08-19 12:5x UTC — resumed automatically after window reset. 4 hands dispatched.
+
+The auto-resume worked exactly as designed: the hourly cron retried through the lockout, failed
+harmlessly, and the first fire after the 12:50 UTC reset picked the voyage back up with no
+intervention and nothing lost.
+
+| Hand | Task | Why |
+|---|---|---|
+| red-team (opus/xhigh) | **Harden C25 (Cor 4.B)** | At `replicated`; needs red-team → `hardened`, then referee → **ESTABLISHED**. Leading candidate for the voyage's first established claim. Pointed at the replicator's one self-reported residual (near-threshold asymmetric case at ~80% of target) and at common-mode grid bugs. |
+| auditor (sonnet) | **Audit C33 / C34 / C35** | The theorist fixed its own defect and verified its own fix. It was wrong once already about this exact gap. 240/240 on one seed is not a fix — asked to re-run at other seeds, other N, non-power-of-two. |
+| replicator (sonnet) | **Blind-verify C30's local law** | The Θ(N) proof rests on the width-independence of the bump depression. If that empirical core fails, V2a's proof loses its foundation. Barred from all four originating directories. |
+| numericist (sonnet) | **V1-c compiled implementation** | The last untested lever on V1. Seven routes have died on Python constants, not information deficits; 2.86× sits just under the 3× bar. Explicitly warned about the `linspace` endpoint bug that produced the bogus 1.70×. |
