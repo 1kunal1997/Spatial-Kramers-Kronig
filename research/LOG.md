@@ -711,3 +711,52 @@ So there are two live possibilities and they must not be conflated:
 
 Either way the replicator's work stands — it found a real, sharp, pre-registered result. But **C30
 cannot be promoted or dismissed until someone reads the actual proof.** Adjudicator dispatched.
+
+### Cycle 3 — red-team returned: **C25 NARROWED. The `iff` is not an `iff`.**
+
+Report: `results/cycle3_c25_hardening/redteam.md`. **C25 must NOT be promoted to `hardened` as worded.**
+
+**The necessity half is false (C38).** Counterexample built on exact linearity of ε″ in g:
+P = λ·(balanced corner pair at −0.40, +0.90) + (1−λ)·(balanced pair at ±0.20). Both pieces have g ≥ 0
+and M₁ = 0; the support hull is **exactly** [−0.40, 0.90], so a+b = 1.30L — and crucially the
+**effective support equals the nominal box**, closing the very ambiguity that produced the
+replicator's earlier 76/80 confusion. At λ = 0.2: **min ε″ = +9e−9, passive.**
+
+Confirmed through production `ht_derivative` at N = 2¹⁵/2¹⁷/2¹⁹, and independently by a hired hand
+using erf smoothing, both grid conventions, non-power-of-two N, and its own closed form (λ* ≈ 0.278).
+
+**Not a marginal exception.** Max passive corner-mass fraction: **26%** at a+b = 1.30L, 21% at 1.40L,
+8.7% at 1.80L, 0.09% at 1.98L. **For every a+b up to 2L there exist passive profiles touching both
+corners.**
+
+**Consequence for the mission's headline.** The theorist's necessity line ("take the extreme pair")
+establishes only a **sharpness statement about the box** — the same logical shape as Thm 4.2
+("sufficient, constant L/2 sharp"). So C25 supplies **no necessary condition on any individual ε′**,
+the billing as "the mission's first two-sided non-trivial result" was **overreach**, and **it does not
+advance V6.** The First Mate propagated that billing to the Captain; corrected here.
+
+**Five attacks failed — what survives is solid (C25′).** Sufficiency now looks genuinely proved: 3600
+random many-atom balanced measures across 10 boxes, zero negatives; the Bauer/extreme-point step
+checked against its *actual* hypotheses (F = min of linear functionals ⟹ concave u.s.c.; K weak*-compact
+since a,b < L; Richter ⟹ ≤2 atoms). Cor 4.A re-derived by hand and exact. Boundary a+b = L is
+**passive**, unambiguously, min ε″ = 0 at the interior point x* = b−a. Degenerate a = 0 and b → L both
+survive. And the kernel/gauge (C1) was verified against production code to 4.5e−6 with a control
+confirming the cos(πt/2L) factor is really present — **discharging the shared-assumption worry**, since
+route 1 and (L1) do share the atom kernel and that assumption is now checked against ground truth.
+
+### 🚨🚨 C39 — the finding with the widest blast radius
+
+**The interior-window convention has its own blind spot.** With M₁ ≠ 0 the profile carries strict gain
+matching C9 to 3–4 digits, **but the gain migrates to the seam** as M₁ shrinks: argmin at x/L =
+−0.956, −0.9947, −0.99946, −0.99995 for M₁ = 1e−1 … 1e−4. **A 0.95L interior window — the replicator's
+pre-registered choice, and the convention used in project scripts — reports PASS for every one.**
+
+So *both* conventions fail, in opposite directions: whole-domain min is blind because the endpoint is
+pinned to zero (C19); a fixed interior window is blind because near-balanced gain hides arbitrarily
+close to the seam. **This affects corpus labels, not just C25** — and therefore potentially C33's
+240/240, which may be agreement on a shared convention rather than a genuine fix. Relayed to the
+auditor mid-flight with three specific checks.
+
+**Free results also registered:** C40 threshold depth law (5-digit match), C41 (only the interval hull
+matters; Cayley form is the *product* ξ₊|ξ₋| ≤ 1), C42 (the a+b = L negative minimum is quadrature,
+O(h²) — a referee will ask).

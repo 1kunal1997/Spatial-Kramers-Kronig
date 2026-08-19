@@ -125,7 +125,12 @@ Attacking the SURVIVING (box-quantified) form on four fronts:
     through the production pipeline, and it interacts with C19/C21).
 
 ## 5. NEXT STEP
-All planned experiments E1,E2,E5,E6,E7,E8,E9,E10,E11 are DONE and on disk.
+**DONE — verdict NARROWED written to `redteam.md`.** Hand A returned and CONFIRMED the Attack-1
+counterexample independently (erf smoothing, both grid conventions, non-power-of-two N,
+own closed form): lam=0.2 passive, sign change at lam*~0.278, grid conventions agree.
+Nothing outstanding. Any successor should read `redteam.md`, not this file.
+
+(historical) All planned experiments E1,E2,E5,E6,E7,E8,E9,E10,E11 are DONE and on disk.
 Outstanding: hand A (general-purpose subagent) was dispatched to re-verify the E1
 counterexample with a DIFFERENT construction (erf/tanh smoothing, both grid conventions,
 non-power-of-two N).  When it returns, fold its table into `redteam.md`.
