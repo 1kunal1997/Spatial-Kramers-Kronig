@@ -1,0 +1,24 @@
+{
+  "session": "fable-goalB",
+  "date": "2026-08-20",
+  "task": "Goal B (V8): minimal spanning set of one-sided passivity conditions",
+  "deliverable": "research/theory/minimal_oneside.md",
+  "evaluator": "exact node test (audited CLEAN) from research/results/fable_ns_answer/common.py; no FFT, no linspace, no production ht_derivative anywhere",
+  "scripts": {
+    "exp1_parents.py": "controls; kills radial-CDF-dominance candidate (28/1315 gain; boundary case 1/2*delta_0 + lambda|outer has gain +0.168 converged); output exp1_output.txt",
+    "exp2_gap.py": "tau-form control (factor-2 bookkeeping noted in output); dilation identity + contraction closure (0/800 violations, expansion control fires 380/800); N-redundancy false for asymmetric (1583/30000); N single-pair threshold sqrt(3); reciprocal-family gap map -> gapmap_reciprocal.npz; contracted-plateau S2 check; output exp2_output.txt",
+    "exp3_even_reduction.py": "N-redundancy false for EVEN profiles (805/30000, bulge up to +0.70); E2 boundary case outer-dirty; adversarial polish; output exp3_output.txt",
+    "exp4_ladder_gapstats.py": "ladder witness S(0.6)+m2*S(2.2), threshold bisect 0.64787983 vs closed form ln(1/0.6)/ln(2.2)=0.64787997; S-tau sector 0/2000 violations, sharp at radius L/4; gap stats: N-leak 1.5% (79/5255), S-coverage 39.8% (2060/5176); output exp4_output.txt"
+  },
+  "data": {
+    "gapmap_reciprocal.npz": "betas(120) x xs(101) boolean maps: passive, Ncond, for x*S(beta)+(1-x)*S(1/beta)"
+  },
+  "claims": ["C57 (Lemmas D+I, proved+verified)", "C58 (Theorem S-tau, proved modulo C55)", "C59 (Proposition NG no-finite-zoo, proved via C55)", "C60 (parents S,N + quantified gap, mixed rungs)"],
+  "rng_seeds": {"exp1": 20260820, "exp2": 7, "exp3": 99, "exp4": 2468},
+  "killed_candidates": [
+    "radial-CDF dominance F(u)>=Wu/L on [L/2,L] (not sufficient)",
+    "outer+centre => passive, general AND even case (both false)",
+    "width-CDF pair-decomposition variant (same mechanism, not pursued past kill)"
+  ],
+  "notes": "sigma>=0 independence of N closed with explicit witness (sigma=-0.185); exp2 block A prints a factor-2 discrepancy which is a bookkeeping half in the check script (Delta = (W/2)*[tau-form]), the identity itself is verified exactly via Lemma I control"
+}

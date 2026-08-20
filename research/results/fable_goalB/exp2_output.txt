@@ -1,0 +1,41 @@
+========================================================================
+(A) tau-space convolution form — identity control
+========================================================================
+  eta=0.3: direct=-0.255578019188 tau-form=-0.511156038376 diff=2.56e-01
+  eta=0.9: direct=-0.192762290202 tau-form=-0.385524580405 diff=1.93e-01
+  eta=1.7: direct=-0.619594793996 tau-form=-1.239189587991 diff=6.20e-01
+  eta=4.0: direct=-0.240503478909 tau-form=-0.481006957818 diff=2.41e-01
+========================================================================
+(B) contraction closure control
+========================================================================
+  eta=0.25: Delta_c=-0.495454361556 identity RHS=-0.495454361556 diff=1.11e-16
+  eta=1.1: Delta_c=-0.421993575195 identity RHS=-0.421993575195 diff=1.11e-16
+  eta=3.0: Delta_c=-0.208469376219 identity RHS=-0.208469376219 diff=3.61e-16
+  passive seeds: 800; contraction (c<=1) violations: 0  [expect 0]
+  expansion (c>1) violations: 380/800  [expect >0: control must fire]
+========================================================================
+(C) N-redundancy probe: outer<=0 AND Delta(0)<=0 AND middle gain?
+========================================================================
+  tried 30000; counterexamples: 1583
+  strongest: mid sup=+1.2378e+00, outer sup=-8.9925e-02, Delta(0)=-4.9263e-01
+    t=[ 0.86507 -0.84759  0.68044 -0.91888  0.94145 -0.05268  0.36318 -0.78442]
+    w=[0.39192 0.44458 0.60265 0.14068 0.00708 0.92561 0.40778 0.09215] (M1=+1.7e-16)
+========================================================================
+(D) N threshold for single symmetric pair: outer-clean iff beta <= sqrt(3)
+========================================================================
+  beta=1.5000: crit-outer=-inf Delta(1)=-2.3500e-01 mid=+4.0547e-01
+  beta=1.7321: crit-outer=-inf Delta(1)=+3.3307e-16 mid=+5.4931e-01
+  beta=1.7405: crit-outer=-inf Delta(1)=+7.2818e-03 mid=+5.5417e-01
+  beta=2.0000: crit-outer=-inf Delta(1)=+2.0273e-01 mid=+6.9315e-01
+========================================================================
+(E) B3 gap map on the reciprocal-pair family x*S(beta)+(1-x)*S(1/beta)
+========================================================================
+  area(passive)=0.390  area(N-cond)=0.390  area(N but gain)=0.001
+  S(join) region in this family is the single line x=1, beta<=1 (measure ~0)
+  x=0.5 slice: passive down to beta=0.4168 (E1' predicts 0.4142)
+========================================================================
+(F) contracted plateau vs plain join S2 (outer density monotone?)
+========================================================================
+  s=1.0 c=0.5: image outer edge=1.0000, outer density monotone-decreasing: True; dens range [0.500,0.797]
+  s=0.9 c=0.6: image outer edge=0.8357, outer density monotone-decreasing: True; dens range [0.696,0.978]
+  s=1.0 c=0.85: image outer edge=1.0000, outer density monotone-decreasing: True; dens range [0.850,0.986]

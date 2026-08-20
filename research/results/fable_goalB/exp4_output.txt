@@ -1,0 +1,32 @@
+========================================================================
+(a) ladder witness: m1*S(0.6) + m2*S(2.2)
+========================================================================
+  m2=0.00: sup=-5.1083e-01 at eta=-0.0000  PASSIVE
+  m2=0.10: sup=-2.4050e-01 at eta=-1.8693  PASSIVE
+  m2=0.20: sup=-2.8368e-01 at eta=-1.6644  PASSIVE
+  m2=0.30: sup=-2.7429e-01 at eta=+0.0000  PASSIVE
+  m2=0.40: sup=-1.9544e-01 at eta=+0.0000  PASSIVE
+  m2=0.50: sup=-1.1660e-01 at eta=+0.0000  PASSIVE
+  m2=0.60: sup=-3.7751e-02 at eta=+0.0000  PASSIVE
+  m2=0.70: sup=+4.1095e-02 at eta=+0.0000  GAIN
+  m2=0.80: sup=+1.1994e-01 at eta=+0.0000  GAIN
+  m2=0.90: sup=+1.9879e-01 at eta=+0.0000  GAIN
+  m2=1.00: sup=+2.7763e-01 at eta=+0.0000  GAIN
+  m2=1.10: sup=+3.5648e-01 at eta=+0.0000  GAIN
+  m2=1.20: sup=+4.3532e-01 at eta=+0.0000  GAIN
+  exact threshold: m2* = 0.64787983 (passive for m2 <= m2*)
+  note: 0.6*2.2 = 1.32 > 1 (bad cross pair), 1/0.6 = 1.6667 != 2.2 (not reciprocal)
+  => every passive point with m2 > 0 is outside cone(good pairs U reciprocal pairs)
+========================================================================
+(b) S-tau control: inversion-symmetric, radii in [1/4, 3/4]
+========================================================================
+  violations: 0/2000  [expect 0 — proved via E1' + mixtures]
+  pure inversion pair u=0.24: sup=+3.1437e-02  expect GAIN
+  pure inversion pair u=0.25: sup=-5.5511e-17  expect boundary~0
+  pure inversion pair u=0.26: sup=+0.0000e+00  expect PASSIVE
+========================================================================
+(c) gap statistics, random even atomic ensemble
+========================================================================
+  tried 12000 random even atomic measures
+  N-satisfying: 5255;  of those with GAIN: 79  (1.5% — the N-side gap)
+  passive: 5176;  certified by S (pair cone): 2060  (39.8% — S-side coverage)

@@ -23,6 +23,34 @@ The Captain has read the solo-session answer and **adjusted the end goal**. Full
 - **V6 amended:** two-sidedness withdrawn (C49 proves it unachievable); **parsimony retained in
   full** and now binds Goal B.
 
+## ⭐ 2026-08-20 solo Fable session #2: GOAL B (V8) IS ANSWERED — read `research/theory/minimal_oneside.md`
+
+Short version (handoff: `research/results/fable_goalB/HANDOFF.md`, claims C57–C60):
+- **The one-sided corpus collapses 10+ → 2 parents.** Theorem S (sufficient: balanced
+  half-period box ⊕ even unimodal, closed under two NEW covariances — Cayley contraction
+  and inversion, each a one-line identity) absorbs C3/C25′/C4/C5/C6/C7. Theorem N
+  (necessary: passivity on the closed outer half |x| ≥ L/2 + centre) absorbs the C8
+  cascade, C9, C13 as its seam jet; σ ≥ 0 = the ω-average of the full law, proved
+  independent of N by explicit witness.
+- **Proposition NG (new, proved): no finite zoo can ever span the passive cone** — 𝒫 is
+  non-polyhedral on every Lemma-E2 atom set. The exact primal mirror of C49, proved by
+  the same Lemma E2: one lemma now kills finite batteries (necessary side) AND finite
+  generator families (sufficient side). V8's "prove no parent exists" branch, delivered
+  for both sides; {S, N} is extendable forever, completable never.
+- **The gap is self-similar (the ladder):** Theorem S-τ — inversion-symmetric drops with
+  radii in [L/4, 3L/4] are passive, **sharp at L/4** (arctan(√2−1) = π/8), proved from
+  C55's Lemma E1′, provably outside S. C3's middle-half motif regenerated on the radius
+  axis. A third rung has a closed-form threshold (numerics, 7 digits).
+- **Gap quantified (B3):** single symmetric pair — passive ⟺ radius ≤ L/2, passes N ⟺
+  radius ≤ 2L/3 (exact); ensembles — N false-passes 1.5%, S certifies 39.8% of passive
+  atomic profiles.
+- **Killed candidates (do not re-walk):** radial-CDF dominance; "outer+centre ⟹ passive"
+  in EVERY symmetry class (805 even counterexamples; a vanishing centre atom defeats any
+  point condition — C48's density theorem made concrete).
+- **Rung dependencies:** C58/C59 lean on C55 (`supported`, red-team pending) — the F1
+  red-team now gates Goal A **and** Goal B. Everything else in the doc is self-contained
+  real analysis + machine-zero controls.
+
 Everything below this line predates the amendment and remains factually current.
 
 ## ⭐ 2026-08-19 solo session: the ONE QUESTION is answered — read `research/theory/ns_answer.md`
