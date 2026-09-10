@@ -85,6 +85,22 @@ model's single `i_prof` interpolation function. Two consequences worth having: t
 longer carries profile data (34 MB -> 0.38 MB), and a figure script can plot exactly what
 COMSOL was fed by reading the same file.
 
+### COMSOL gotchas, all found the hard way
+
+Three properties of a file-source `Interpolation` fail only at solve time, with messages
+that never mention the interpolation file:
+
+1. The function is named after the **feature tag**. `funcname` is ignored for a file
+   source, so the tags are `p_re` and `p_im`. Wrong tag -> "Unknown function or operator".
+2. Use **two two-column files**, not one three-column file. The spreadsheet format reads
+   the leftmost columns as arguments, so `y eps_re eps_im` is a function of TWO arguments
+   -> "Function called with wrong number of arguments".
+3. Set `filename` **before** `struct`, and call `discardData()` before re-pointing at a new
+   file. Set the other way round, `struct` silently reverts to `grid`.
+
+`model_build.py` asserts 1 and 3 at build time, and `skk_lib.set_profile` re-asserts them
+on every swap.
+
 ## Running things
 
 ```bash

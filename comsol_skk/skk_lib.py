@@ -136,33 +136,45 @@ def profile(kind, L, eps_b=EB_DEFAULT, npts=None, **params):
 
 
 def write_profile(name, prof, outdir=PROFILES):
-    """Write a COMSOL spreadsheet-format table: '% comment' header, then `y eps_re eps_im`.
-    The same file is what a figure script plots, so what COMSOL is fed and what gets drawn
-    can never disagree."""
+    """Write the profile as TWO two-column COMSOL spreadsheet files:
+
+        profiles/<name>.re.txt      % header, then `y eps_re`
+        profiles/<name>.im.txt      % header, then `y eps_im`
+
+    Two columns rather than one three-column file because the spreadsheet format reads the
+    leftmost columns as arguments: `y eps_re eps_im` is taken as a function of TWO arguments
+    and every solve fails. Returns the path PREFIX (no extension); pass it to set_profile.
+
+    The same files are what a figure script reads back, so a figure cannot disagree with
+    what COMSOL was fed.
+    """
     os.makedirs(outdir, exist_ok=True)
-    path = os.path.join(outdir, f'{name}.txt')
-    with open(path, 'w') as fh:
-        fh.write(f'% sKK terminator profile: {name}\n')
-        fh.write(f'% written {datetime.date.today().isoformat()} by skk_lib.write_profile\n')
-        fh.write('% ' + json.dumps(prof.meta) + '\n')
-        fh.write(f'% passive={prof.passive()}  one_sidedness={prof.one_sidedness():.4f}%\n')
-        fh.write('% y[m] eps_re eps_im\n')
-        np.savetxt(fh, np.column_stack([prof.y, prof.eps_re, prof.eps_im]), fmt='%.10e')
-    return path
+    prefix = os.path.join(outdir, name)
+    head = (f'% sKK terminator profile: {name}\n'
+            f'% written {datetime.date.today().isoformat()} by skk_lib.write_profile\n'
+            f'% {json.dumps(prof.meta)}\n'
+            f'% passive={prof.passive()}  one_sidedness={prof.one_sidedness():.4f}%\n')
+    for part, col in (('re', prof.eps_re), ('im', prof.eps_im)):
+        with open(f'{prefix}.{part}.txt', 'w') as fh:
+            fh.write(head + f'% y[m] eps_{part}\n')
+            np.savetxt(fh, np.column_stack([prof.y, col]), fmt='%.10e')
+    return prefix
 
 
-def read_profile(path):
-    """Read one back (for figures). Returns (y, eps_re, eps_im, meta_dict)."""
+def read_profile(prefix):
+    """Read a profile back from its two files (for figures -- no COMSOL needed).
+    `prefix` is what write_profile returned. Returns (y, eps_re, eps_im, meta_dict)."""
     meta = {}
-    with open(path) as fh:
+    with open(f'{prefix}.re.txt') as fh:
         for line in fh:
             if not line.startswith('%'):
                 break
             body = line[1:].strip()
             if body.startswith('{'):
                 meta = json.loads(body)
-    d = np.loadtxt(path, comments='%')
-    return d[:, 0], d[:, 1], d[:, 2], meta
+    re_ = np.loadtxt(f'{prefix}.re.txt', comments='%')
+    im_ = np.loadtxt(f'{prefix}.im.txt', comments='%')
+    return re_[:, 0], re_[:, 1], im_[:, 1], meta
 
 
 # ==================================================================== model
@@ -175,14 +187,23 @@ def load(client, geometry='swap'):
     return client.load(path)
 
 
-def set_profile(model, path):
-    """Point the terminator's interpolation function at a profile file and re-read it."""
-    f = model.java.component('comp1').func('i_prof')
-    f.set('filename', str(path))
-    try:
+def set_profile(model, prefix):
+    """Point the terminator's two interpolation functions at a profile and re-read it.
+    `prefix` is what write_profile returned (no extension).
+
+    Order matters twice: discardData() before the new filename (otherwise importData
+    throws), and `struct` after `filename` (set the other way round it reverts to 'grid'
+    and the solve fails with a message that never mentions the file).
+    """
+    comp = model.java.component('comp1')
+    for tag, part in (('p_re', 're'), ('p_im', 'im')):
+        f = comp.func(tag)
+        f.discardData()                       # must come BEFORE the new filename
+        f.set('filename', f'{prefix}.{part}.txt')
+        f.set('struct', 'spreadsheet')
         f.importData()
-    except Exception:
-        f.discardData(); f.importData()
+        if str(f.getString('struct')) != 'spreadsheet':
+            raise RuntimeError(f'{tag}: struct is {f.getString("struct")!r}, not spreadsheet')
 
 
 def set_mesh(model, n_term, grading='uniform', ratio=1.0):

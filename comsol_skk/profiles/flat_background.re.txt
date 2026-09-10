@@ -1,0 +1,7 @@
+% sKK terminator profile: flat_background
+% written 2026-09-09 by skk_lib.write_profile
+% {"kind": "flat", "L_over_lam": 10.0, "eps_b": 2.8899999999999997, "npts": 2, "terminates_in": "eps_b"}
+% passive=True  one_sidedness=nan%
+% y[m] eps_re
+0.0000000000e+00 2.8900000000e+00
+8.0000000000e-06 2.8900000000e+00

@@ -94,15 +94,36 @@ def build(client, geometry='swap', pol='s', save=True):
     os.makedirs(S.PROFILES, exist_ok=True)
     tmpl = S.write_profile('_template_flat',
                            S.profile('flat', 8*S.LAM, eps_b=S.EB_DEFAULT, npts=2))
-    f = comp.func().create('i_prof', 'Interpolation')
-    f.set('source', 'file'); f.set('struct', 'spreadsheet')
-    f.set('filename', str(tmpl)); f.set('nargs', '1')
-    f.setIndex('funcs', 'p_re', 0, 0); f.setIndex('funcs', '1', 0, 1)
-    f.setIndex('funcs', 'p_im', 1, 0); f.setIndex('funcs', '2', 1, 1)
-    f.set('interp', 'linear'); f.set('extrap', 'const')
-    f.set('argunit', 'm'); f.set('fununit', jpype.JArray(jpype.JString)(['1', '1']))
-    f.importData()
-    f.label('terminator profile (from profiles/*.txt)')
+    # ORDER MATTERS: filename first, THEN struct. Set the other way round, `struct` reverts
+    # to 'grid' and a 3-column file is read as a 2-D grid -- the function then wants two
+    # arguments and every solve dies with "Function called with wrong number of arguments".
+    # ('nargs' is a table-source property and is rejected outright for a file source.)
+    def mkfun(name, path):
+        """One interpolation function per part, each reading a TWO-column file.
+
+        Three gotchas, all of which fail only at solve time with messages that never
+        mention the interpolation file:
+          * The function is named after the FEATURE TAG. `funcname` is ignored for a file
+            source, so the tags have to be 'p_re'/'p_im'.
+          * A single 3-column file does not work: the spreadsheet format reads the leftmost
+            columns as arguments, so `y eps_re eps_im` is taken as a function of TWO
+            arguments -> "Function called with wrong number of arguments".
+          * Set `filename` BEFORE `struct`, or struct silently reverts to 'grid'.
+        """
+        f = comp.func().create(name, 'Interpolation')
+        f.set('source', 'file')
+        f.set('filename', str(path))
+        f.set('struct', 'spreadsheet')
+        f.set('interp', 'linear'); f.set('extrap', 'const')
+        f.set('argunit', 'm'); f.set('fununit', '1')
+        f.importData()
+        assert str(f.getString('struct')) == 'spreadsheet', 'struct did not stick'
+        assert str(f.getStringMatrix('funcs')[0][0]) == name, 'function name is not the tag'
+        f.label(f'terminator {name} (from profiles/*.{name[-2:]}.txt)')
+        return f
+
+    mkfun('p_re', tmpl + '.re.txt')
+    mkfun('p_im', tmpl + '.im.txt')
 
     # ------------------------------------------------------------ physics
     m1 = comp.material().create('mat1', 'Common'); m1.label('background')
