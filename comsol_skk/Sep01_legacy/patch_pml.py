@@ -1,8 +1,8 @@
 """Re-run the PML sections with a finely-meshed companion domain so the measured
 floor is the PML's, not the uniform-region under-resolution."""
 import os, sys, time, numpy as np, jpype, mph
-ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__))); HERE=os.path.dirname(os.path.abspath(__file__))
-MODEL=os.path.join(ROOT,'Comsol Files','skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
+ROOT=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); HERE=os.path.dirname(os.path.abspath(__file__))
+MODEL=os.path.join(HERE, 'skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
 lam=0.8e-6; EB=1.7**2
 FINE='range(0,1,89)'; COARSE='0 10 20 30 40 50 60 70 80 89'
 t0=time.time()

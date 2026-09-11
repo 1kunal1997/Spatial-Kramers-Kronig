@@ -12,10 +12,10 @@ Geometry identical to patch9/patch11 so everything concatenates:
     sKK : L_low = 2 lam, N_low = 400.   PML reference comes from P9_PML_* / P10_PML_*.
 """
 import os, sys, time, numpy as np, jpype, mph
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT); import tmm_helper as tmm_h
-MODEL = os.path.join(ROOT, 'Comsol Files', 'skk_master.mph')
+MODEL = os.path.join(HERE, 'skk_master.mph')
 OUT   = os.path.join(HERE, 'master_data.npz')
 
 lam = 0.8e-6; EB = 1.7**2; WFIX = lam / 5; ELL = 0.5 * lam

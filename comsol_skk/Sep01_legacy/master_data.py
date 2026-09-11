@@ -6,11 +6,11 @@ so any profile can be dropped in and every comparison is genuinely apples-to-app
 """
 import os, sys, time, numpy as np, jpype, mph
 from scipy.signal import hilbert
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT); import tmm_helper as tmm_h
 OUT  = os.path.join(HERE, 'master_data.npz')
-OUTM = os.path.join(ROOT, 'Comsol Files', 'skk_master.mph')
+OUTM = os.path.join(HERE, 'skk_master.mph')
 
 lam = 0.8e-6; NB = 1.7; EB = NB**2
 FINE = 'range(0,1,89)'

@@ -23,10 +23,10 @@ never re-saved, so every earlier n_b = 1.7 result stands.  PML references are re
 air, since the n_b = 1.7 PML numbers are not comparable.
 """
 import os, sys, time, numpy as np, jpype, mph
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT); import tmm_helper as tmm_h
-MODEL = os.path.join(ROOT, 'Comsol Files', 'skk_master.mph')
+MODEL = os.path.join(HERE, 'skk_master.mph')
 OUT   = os.path.join(HERE, 'master_data.npz')
 
 lam = 0.8e-6

@@ -1,9 +1,9 @@
 """Figs 13/14: rerun the logistic with a FIXED w = lam/5 so its feature width matches
 the Lorentzian family's gamma at every thickness (at L=8lam the old L/40 already equalled lam/5)."""
 import os, sys, numpy as np, jpype, mph
-ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__))); HERE=os.path.dirname(os.path.abspath(__file__))
+ROOT=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); HERE=os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,ROOT); import tmm_helper as tmm_h
-MODEL=os.path.join(ROOT,'Comsol Files','skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
+MODEL=os.path.join(HERE, 'skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
 lam=0.8e-6; EB=1.7**2; WFIX=lam/5; FINE='range(0,1,89)'
 client=mph.start(); model=client.load(MODEL); jm=model.java
 comp=jm.component('comp1'); pml=comp.coordSystem('pml1'); STUDY=model.studies()[0]

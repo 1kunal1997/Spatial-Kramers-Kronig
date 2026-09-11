@@ -12,10 +12,10 @@ past 2000, so the low-N sampling is identical to the other equal-cost plots.
 Writes P9_* keys for the new N values, plus the Lorentzian over the full grid.
 """
 import os, sys, time, numpy as np, jpype, mph
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT); import tmm_helper as tmm_h
-MODEL = os.path.join(ROOT, 'Comsol Files', 'skk_master.mph')
+MODEL = os.path.join(HERE, 'skk_master.mph')
 OUT   = os.path.join(HERE, 'master_data.npz')
 
 lam = 0.8e-6; EB = 1.7**2

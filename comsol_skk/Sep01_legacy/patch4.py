@@ -1,9 +1,9 @@
 """Fig 9 redone consistently: ALL profiles keep a FIXED absolute feature width (lam/5),
 and all use the same element scaling. Only the domain length varies -> pure truncation."""
 import os, sys, time, numpy as np, jpype, mph
-ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__))); HERE=os.path.dirname(os.path.abspath(__file__))
+ROOT=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); HERE=os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,ROOT); import tmm_helper as tmm_h
-MODEL=os.path.join(ROOT,'Comsol Files','skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
+MODEL=os.path.join(HERE, 'skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
 lam=0.8e-6; NB=1.7; EB=NB**2; NPTS=6001; A80='80'; WFIX=lam/5
 
 def profile(kind,L):

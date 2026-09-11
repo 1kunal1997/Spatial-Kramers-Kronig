@@ -113,23 +113,11 @@ python fig_angle_vs_terminator.py        # -> figures/angle_vs_terminator*.png
 `exp_angle_vs_terminator.py` + `fig_angle_vs_terminator.py` are the template pair; copy them
 for a new question and keep the basenames matching.
 
-## Legacy (Aug-Sep 2026) — kept until migration, then retired
+## Legacy
 
-`master_data.py`, `patch_pml.py`, `patch2`–`patch14.py`, `make_figures.py` and
-`grazing_figures.py` are the previous harness. They build and use
-`../Comsol Files/skk_master.mph` and `master_data.npz`, and together they produce every
-figure numbered `01`–`31` in `figures/`, i.e. the entire Sep 1 2026 deck. They are left in
-place and working: nothing above touches them, and no result has been re-measured.
+`Sep01_legacy/` holds the harness that produced the 2026-09-01 deck — `master_data.py`,
+`patch*.py`, the two figure scripts, `master_data.npz`, `skk_master.mph` and figures 01–31
+with their `INDEX.md`. Still runnable in place; see its README. Nothing in the new workflow
+imports from it. The generation before that is in `../archive/comsol_skk_aug2026/`.
 
-Two things to know if you run them:
-
-- **`master_data.py` is destructive.** Unlike every patch, it writes `master_data.npz`
-  without merging, so re-running it rebuilds the model *and* wipes ~700 solves of `P2_*`
-  … `P14_*` results. Back up the `.npz` first.
-- Figures `01`–`20` and `29`–`31` come from `make_figures.py`; `21`–`28` come from
-  `grazing_figures.py`. `figures/INDEX.md` maps advisor questions to figure numbers and
-  holds the results tables.
-
-The generation before that (Aug 25–31: `build_*.py`, `plot_*.py`, `run_*.py`,
-`verify_baseline.py`, `inspect_baseline.py`, `sweep_thickness_nb17.py`,
-`taper_ht_analysis.py`, `grazing_study.py`) is in `../archive/comsol_skk_aug2026/`.
+The plan for what to run next is `PLAN.md`.

@@ -1,8 +1,8 @@
 """Re-verify convergence for fig 9 with the CURRENT fixed-width (lam/5) profiles."""
 import os, sys, numpy as np, jpype, mph
-ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__))); HERE=os.path.dirname(os.path.abspath(__file__))
+ROOT=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); HERE=os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,ROOT); import tmm_helper as tmm_h
-MODEL=os.path.join(ROOT,'Comsol Files','skk_master.mph')
+MODEL=os.path.join(HERE, 'skk_master.mph')
 lam=0.8e-6; EB=1.7**2; WFIX=lam/5; A80='80'
 def profile(kind,L):
     y=np.linspace(0.0,L,6001)

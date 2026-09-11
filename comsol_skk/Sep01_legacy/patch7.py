@@ -1,8 +1,8 @@
 """Equal-cost element sweeps at theta = 0, 45, 80, 89 for all terminators + PML."""
 import os, sys, time, numpy as np, jpype, mph
-ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__))); HERE=os.path.dirname(os.path.abspath(__file__))
+ROOT=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); HERE=os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,ROOT); import tmm_helper as tmm_h
-MODEL=os.path.join(ROOT,'Comsol Files','skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
+MODEL=os.path.join(HERE, 'skk_master.mph'); OUT=os.path.join(HERE,'master_data.npz')
 lam=0.8e-6; EB=1.7**2; WFIX=lam/5; ANG='0 45 80 89'; THS=[0.,45.,80.,89.]
 L=8*lam
 def profile(kind):

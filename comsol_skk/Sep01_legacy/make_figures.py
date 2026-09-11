@@ -4,7 +4,7 @@ import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from scipy.signal import hilbert
-ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__))); HERE=os.path.dirname(os.path.abspath(__file__))
+ROOT=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); HERE=os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,ROOT); import tmm_helper as tmm_h
 FIG=os.path.join(HERE,'figures'); os.makedirs(FIG,exist_ok=True)
 D=np.load(os.path.join(HERE,'master_data.npz'))
