@@ -1,0 +1,7 @@
+% sKK terminator profile: flat_air
+% written 2026-09-11 by skk_lib.write_profile
+% {"kind": "flat", "L_over_lam": 1.0, "eps_b": 1.0, "npts": 2, "terminates_in": "eps_b"}
+% passive=True  one_sidedness=nan%
+% y[m] eps_re
+0.0000000000e+00 1.0000000000e+00
+8.0000000000e-07 1.0000000000e+00

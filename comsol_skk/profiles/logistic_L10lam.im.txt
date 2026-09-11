@@ -1,5 +1,5 @@
 % sKK terminator profile: logistic_L10lam
-% written 2026-09-09 by skk_lib.write_profile
+% written 2026-09-11 by skk_lib.write_profile
 % {"kind": "logistic", "L_over_lam": 10.0, "eps_b": 2.8899999999999997, "npts": 5001, "terminates_in": "air", "w": 0.2, "width_units": "lambda"}
 % passive=True  one_sidedness=100.0000%
 % y[m] eps_im

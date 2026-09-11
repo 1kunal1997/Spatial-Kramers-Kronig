@@ -83,6 +83,18 @@ _KINDS = {'logistic': _logistic, 'turned_logistic': _turned_logistic,
 TERMINATES_IN = {'logistic': 'air', 'turned_logistic': 'eps_b',
                  'lorentzian': 'eps_b', 'tapered': 'eps_b', 'flat': 'eps_b'}
 
+#: BACKGROUND RULE (2026-09-11). Every profile sits in AIR (n_bg = 1, eps_b = 1) except the
+#: un-turned logistic from the paper, which needs the n_b -> air index step to carry its
+#: loss and so keeps n_bg = 1.7. With eps_b = 1 the Lorentzians' eps' dips below 1 (to
+#: 1 - A/2, i.e. negative for A = 4): fine -- these are numerical terminators, not materials.
+NB_FOR = {'logistic': 1.7, 'turned_logistic': 1.0, 'lorentzian': 1.0, 'tapered': 1.0,
+          'flat': 1.0}
+
+
+def background(kind):
+    """Background index for a profile kind, per the BACKGROUND RULE above."""
+    return NB_FOR[kind]
+
 
 class Profile:
     __slots__ = ('y', 'eps_re', 'eps_im', 'meta')
@@ -133,6 +145,35 @@ def profile(kind, L, eps_b=EB_DEFAULT, npts=None, **params):
     if any(k in params for k in ('w', 'gam', 'ell')):
         meta['width_units'] = 'lambda'
     return Profile(y, er, ei, meta)
+
+
+def profile_on_nodes(kind, L, N, mode, eps_b=EB_DEFAULT, **params):
+    """Profile defined on the mesh's own N+1 node positions (uniform mesh), for the
+    discrete-Hilbert-transform experiment. COMSOL interpolates linearly between table
+    points, so with the table AT the nodes the profile the model sees is the piecewise-
+    linear interpolant of this sequence -- in both modes. The two modes differ only in how
+    the Hilbert partner is obtained:
+
+        'continuous'  fine-grid pair (the usual profile) sampled at the nodes
+        'dht'         the driving part sampled at the nodes, then the discrete Hilbert
+                      transform OF THAT (N+1)-point sequence -- so the sequence itself is
+                      one-sided within its own Nyquist band
+    """
+    if kind not in ('logistic', 'turned_logistic'):
+        raise ValueError('profile_on_nodes: only the logistic pair is defined by a HT')
+    yn = np.linspace(0.0, L, int(N) + 1)
+    if mode == 'continuous':
+        fine = profile(kind, L, eps_b=eps_b, **params)
+        er = np.interp(yn, fine.y, fine.eps_re); ei = np.interp(yn, fine.y, fine.eps_im)
+    elif mode == 'dht':
+        er, ei = _KINDS[kind](yn, L, eps_b, **params)      # ht_derivative on the node grid
+    else:
+        raise ValueError(mode)
+    meta = dict(kind=kind, L_over_lam=L/LAM, eps_b=eps_b, npts=len(yn), on_nodes=True,
+                ht_mode=mode, terminates_in=TERMINATES_IN[kind],
+                **{k: (v/LAM if k in ('w', 'gam', 'ell') else v) for k, v in params.items()},
+                width_units='lambda')
+    return Profile(yn, er, ei, meta)
 
 
 def write_profile(name, prof, outdir=PROFILES):
@@ -206,6 +247,30 @@ def set_profile(model, prefix):
             raise RuntimeError(f'{tag}: struct is {f.getString("struct")!r}, not spreadsheet')
 
 
+def set_background(model, nb):
+    """Background index. Also sets the stacked model's lower region to match, if present."""
+    model.parameter('n_bg', f'{nb:g}')
+
+
+def set_thickness(model, L):
+    """Terminator thickness in metres (PML or sKK -- same domain in the swap model)."""
+    model.parameter('L_term', f'{L/LAM:g}*lam')
+
+
+def set_lateral(model, n_x):
+    model.parameter('N_x', str(int(n_x)))
+
+
+def set_lower(model, L_low, N_low, eps_re, eps_im=0.0):
+    """Stacked model only: the lower region's thickness, mesh and permittivity. eps_im lets
+    the lower region continue a lossy terminator (e.g. the turned logistic ends at
+    eps_b + i*amp) so a PML placed on it stretches the SAME medium -- no eps'' jump."""
+    model.parameter('L_low', f'{L_low/LAM:g}*lam'); model.parameter('N_low', str(int(N_low)))
+    model.parameter('eps_low', f'{eps_re:.10g}')
+    model.java.component('comp1').physics('ewfd').feature('wee_low').set(
+        'epsilonBis', f'{eps_im:.10g}')
+
+
 def set_mesh(model, n_term, grading='uniform', ratio=1.0):
     """Element count and distribution across the terminator.
 
@@ -238,6 +303,27 @@ def set_pml(model, active, pmlfactor=1):
         pml.set('PMLfactor', str(pmlfactor))
 
 
+SNAPSHOTS = os.path.join(MODELS, 'snapshots')
+
+
+def snapshot(model, name):
+    """Save the model AS CURRENTLY CONFIGURED -- parameters, profile files, mesh grading,
+    PML state -- to Models/snapshots/<name>.mph, with solution data cleared so the file
+    stays small. Open it in the COMSOL GUI, press Compute, and you should reproduce the
+    number stored under the same key in data/<experiment>.npz. The template models in
+    Models/ are never overwritten by this."""
+    os.makedirs(SNAPSHOTS, exist_ok=True)
+    path = os.path.join(SNAPSHOTS, f'{name}.mph')
+    try:
+        model.clear()                       # drop solution / mesh / plot data
+    except Exception:
+        pass
+    model.save(path)
+    print(f'  snapshot -> {os.path.relpath(path, HERE)}  ({os.path.getsize(path)/1e6:.2f} MB)',
+          flush=True)
+    return path
+
+
 def solve_angles(model, angles):
     """Parametric solve over incidence angle. Returns (theta_deg, R) as float arrays."""
     import jpype
@@ -245,9 +331,21 @@ def solve_angles(model, angles):
     plist = ' '.join(f'{a:g}' for a in ang)
     st = model.java.study('std1').feature('stat')
     st.set('plistarr', jpype.JArray(jpype.JString)([plist]))
-    model.solve(model.studies()[0])
-    R = np.asarray(model.evaluate('ewfd.Rtotal')).ravel()
-    return ang[:len(R)], R
+    try:
+        model.solve(model.studies()[0])
+        R = np.asarray(model.evaluate('ewfd.Rtotal')).ravel()
+    except Exception as e:                       # record the failure, keep the sweep going
+        print(f'    !! solve failed: {str(e).splitlines()[0][:70]}', flush=True)
+        return ang, np.full(len(ang), np.nan)
+    if len(R) < len(ang):
+        R = np.concatenate([R, np.full(len(ang) - len(R), np.nan)])
+    return ang, R
+
+
+def key(**kw):
+    """Result-array key for one configuration, e.g. key(kind='tapered', N=100, L=5)
+    -> 'kind=tapered__N=100__L=5'. Experiments also list every key in meta['grid']."""
+    return '__'.join(f'{k}={v:g}' if isinstance(v, float) else f'{k}={v}' for k, v in kw.items())
 
 
 # ==================================================================== data

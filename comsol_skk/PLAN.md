@@ -120,3 +120,26 @@ free.
   constraint that bites is the sum rule, not passivity.
 - **Order:** A → B → C (cheap, closes a question) → D → E. A and B together answer the two
   questions the advisor and post-doc actually asked.
+
+---
+
+## Status 2026-09-11 — all six run (A–E + F stacked), 0°/80°/89°, air background except the paper's logistic
+
+Data in `data/<name>.npz`, figures in `figures/<name>_*.png`, one opened-and-checkable
+model per experiment in `Models/snapshots/`. Details in the session summary; one line each:
+
+| exp | data | one-line result |
+|---|---|---|
+| A budget_vs_length | `budget_vs_length` | L\*(N) ≈ Nλ/10 as predicted; at equal N and equal L the tuned PML (pf=4) wins everywhere; the turned logistic beats the default PML (pf=1) by 2500× at 80° (L=50λ, N=400) |
+| B mesh_grading | `mesh_grading` | at w = λ/50, N = 100, centre-dense r=2 is 10× better than uniform; at w = λ/5 nothing to gain — consistent with r\*. **Caveat:** at L = 10λ the truncation floor (2.5e-9) sits where discretization and truncation reflections *cancel*, so raw R is a bad convergence metric here; redo with \|R − R_converged\| |
+| C lateral_mesh | `lateral_mesh` | sKK profiles move < 0.6 % from N_x = 5 → 20. **PML pf=4 at 80° moves 33 %** (3.96e-8 → 2.62e-8): the PML's grazing number carries a lateral-mesh uncertainty the sKK numbers do not |
+| D discrete_hilbert | `discrete_hilbert` | no difference: the node sequence of the continuous pair is already 99.98–99.9999 % one-sided at N = 50–200; sampling does not break one-sidedness for w = λ/5 |
+| E width_sweep | `width_sweep` | turned logistic flat in w for w ≤ λ/2; ε″ plateau **amp = 0.5 beats 1 at every angle** (R(80) 1.3e-3 vs 4.2e-3) — sweep lower; Lorentzian family best at A = 2 in air; turned logistic beats every Lorentzian variant by ≥3 orders at 0° |
+| F stacked | `stacked` | **R is independent of what is behind the sKK section** (PML pf=1/4, lossy slab, even lossless air) to 3 digits: the residual is 100 % front-face truncation of the sKK part, so at fixed footprint every λ given to a PML is a λ taken from the sKK's truncation length. Stacking never wins |
+
+Two things learned about method, both of which should change the next runs:
+1. **Discretization and truncation reflections interfere.** At L = 10λ, N = 100 the turned
+   logistic gives R(0) = 3.6e-11 while the converged answer is 2.5e-9 — coarser looked
+   *better*. Any mesh study must score \|R − R_converged\|, never R.
+2. The wself bug: `L/40` with L in units of λ gave w in metres. Caught by the L = 10λ
+   cross-check between rules (2.56e-9 vs 2.51e-9 after the fix). Keep such cross-checks.

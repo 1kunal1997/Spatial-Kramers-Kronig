@@ -113,6 +113,16 @@ python fig_angle_vs_terminator.py        # -> figures/angle_vs_terminator*.png
 `exp_angle_vs_terminator.py` + `fig_angle_vs_terminator.py` are the template pair; copy them
 for a new question and keep the basenames matching.
 
+**Checking a result by hand in the GUI.** `python make_snapshots.py` writes one fully
+configured model per experiment to `Models/snapshots/` (parameters, profile files, mesh
+grading, PML state; no solution data). Open one, Study 1 → Compute, then Results → Derived
+Values → Global Evaluation of `ewfd.Rtotal`, and compare with the same key in the data file:
+
+    python -c "import skk_lib as S; r,m = S.load_result('budget_vs_length'); print(r['kind=turned_logistic__rule=wfix__L=10__N=400'])"
+
+The interpolation functions `p_re`/`p_im` point at `profiles/*.re.txt` / `*.im.txt` by
+absolute path; those files are the profile.
+
 ## Legacy
 
 `Sep01_legacy/` holds the harness that produced the 2026-09-01 deck — `master_data.py`,
