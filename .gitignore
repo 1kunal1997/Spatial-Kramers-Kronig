@@ -42,3 +42,4 @@ Rule List.rtf
 # Empty submodule (files moved to root)
 modules/
 sKK-Paper-Overleaf/
+!theory/cfreq_skk/figures/*.png
