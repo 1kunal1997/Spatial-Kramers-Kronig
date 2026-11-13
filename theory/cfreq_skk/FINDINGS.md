@@ -326,3 +326,18 @@ This was the frequency-domain-only figure for advisor update #1.
   - 1 − |τ(ω_r)|² ≈ 0.31 is flat.
   - γ_max ∝ η and ω_p,max ∝ √η.
 - **Caveat.** Small η needs Q ~ 1/η, and single-Lorentz virtual gain never settles in time (B3). So η → 0 is a limit of the frequency-domain design, not an operating regime.
+
+## B3a confirmed in COMSOL (2026-11-12)
+COMSOL 6.4's built-in "Electromagnetic Waves, Transient" interface (`ewt`) with its built-in
+Drude–Lorentz polarization reproduces B3a for the two solid curves. Model and scripts are in
+`comsol/` (see the README there). Result:
+- Gain slab (γ/2|ω″| = 0.5): B3a quantity 243 at t = 60 T_r, same as TMM × FFT.
+- Lossy slab (1.5): 1.000.
+- The complex exit field converges to TMM × FFT at second order in the time step. Median
+  difference: 3.7e‑2 / 9.3e‑3 / 2.3e‑3 (gain slab) and 8.8e‑3 / 2.2e‑3 / 5.4e‑4 (lossy slab)
+  at T_r/100, /200, /400.
+- Figure: `figures/B3a_comsol_check.png`.
+
+The `temw` / `teew` / `ewfd` choice: `teew` (Time Explicit) has no dispersive materials. `ewfd`
+and `emw` are frequency domain. `ewt` takes any number of Drude–Lorentz terms, including a
+negative oscillator strength (checked), so it also covers the two-line medium of B7.
