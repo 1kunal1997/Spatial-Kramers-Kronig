@@ -395,8 +395,27 @@ media fail.
 
 - Above about 2λ the two-pole slabs have a Fabry–Pérot pole above the drive. In the frame
   that decays with the drive, the slab is a gain medium (ε″(ω_c) < 0) between two weak mirrors.
-  Once the round-trip gain beats the mirror loss, it lases. A rough estimate (|τ| = 2.41 per λ,
-  interface |r|² ≈ 0.006) puts the threshold near 3λ.
+  Once the round-trip gain beats the mirror loss, it lases. Threshold estimate (corrected
+  2026-11-14): a pole sits on the drive line when |r′(ω_c)|² |e^{2i n(ω_c) ω_c L/c}| = 1, with
+  the ABSOLUTE spatial growth Im(n ω_c) = −1.25 per λ, not the |τ| = 2.41 relative to vacuum.
+  With |r′|² = 0.0054 this gives L_th = ln(1/|r′|²)/(2·1.25) = 2.09λ, consistent with the table.
+  An earlier estimate of "near 3λ" used |τ| and was wrong.
+- **1λ vs 5λ, time domain (exp_slab_poles.py → B7_{eit,fano2}_thick.png):**
+  - At 5λ, EIT has 6 slab poles above the drive (highest 1.0074 − 0.0313i) and two-line has 5
+    (0.9941 − 0.0369i), by the argument principle.
+  - |t/t_free| grows to 1.0e5 (EIT) and 4.1e3 (two-line) by t = 100 T_r.
+  - The frequency-domain value τ(ω_c) = 0.074 is never reached: above threshold r′²e^{2iφ}
+    dominates the FP denominator and τ(ω_c) is a meaningless analytic continuation.
+  - Numerics: near a material pole at 5λ the TMM product loses precision (bright "blobs" where
+    |t| ~ 1e-8). exp_slab_poles.py uses the closed form t = (1−r′²)e^{iφ}/(1−r′²e^{2iφ}), written
+    so no exponential grows; it is checked against 50-digit mpmath.
+- **FP order (1λ):** m = 0, 1, 2, … along each chain, integers to 1e-3 (B7 panel d labels m = 1).
+  - EIT: m = 1 at 0.9749 − 0.0713i.
+  - Two-line: m = 1 at 0.9857 − 0.0605i, the highest pole, spiralling into the pole at 1.002 − 0.100i.
+  - The absolute index carries the face-reflection phase convention (principal log); the +1 step
+    per dot is what matters.
+- |ε(ω)| maps next to |t(ω)|: B7_{eit,fano2}_eps_map.png. Bright = material poles (×),
+  dark = zeros of ε.
 - Implication: stability is a structure property. Check the poles of t and r for the actual
   structure; the material alone isn't enough. B8 (sKK, about 4–5λ) settles in the time domain.
   **Pole check (2026-11-14):** for the B8 4λ stack (simple target, η = 0.05) the
@@ -406,7 +425,7 @@ media fail.
   drive. This is consistent with weak, local gain (about 0.2λ wide, ε″ ≥ −0.4) and a one-sided
   reflectionless stack with little feedback. B8 panel d (|r_R| map) shows the same.
   Single Lorentz in B8: highest pole −0.028, above the drive, as expected.
-- **Not yet verified in the time domain**, only from the |t(ω)| pole maps.
+- Time-domain verified for 1λ vs 5λ (above); 2–3λ not run in the time domain.
 
 ## TO REVISIT (Kunal): why ω₀ ≠ ω_r exactly in the two-line design (2026-11-14)
 Reminder: be ready to answer "why is the oscillator resonance not at the drive frequency?"
