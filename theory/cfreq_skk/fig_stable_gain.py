@@ -1,7 +1,7 @@
 """Figures B7-B9 (stable virtual gain from passive two-pole media). Reads data/stable_gain.npz
 (exp_stable_gain.py) and data/fdtd_twopole.npz (fdtd_twopole.py); no physics computed here.
   python theory/cfreq_skk/fig_stable_gain.py              # all
-  python theory/cfreq_skk/fig_stable_gain.py slab         # B7: before/after, homogeneous slab
+  python theory/cfreq_skk/fig_stable_gain.py slab         # B7: before/after, homogeneous slab (B7_eit, B7_fano2)
   python theory/cfreq_skk/fig_stable_gain.py skk          # B8: layered one-way-invisible sKK
   python theory/cfreq_skk/fig_stable_gain.py angle        # B9: angles + EIT layer parameters
 """
@@ -49,78 +49,49 @@ def _map(ax, key, poles_list, eta):
     return im
 
 
-def fig_slab():
-    """B7: same eps(w_c) = 1 - 0.3i, single Lorentz (Long et al.) vs EIT / two-line."""
+def fig_slab(stable='eit'):
+    """B7: same eps(w_c) = 1 - 0.3i in a homogeneous 1-lambda slab. Left column: single Lorentz
+    (Long et al.); right column: one STABLE two-pole medium (`stable` = 'eit' or 'fano2').
+    One figure per stable medium (split 2026-11-13: the shared map mixed two different slabs).
+    c, d: log10|t(w)| of THAT slab over complex w (bright = slab poles); white markers = poles of
+    the material eps(w) itself (the slab poles pile up around them, where |eps| -> inf, t -> 0).
+    e, f: |t(t)/t_free(t)| = |tau(t)|, dotted = frequency-domain |tau(w_c)| (same for all media)."""
+    title = {'eit': 'EIT', 'fano2': 'two-line'}[stable]
     fig, axs, _ = C.panel_grid(3, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12)
     (ax_a, ax_b), (ax_c, ax_d), (ax_e, ax_f) = axs
     w = D['slab_w']
-    for ax, names in ((ax_a, ['lorentz']), (ax_b, ['eit', 'fano2'])):
-        axr = None
-        for nm, ls in zip(names, ['-', '--']):
-            e = D[f'slab_eps_{nm}']
-            if axr is None:
-                axr = C.profile_panel(ax, w, e.real, e.imag, xlabel=r'real frequency $\omega/\omega_r$',
-                                      ylab_im=r"$\epsilon''(\omega)$", xlim=(w[0], w[-1]))
-                ax.set_ylabel(r"$\epsilon'(\omega)$", color=C.C_EPS_RE)
-            else:
-                ax.plot(w, e.real, color=C.C_EPS_RE, ls=ls, lw=C.LW_THIN)
-                axr.plot(w, e.imag, color=C.C_EPS_IM, ls=ls, lw=C.LW_THIN)
+    for ax, nm, txt in ((ax_a, 'lorentz', 'single Lorentz'), (ax_b, stable, title)):
+        e = D[f'slab_eps_{nm}']
+        axr = C.profile_panel(ax, w, e.real, e.imag, xlabel=r'real frequency $\omega/\omega_r$',
+                              ylab_im=r"$\epsilon''(\omega)$", xlim=(w[0], w[-1]))
+        ax.set_ylabel(r"$\epsilon'(\omega)$", color=C.C_EPS_RE)
         axr.set_ylim(0, 0.42); ax.set_ylim(0.8, 1.25)
         axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
         ax.axvline(1, color='gray', lw=C.LW_GUIDE, ls=':')
-    ax_b.plot([], [], color='k', lw=C.LW_MAIN, label='EIT'); ax_b.plot([], [], color='k', ls='--', lw=C.LW_THIN, label='two-line')
-    ax_b.legend(loc='upper right', fontsize=5)
-    ax_a.text(0.06, 0.92, 'single Lorentz', transform=ax_a.transAxes, fontsize=6, va='top')
+        ax.text(0.06, 0.92, txt, transform=ax.transAxes, fontsize=6, va='top')
 
     im = _map(ax_c, 'slab_map_lorentz', [(D['slab_poles_lorentz'], 'x')], ETA_SLAB)
-    _map(ax_d, 'slab_map_eit', [(D['slab_poles_eit'], 'x'), (D['slab_poles_fano2'], '+')], ETA_SLAB)
-    for ax in (ax_c, ax_d):
+    _map(ax_d, f'slab_map_{stable}', [(D[f'slab_poles_{stable}'], 'x')], ETA_SLAB)
+    for ax, txt in ((ax_c, 'single Lorentz'), (ax_d, title)):
         ax.set_ylim(D['map_y'][0], D['map_y'][-1])
+        ax.text(0.03, 0.06, txt + r' slab, $1\lambda_r$', transform=ax.transAxes, color='w', fontsize=6)
     _cbar_right(fig, ax_d, im, r'$\log_{10}|t(\omega)|$')
 
     t = D['slab_t']; m = t > 1
-    for ax, names in ((ax_e, ['lorentz']), (ax_f, ['eit', 'fano2'])):
-        for nm, ls in zip(names, ['-', '--']):
-            ax.semilogy(t[m], D[f'slab_tau_{nm}'][m], color=C.C_T, ls=ls, lw=C.LW_THIN)
-            ft, fr = F[f'slab_{nm}_t'], F[f'slab_{nm}_tau']
-            k = (ft > 2) & (ft < 70)
-            ax.plot(ft[k][::FD_EVERY], fr[k][::FD_EVERY], marker='o', mfc='none', mec='k', ms=3,
-                    mew=0.6, ls='none')
-        ax.axhline(1, color='gray', lw=C.LW_GUIDE, ls=':')
+    for ax, nm, txt in ((ax_e, 'lorentz', 'single Lorentz'), (ax_f, stable, title)):
+        tc = META['slab'][nm]['tau_c']
+        ax.semilogy(t[m], D[f'slab_tau_{nm}'][m] * tc, color=C.C_T, lw=C.LW_THIN, label=txt)
+        ft, fr = F[f'slab_{nm}_t'], F[f'slab_{nm}_tau']
+        k = (ft > 2) & (ft < 70)
+        ax.plot(ft[k][::FD_EVERY], fr[k][::FD_EVERY] * tc, marker='o', mfc='none', mec='k', ms=3,
+                mew=0.6, ls='none', label='FDTD')
+        ax.axhline(tc, color=C.C_T, lw=C.LW_GUIDE, ls=':')
         ax.set_xlim(0, 100); ax.set_ylim(1e-2, 1e3)
         ax.set_xlabel(r'time after turn-on ($T_r$)')
-        ax.set_ylabel(r'$|\tau(t)|\,/\,|\tau(\omega_c)|$')
-    ax_f.plot([], [], color=C.C_T, label='EIT'); ax_f.plot([], [], color=C.C_T, ls='--', label='two-line')
-    ax_f.plot([], [], marker='o', mfc='none', mec='k', ms=3, ls='none', label='FDTD')
-    ax_f.legend(loc='upper right', fontsize=5)
-    ax_e.plot([], [], color=C.C_T, label='single Lorentz')
-    ax_e.plot([], [], marker='o', mfc='none', mec='k', ms=3, ls='none', label='FDTD')
-    ax_e.legend(loc='upper left', fontsize=5)
+        ax.set_ylabel(r'$|t(t)/t_{\rm free}(t)|$')
+        ax.legend(loc='upper left', fontsize=5)
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd'), (ax_e, 'e'), (ax_f, 'f')])
-    C.save(fig, os.path.join(OUT, 'B7_stable_virtual_gain.png'))
-
-
-def _td_panel(ax, case, xmax, fdtd=False):
-    t = D[f'{case}_t']; m = (t > 1) & (t <= xmax)
-    M = META['skk'][case]
-    for key, col, ls in (('rL', C.C_R, '-'), ('rR', C.C_R, '--'), ('tauL', C.C_T, '-')):
-        ax.semilogy(t[m], D[f'{case}_eit_{key}'][m], color=col, ls=ls, lw=C.LW_MAIN)
-        ref = M['eit']['rL' if key == 'rL' else 'rR' if key == 'rR' else 'tau']
-        ax.axhline(ref, color=col, ls=':', lw=C.LW_GUIDE)
-    ax.semilogy(t[m], D[f'{case}_fano2_rL'][m], color=C.C_R, ls=':', lw=C.LW_THIN)
-    eta = float(case.split('eta')[1])
-    ml = m & (t < np.log(1e12) / (2 * np.pi * eta))   # unshifted synthesis: drive > 1e-12 of its peak
-    ax.semilogy(t[ml], D[f'{case}_lorentz_rL'][ml], color=C_GRAY, ls='-', lw=C.LW_THIN)
-    if fdtd:
-        for nm in ('eit', 'lorentz'):
-            ft, fr = F[f'{nm}_t_rL'], np.abs(F[f'{nm}_rL'])
-            k = (ft > 2) & (ft < 66)
-            ax.plot(ft[k][::FD_EVERY], fr[k][::FD_EVERY], marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none')
-        ft, fr = F['eit_t_tau'], np.abs(F['eit_tau'])
-        k = (ft > 2) & (ft < 62)
-        ax.plot(ft[k][::FD_EVERY], fr[k][::FD_EVERY], marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none')
-    ax.set_xlim(0, xmax); ax.set_ylim(1e-6, 1e3)
-    ax.set_xlabel(r'time after turn-on ($T_r$)')
+    C.save(fig, os.path.join(OUT, f'B7_{stable}_slab.png'))
 
 
 def fig_skk():
@@ -204,7 +175,7 @@ def fig_angle():
     C.save(fig, os.path.join(OUT, 'B9_angles_eit_layers.png'))
 
 
-FIGS = {'slab': fig_slab, 'skk': fig_skk, 'angle': fig_angle}
+FIGS = {'slab': lambda: (fig_slab('eit'), fig_slab('fano2')), 'skk': fig_skk, 'angle': fig_angle}
 if __name__ == '__main__':
     for nm in (sys.argv[1:] or list(FIGS)):
         FIGS[nm]()
