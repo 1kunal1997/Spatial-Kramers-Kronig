@@ -441,3 +441,41 @@ Reminder: be ready to answer "why is the oscillator resonance not at the drive f
 - It is an O(η²) correction (it vanishes as b → 0), not a detuning knob.
 - EIT and the sKK stacks: each layer's ω₀ is solved in the same way to hit that layer's χ(ω_c), so the ω₀
   spread across layers (B8 EIT: 0.86–1.14 a) is the design, not a mistake.
+
+## Slowest slab mode vs thickness: analytic law (2026-11-14; `exp_slab_poles.py` → B7_pole_vs_thickness.png)
+Homogeneous slab in vacuum, ε(ω_c) = 1 − 0.3i, η = 0.05. Here k(ω) = n(ω)ω/c and r(ω) = (n − 1)/(n + 1).
+1. **Exact pole condition:** r(ω)² e^{2ik(ω)L} = 1.
+   - Modulus part: **L·Im k(ω) = ln|r(ω)|**. Every pole lies on this curve.
+   - Phase part: Re k·L + arg r = mπ. It picks discrete points on the curve, one per FP order m.
+2. **Envelope.** The top of the modulus curve tracks the exact highest pole to within 0.0005 ω_r
+   for L ≥ 0.5λ. Below that, discreteness matters: only a few poles exist.
+3. **First-order closed form** (expanding about ω_c):
+   - Im ω_top(L) ≈ −|ω″| + v_g [g − ln(1/|r|)/L], with g = −Im k(ω_c), v_g = 1/Re k′(ω_c), r = r(ω_c).
+   - Equivalently, the slowest-mode decay rate is κ(L) ≈ v_g[α + ln(1/|r|)/L], evaluated on the real
+     axis. This is the textbook cavity photon decay rate (absorption + mirror leakage).
+   - Settling ⇔ κ(L) > |ω″|.
+   - **Threshold L_th = ln(1/|r(ω_c)|)/g = 2.09λ.** It is the SAME for EIT and two-line, because it
+     depends only on ε(ω_c); dispersion only sets v_g (0.17c EIT, 0.11c two-line), i.e. the slope.
+   - Exact first crossing: 2.125λ (EIT) and 2.25λ (two-line), on a 0.125λ grid.
+4. **Limits.**
+   - L → 0: the top pole goes down to the highest material pole (the FP chain's accumulation point).
+   - L → ∞: the top pole tends to the top of the curve Im k(ω) = 0. That is 0.000 for EIT, because
+     ε″(ω_r) = 0 (a transparency window gives arbitrarily long-lived modes), and −0.010 for two-line.
+5. **Meaning: it is mode lifetime vs drive, not gain per se.**
+   - g = −Im(nω_c) = a|n″| + n′|ω″| for n″ < 0. Virtual gain at ω_c therefore always gives g > 0 and
+     a finite L_th.
+   - Even a gainless nondispersive slab has g = n′|ω″| > 0. For ε = 2, L_th = 3.97λ, exactly
+     equal to its pole law Im ω = ln|r|/(nL).
+   - Any cavity whose photon lifetime exceeds the drive's decay time fails to settle.
+   - Stable for all L requires g ≤ 0, e.g. the B3 lossy slab (ε = 1 + 0.3i).
+   - Reflectionless structures (|r| → 0) push L_th → ∞. This is consistent with B8 having no FP
+     poles near the drive (heuristic for inhomogeneous stacks: there is no single r there).
+6. **Why the material pole is the m → ∞ end** (polariton picture):
+   - The slab samples the medium's dispersion k(ω) at k ≈ mπ/L.
+   - k(ω) → ∞ only at a pole of ε, i.e. the flat, matter-like end of the polariton branch. So
+     ω_m → ω_material as m → ∞.
+   - Large-k modes carry almost all their energy in the oscillators. They decay at the oscillator
+     rate and don't feel the faces, so they are L-independent.
+   - Low-m modes are light-like: they leak through the faces and feel the virtual gain, so they are
+     L-dependent and are the ones that cross the drive.
+   - One band of modes, two ends.

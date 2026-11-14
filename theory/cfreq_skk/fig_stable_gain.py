@@ -6,7 +6,8 @@
   python theory/cfreq_skk/fig_stable_gain.py angle        # B9: angles + EIT layer parameters
   python theory/cfreq_skk/fig_stable_gain.py slab_thick   # B7 1 lam vs 5 lam (B7_{eit,fano2}_thick)
   python theory/cfreq_skk/fig_stable_gain.py eps_map      # |eps(w)| vs |t(w)| maps (B7_{eit,fano2}_eps_map)
-slab_thick / eps_map and the B7 m = 1 label read data/slab_poles.npz (exp_slab_poles.py).
+  python theory/cfreq_skk/fig_stable_gain.py pole_vs_L    # highest slab pole vs thickness (B7_pole_vs_thickness)
+slab_thick / eps_map / pole_vs_L and the two-line B7 maps read data/slab_poles.npz (exp_slab_poles.py).
 """
 import sys, os, json
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -22,8 +23,6 @@ F = np.load(os.path.join(_HERE, 'data', 'fdtd_twopole.npz'))
 META = json.loads(str(D['meta']))
 P = np.load(os.path.join(_HERE, 'data', 'slab_poles.npz'))
 PMETA = json.loads(str(P['meta']))
-LABEL_FP_M = 1        # TEMPORARY (2026-11-14, Kunal): label this Fabry-Perot order in B7 panel d;
-                      # set to None to remove
 C_ORANGE = '#ff7f0e'
 C_GRAY = '#7f7f7f'
 ETA_SLAB = 0.05
@@ -77,13 +76,16 @@ def fig_slab(stable='eit'):
         ax.axvline(1, color='gray', lw=C.LW_GUIDE, ls=':')
         ax.text(0.06, 0.92, txt, transform=ax.transAxes, fontsize=6, va='top')
 
-    im = _map(ax_c, 'slab_map_lorentz', [(D['slab_poles_lorentz'], 'x')], ETA_SLAB)
-    _map(ax_d, f'slab_map_{stable}', [(D[f'slab_poles_{stable}'], 'x')], ETA_SLAB)
+    if stable == 'fano2':        # tall window: shows the broad pole (-0.25) and its FP chain too
+        im = _pmap(ax_c, 'tallmap_t_lorentz', 'tall_x', 'tall_y', 'lorentz')
+        _pmap(ax_d, 'tallmap_t_fano2', 'tall_x', 'tall_y', 'fano2')
+    else:
+        im = _map(ax_c, 'slab_map_lorentz', [(D['slab_poles_lorentz'], 'x')], ETA_SLAB)
+        _map(ax_d, f'slab_map_{stable}', [(D[f'slab_poles_{stable}'], 'x')], ETA_SLAB)
+        for ax in (ax_c, ax_d):
+            ax.set_ylim(D['map_y'][0], D['map_y'][-1])
     for ax, txt in ((ax_c, 'single Lorentz'), (ax_d, title)):
-        ax.set_ylim(D['map_y'][0], D['map_y'][-1])
         ax.text(0.03, 0.06, txt + r' slab, $1\lambda_r$', transform=ax.transAxes, color='w', fontsize=6)
-    if LABEL_FP_M is not None:
-        _label_fp(ax_d, stable, 1, LABEL_FP_M)
     _cbar_right(fig, ax_d, im, r'$\log_{10}|t(\omega)|$')
 
     t = D['slab_t']; m = t > 1
@@ -101,18 +103,6 @@ def fig_slab(stable='eit'):
         ax.legend(loc='upper left', fontsize=5)
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd'), (ax_e, 'e'), (ax_f, 'f')])
     C.save(fig, os.path.join(OUT, f'B7_{stable}_slab.png'))
-
-
-def _label_fp(ax, nm, L, m):
-    """Circle + label the slab pole of Fabry-Perot order m (exp_slab_poles.fp_order)."""
-    pl, ms = P[f'poles_{nm}_L{L:g}'], P[f'm_{nm}_L{L:g}']
-    k = np.nonzero(np.abs(ms - m) < 1e-3)[0]
-    if not k.size:
-        return
-    z = pl[k[0]]
-    ax.plot(z.real, z.imag, marker='o', ms=7, mfc='none', mec='c', mew=0.7, ls='none')
-    ax.annotate(rf'$m={m}$', (z.real, z.imag), xytext=(z.real - 0.045, z.imag - 0.03),
-                color='c', fontsize=6, arrowprops=dict(arrowstyle='-', color='c', lw=0.6))
 
 
 def _pmap(ax, key, xkey, ykey, nm, lim=MAP_LIM):
@@ -151,7 +141,7 @@ def fig_slab_thick(stable='eit'):
     t = P['td_t']; m = t > 1
     for axm, axt, L in ((ax_c, ax_e, 1.0), (ax_d, ax_f, 5.0)):
         key = f'{stable}_L{L:g}'
-        im = _pmap(axm, f'map_{key}', 'map_x', 'map_y', stable)
+        im = _pmap(axm, f'map_{key}', 'map_x', PMETA[stable]['map_y'], stable)
         axm.text(0.03, 0.06, rf'{title} slab, ${L:g}\lambda_r$', transform=axm.transAxes,
                  color='w', fontsize=6)
         tc = PMETA[stable][f'L{L:g}']['tau_c']
@@ -190,6 +180,37 @@ def fig_eps_map(stable='eit'):
     _cbar_right(fig, ax_b, im, r'$\log_{10}|t(\omega)|$')
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b')])
     C.save(fig, os.path.join(OUT, f'B7_{stable}_eps_map.png'))
+
+
+def fig_pole_vs_L():
+    """Highest slab pole (slowest-decaying Fabry-Perot mode) vs thickness of the homogeneous
+    eps(w_c) = 1 - 0.3i slab; a EIT, b two-line. Exact poles (line + dots); envelope of the exact
+    modulus condition L Im k(w) = ln|r(w)| (every pole lies on that curve); first-order closed
+    form Im w_c + v_g [g - ln(1/|r|)/L]; drive line (dashed); highest material pole (dash-dot)."""
+    fig, axs, _ = C.panel_grid(1, 2, margin_l=0.47)
+    L = P['sweep_L']
+    for ax, nm, title in ((axs[0][0], 'eit', 'EIT'), (axs[0][1], 'fano2', 'two-line')):
+        sw = PMETA[nm]['sweep']
+        ax.plot(L, P[f'sweep_top_{nm}'].imag, color=C.C_T, lw=C.LW_MAIN, marker='o', ms=1.6,
+                label='highest slab pole (exact)')
+        ax.plot(L, P[f'sweep_env_{nm}'], color=C_ORANGE, lw=C.LW_THIN,
+                label=r'envelope: $L\,{\rm Im}\,k(\omega)=\ln|r(\omega)|$')
+        ax.plot(L, P[f'sweep_lin_{nm}'], color=C_GRAY, lw=C.LW_THIN, ls=':',
+                label=r'$-|\omega^{\prime\prime}|+v_g\,[g-\ln(1/|r|)/L]$')
+        ax.axhline(-ETA_SLAB, color='k', lw=C.LW_GUIDE, ls='--')
+        ax.text(9.8, -ETA_SLAB + 0.002, 'drive', fontsize=6, ha='right')
+        ax.axhline(sw['top_material_pole'], color=C.C_EPS_IM, lw=C.LW_GUIDE, ls='-.',
+                   label='highest material pole')
+        ax.axvline(sw['L_th_first_order'], color=C_GRAY, lw=C.LW_GUIDE, ls=':')
+        ax.text(sw['L_th_first_order'] + 0.15, -0.115, rf"$L_{{\rm th}}={sw['L_th_first_order']:.2f}\lambda_r$",
+                fontsize=6, color=C_GRAY)
+        ax.set_xlim(0, L[-1]); ax.set_ylim(-0.12, 0.005)
+        ax.set_xlabel(r'slab thickness $L/\lambda_r$')
+        ax.set_ylabel(r'Im $\omega/\omega_r$ of slowest mode')
+        ax.text(0.04, 0.92, title, transform=ax.transAxes, fontsize=6, va='top')
+    axs[0][0].legend(loc='lower right', bbox_to_anchor=(1.0, 0.11), fontsize=4.5)
+    C.label_panels(fig, [(axs[0][0], 'a'), (axs[0][1], 'b')])
+    C.save(fig, os.path.join(OUT, 'B7_pole_vs_thickness.png'))
 
 
 def fig_skk():
@@ -275,7 +296,7 @@ def fig_angle():
 
 FIGS = {'slab': lambda: (fig_slab('eit'), fig_slab('fano2')), 'skk': fig_skk, 'angle': fig_angle,
         'slab_thick': lambda: (fig_slab_thick('eit'), fig_slab_thick('fano2')),
-        'eps_map': lambda: (fig_eps_map('eit'), fig_eps_map('fano2'))}
+        'eps_map': lambda: (fig_eps_map('eit'), fig_eps_map('fano2')), 'pole_vs_L': fig_pole_vs_L}
 if __name__ == '__main__':
     for nm in (sys.argv[1:] or list(FIGS)):
         FIGS[nm]()

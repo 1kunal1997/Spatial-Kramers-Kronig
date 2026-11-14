@@ -6,7 +6,13 @@ with eps(w_c) = 1 - 0.3i (B7's slab), eta = 0.05.
   2. Fabry-Perot order m of each 1 lam slab pole, from the exact symmetric-slab pole condition
      e^{2inkL} = ((n+1)/(n-1))^2  ->  m = (n k L + i ln((n+1)/(n-1))) / pi  (an integer at a pole;
      principal branches, so the absolute index carries the face-reflection-phase convention).
-  3. log10|eps(w)| and log10|t(w)| (1 lam) over a taller window that holds every material pole.
+  3. log10|eps(w)| and log10|t(w)| (1 lam) over a taller window that holds every material pole
+     (the two-line maps always use this window: its broad pole is at -0.25).
+  4. Thickness sweep: the highest slab pole vs L, against (i) the envelope of the exact modulus
+     condition |r(w)|^2 e^{-2 Im k(w) L} = 1 (top of the curve L Im k(w) = ln|r(w)| on which every
+     pole lies), its L -> inf limit (top of Im k(w) = 0), and (ii) the first-order closed form
+     Im w_top ~ Im w_c + v_g [g - ln(1/|r|)/L],  g = -Im k(w_c), v_g = 1/Re k'(w_c)  (a cavity
+     'laser rate equation'; threshold L_th = ln(1/|r(w_c)|)/g).
 
 Writes data/slab_poles.npz (+ meta). Figures: fig_stable_gain.py slab_thick, eps_map, slab.
 Run: python theory/cfreq_skk/exp_slab_poles.py   (~2 min)
@@ -24,6 +30,9 @@ THICK = (1.0, 5.0)
 XR, YI = (0.85, 1.15, 361), (-0.17, 0.006, 265)          # B7 map window, finer grid
 YI_TALL = (-0.30, 0.006, 460)                             # holds the two-line broad pole (-0.25)
 T_MAX = 100.0
+SWEEP_L = np.round(np.arange(0.125, 10.0001, 0.125), 4)
+SW_X, SW_Y = (0.6, 1.5, 900), (-0.30, 0.03, 660)          # pole search window for the sweep
+ENV_Y = (-0.30, 0.03, 1321)                               # finer rows for the envelope
 
 
 def t_of(name, p, L, w):
@@ -85,6 +94,47 @@ def count_above(name, p, L, lo, a, xr=(0.05, 4.0), top=0.05, n=40000):
     return float(np.round((ph[-1] - ph[0]) / (2 * np.pi), 3))
 
 
+def top_pole(name, p, L, x, y, a, n_ref=12):
+    """Highest pole of t in the window: grid local maxima, Newton on the n_ref highest."""
+    W = (x[None, :] + 1j * y[:, None]) * a
+    lt = np.log10(np.abs(t_of(name, p, L, W)))
+    c = lt[1:-1, 1:-1]; m = np.ones_like(c, bool)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dy or dx:
+                m &= c > lt[1 + dy:lt.shape[0] - 1 + dy, 1 + dx:lt.shape[1] - 1 + dx]
+    iy, ix = np.nonzero(m)
+    order = np.argsort(-y[iy + 1])[:n_ref]
+    best = None
+    for z in (x[ix[order] + 1] + 1j * y[iy[order] + 1]) * a:
+        for _ in range(60):
+            h = 1e-7 * a
+            f0 = 1 / t_of(name, p, L, [z])[0]; f1 = 1 / t_of(name, p, L, [z + h])[0]
+            dz = f0 / ((f1 - f0) / h); z -= dz
+            if abs(dz) < 1e-13 * a:
+                break
+        if abs(1 / t_of(name, p, L, [z])[0]) < 1e-8 and (best is None or z.imag > best.imag):
+            best = z
+    return best / a
+
+
+def envelope_top(name, p, Ls, a):
+    """Top (max Im w) of the curve L Im k(w) = ln|r(w)| for each L (L = inf: Im k = 0), on a
+    grid; sign changes across a branch flip of n (F -> -F) are discarded."""
+    x = np.linspace(*SW_X); y = np.linspace(*ENV_Y)
+    W = (x[None, :] + 1j * y[:, None]) * a
+    n = np.sqrt(E.MODELS[name](W.ravel(), p)[:, 0]).reshape(W.shape)
+    imk, lnr = (n * W).imag, np.log(np.abs((n - 1) / (n + 1)))
+    same = np.abs(n[1:] - n[:-1]) < np.abs(n[1:] + n[:-1])
+    ym = 0.5 * (y[1:] + y[:-1])[:, None] * np.ones((1, x.size))
+    out = []
+    for L in Ls:
+        F = imk - lnr / L if np.isfinite(L) else imk
+        cross = (np.sign(F[1:]) != np.sign(F[:-1])) & same
+        out.append(ym[cross].max() if cross.any() else np.nan)
+    return np.array(out)
+
+
 if __name__ == '__main__':
     wc = cf.omega_c(ETA); a, b = wc.real, abs(wc.imag)
     D = E.designs(np.array([E.EPS_SLAB - 1]), wc)
@@ -95,11 +145,14 @@ if __name__ == '__main__':
     for nm in ('eit', 'fano2'):
         p = D[nm]; meta[nm] = {}
         data[f'mat_poles_{nm}'] = E.material_poles(nm, p) / a
+        tall = nm == 'fano2'                       # two-line maps: tall window (broad pole -0.25)
+        xm, ym, Wm = (xt, yt, Wt) if tall else (x, y, W)
+        meta[nm]['map_y'] = 'tall_y' if tall else 'map_y'
         for L in THICK:
             key = f'{nm}_L{L:g}'
-            logt = np.log10(np.abs(t_of(nm, p, L, W)))
+            logt = np.log10(np.abs(t_of(nm, p, L, Wm)))
             data[f'map_{key}'] = logt
-            poles = find_poles(nm, p, L, x, y, logt, a)
+            poles = find_poles(nm, p, L, xm, ym, logt, a)
             data[f'poles_{key}'] = poles
             data[f'm_{key}'] = fp_order(nm, p, L, poles, a)
             tau_c = abs(cf.rt(E.MODELS[nm]([wc], p), np.array([L]), [wc])['tauL'][0])
@@ -123,6 +176,28 @@ if __name__ == '__main__':
             print(f'   1 lam pole {z.real:.4f}{z.imag:+.4f}i   m = {m.real:+.3f}{m.imag:+.3f}i')
         data[f'tallmap_t_{nm}'] = np.log10(np.abs(t_of(nm, p, 1.0, Wt)))
         data[f'tallmap_eps_{nm}'] = np.log10(np.abs(E.MODELS[nm](Wt.ravel(), p)[:, 0])).reshape(Wt.shape)
+        # ---- thickness sweep ----
+        sx, sy = np.linspace(*SW_X), np.linspace(*SW_Y)
+        data[f'sweep_top_{nm}'] = np.array([top_pole(nm, p, L, sx, sy, a) for L in SWEEP_L])
+        data[f'sweep_env_{nm}'] = envelope_top(nm, p, SWEEP_L, a)   # already in units of a
+        k = lambda w: np.sqrt(E.MODELS[nm](np.atleast_1d(w), p)[:, 0]) * np.atleast_1d(w)
+        h = 1e-6 * a; kc = k(wc)[0]; kp = (k(wc + h)[0] - k(wc - h)[0]) / (2 * h)
+        nc = kc / wc; rc = abs((nc - 1) / (nc + 1)); g = -kc.imag; vg = 1 / kp.real
+        data[f'sweep_lin_{nm}'] = (-b + vg * (g - np.log(1 / rc) / SWEEP_L)) / a
+        asym = float(envelope_top(nm, p, [np.inf], a)[0])
+        mp = data[f'mat_poles_{nm}']
+        meta[nm]['sweep'] = dict(g_per_lam=g, vg_over_c=vg, r_c=rc, L_th_first_order=np.log(1 / rc) / g,
+                                 lin_asymptote=(-b + vg * g) / a, exact_asymptote=asym,
+                                 top_material_pole=float(mp.imag.max()))
+        top = data[f'sweep_top_{nm}'].imag
+        i = np.nonzero(top > -ETA)[0]
+        print(f'{nm} sweep: g={g:.4f}/lam v_g={vg:.4f}c |r|={rc:.4f} L_th(1st order)={np.log(1/rc)/g:.3f}; '
+              f'first L with a pole above drive: {SWEEP_L[i[0]] if i.size else None}; '
+              f'asymptote exact {asym:+.4f}, 1st order {(-b + vg*g)/a:+.4f}', flush=True)
+    data['sweep_L'] = SWEEP_L
+    pl = D['lorentz']
+    data['mat_poles_lorentz'] = E.material_poles('lorentz', pl) / a
+    data['tallmap_t_lorentz'] = np.log10(np.abs(t_of('lorentz', pl, 1.0, Wt)))
     data['meta'] = json.dumps(meta)
     np.savez_compressed(os.path.join(_HERE, 'data', 'slab_poles.npz'), **data)
     print('saved data/slab_poles.npz')
