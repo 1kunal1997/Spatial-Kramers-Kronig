@@ -292,13 +292,13 @@ def fig_time():
         # denominator, so it cancels); the exit face sees the drive Ls later
         sh = int(round(Ls / DT))
         tt = t[sh:] - Ls
-        r = np.abs(rt_[sh:]) / np.abs(rf[sh:]) / abs(tau_c)
+        r = np.abs(rt_[sh:]) / np.abs(rf[sh:])           # |t/t_free| -> |tau(w_c)| if it settles
         lab = (rf'$\epsilon(\omega_c)={tgt.real:.0f}{tgt.imag:+.1f}i$, $\gamma/2|\omega^{{\prime\prime}}|={g}$')
         ax_a.semilogy(tt, r, color=col, ls=ls, lw=C.LW_THIN, label=lab)
-    ax_a.axhline(1, color='gray', lw=C.LW_GUIDE, ls=':')
+        ax_a.axhline(abs(tau_c), color=col, lw=C.LW_GUIDE, ls=':')   # freq-domain |tau(w_c)|
     ax_a.set_xlim(0, 60); ax_a.set_ylim(1e-2, 1e3)
     ax_a.set_xlabel(r'time after turn-on ($T_r$)')
-    ax_a.set_ylabel(r'$|t(t)/t_{\rm free}(t)|\,/\,|\tau(\omega_c)|$')
+    ax_a.set_ylabel(r'$|t(t)/t_{\rm free}(t)|$')
     ax_a.legend(loc='upper left', fontsize=5)
 
     # b: complex-w map of |t| for the virtual-gain slab (gam/2|b| = 0.5): poles above w_c

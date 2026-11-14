@@ -56,17 +56,18 @@ def main():
         t, out, tau_c = tmm_fft(chi_im, ratio, eta, Ls)
         free = drive_c(t - Ls, eta)                       # free propagation to the exit face
         ok = np.abs(free) > 1e-10 * np.abs(free).max()
-        q = np.where(ok, np.abs(out) / np.where(ok, np.abs(free), 1), np.nan) / abs(tau_c)
+        q = np.where(ok, np.abs(out) / np.where(ok, np.abs(free), 1), np.nan)
         tt = t - T0 - Ls                                  # time after turn-on at the exit face
         lab = (rf'$\epsilon(\omega_c)=1{chi_im:+.1f}i$, $\gamma/2|\omega^{{\prime\prime}}|={ratio:g}$'
                ' (TMM$\\times$FFT)')
         ax_a.semilogy(tt, q, color=col, lw=C.LW_THIN, label=lab)
+        ax_a.axhline(abs(tau_c), color=col, lw=C.LW_GUIDE, ls=':')
 
         for name, R in runs.items():
             tc = R['t']; ec = R['e_exit'][k] - 1j * R['e_exit'][k + 1]
             fc = drive_c(tc - Ls, eta)
             okc = np.abs(fc) > 1e-10
-            qc = np.abs(ec[okc]) / np.abs(fc[okc]) / abs(tau_c)
+            qc = np.abs(ec[okc]) / np.abs(fc[okc])
             lsty, mlab = styles.get(name, ('-.', name))
             if name == 'dt100_rho0.75':
                 tq = tc[okc] - T0 - Ls
@@ -85,10 +86,9 @@ def main():
 
     ax_a.plot([], [], ls='none', marker='o', ms=2.6, mfc='none', mec='k', mew=0.6,
               label='COMSOL (temw, built-in Drude–Lorentz)')
-    ax_a.axhline(1, color='gray', lw=C.LW_GUIDE, ls=':')
     ax_a.set_xlim(0, 60); ax_a.set_ylim(1e-2, 1e3)
     ax_a.set_xlabel(r'time after turn-on ($T_r$)')
-    ax_a.set_ylabel(r'$|t(t)/t_{\rm free}(t)|\,/\,|\tau(\omega_c)|$')
+    ax_a.set_ylabel(r'$|t(t)/t_{\rm free}(t)|$')
     ax_a.legend(loc='upper left', fontsize=5)
 
     for name in runs:
