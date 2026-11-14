@@ -370,7 +370,20 @@ media fail.
   −0.10 and −0.25 (two-line) or −0.110 and −0.140 (EIT), in units of ω_r.
 - **Slab poles** are the poles of t(ω) of the finite structure, i.e. the bright dots in the
   B7 maps. They are Fabry–Pérot modes and they set the time domain. They pile up against each
-  material pole, where |ε| → ∞ and t → 0.
+  material pole: there |ε| → ∞, so n·L/λ → ∞ and the FP orders m = 0, 1, 2, … run off to
+  infinity there. Checked for the 1λ EIT slab (2026-11-14): the chain of bright dots ending at the
+  material pole 1.0651 − 0.1098i has m = 0, 1, …, 9 exactly, with |ε| = 0.26 → 17.6 along it.
+  The material pole is an accumulation point of slab poles, which is why a material pole above
+  the drive always means failure.
+- **How to read the maps.** Bright dots are slab poles, the only things that ring. × marks a
+  material pole: it is not a pole of t and not a mode of the slab. Near it the faces become
+  near-perfect mirrors (|ε| huge), so the background is dark (t ≈ 0), and that high-finesse
+  cavity has dense, sharp resonances (the bright chain). Dark regions are just |t| < 1, not modes.
+  The sKK figure of merit (τ(ω_c) = 1, r_L(ω_c) = 0) is the value at the ★ only; a |t| = 1
+  contour elsewhere in the plane means nothing.
+- **Criterion.** "Every pole of the structure (t and r share them) strictly below the drive
+  line" is necessary AND sufficient for settling. The material-pole condition is the part of it
+  that does not depend on L.
 - **Highest slab pole vs thickness** for a homogeneous slab with ε(ω_c) = 1 − 0.3i,
   η = 0.05, drive at −0.05:
 
@@ -386,6 +399,26 @@ media fail.
   interface |r|² ≈ 0.006) puts the threshold near 3λ.
 - Implication: stability is a structure property. Check the poles of t and r for the actual
   structure; the material alone isn't enough. B8 (sKK, about 4–5λ) settles in the time domain.
-  Plausibly that's because its gain is weak and local and it is reflectionless, so there is
-  little feedback. This hasn't been checked with a pole map yet.
+  **Pole check (2026-11-14):** for the B8 4λ stack (simple target, η = 0.05) the
+  argument principle finds 0 poles above the drive over Re ω = 0.05–4 ω_r, for both EIT and
+  two-line. The highest poles are −0.1036 (EIT) and −0.0969 (two-line). These sit right at the
+  highest material poles (−0.104 and −0.100), so no Fabry–Pérot "lasing" pole approaches the
+  drive. This is consistent with weak, local gain (about 0.2λ wide, ε″ ≥ −0.4) and a one-sided
+  reflectionless stack with little feedback. B8 panel d (|r_R| map) shows the same.
+  Single Lorentz in B8: highest pole −0.028, above the drive, as expected.
 - **Not yet verified in the time domain**, only from the |t(ω)| pole maps.
+
+## TO REVISIT (Kunal): why ω₀ ≠ ω_r exactly in the two-line design (2026-11-14)
+Reminder: be ready to answer "why is the oscillator resonance not at the drive frequency?"
+- ω_r = Re ω_c is the drive carrier (fixed, unit of frequency). ω₀ is a material parameter chosen
+  by the design so that ε(ω_c) hits the target exactly, including ε′(ω_c) = 1, i.e. Re χ(ω_c) = 0.
+- One Lorentz term at the complex frequency ω_c = a − ib:
+  D(ω_c) = (ω₀² − a² + b² − γb) + i·a(2b − γ), so Re χ(ω_c) = 0 needs ω₀² = a² − b² + γb.
+  B3 (γ = b, ratio 0.5) gives ω₀ = a exactly.
+- Two lines sharing one ω₀ (fano2: γ₁ = 10b, γ₂ = 4b): the real parts Xₙ = ω₀² − a² + b² − γₙb
+  can't both vanish, so the weighted sum must: (f₁/|D₁|²)X₁ − (f₂/|D₂|²)X₂ = 0.
+  With f₂/f₁ = 0.36, |D₁| ≈ 8ab and |D₂| ≈ 2ab, this gives ω₀² = a² + 1.74b², so
+  ω₀ = 1.0022a at η = 0.05.
+- It is an O(η²) correction (it vanishes as b → 0), not a detuning knob.
+- EIT and the sKK stacks: each layer's ω₀ is solved in the same way to hit that layer's χ(ω_c), so the ω₀
+  spread across layers (B8 EIT: 0.86–1.14 a) is the design, not a mistake.
