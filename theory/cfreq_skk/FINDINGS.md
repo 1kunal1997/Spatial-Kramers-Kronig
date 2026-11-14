@@ -341,3 +341,51 @@ Drude–Lorentz polarization reproduces B3a for the two solid curves. Model and 
 The `temw` / `teew` / `ewfd` choice: `teew` (Time Explicit) has no dispersive materials. `ewfd`
 and `emw` are frequency domain. `ewt` takes any number of Drude–Lorentz terms, including a
 negative oscillator strength (checked), so it also covers the two-line medium of B7.
+
+## TO REVISIT (Kunal): why every pole must decay faster than the drive (2026-11-13)
+Reminder: come back to this and understand it quantitatively. It is why Long-type single-Lorentz
+media fail.
+
+**Derivation.**
+1. Linear response, e^{−iωt} convention: y(t) = (1/2π) ∫ H(ω) X(ω) e^{−iωt} dω. Here H is
+   t(ω) or r(ω) of the structure and X is the drive spectrum. TMM × FFT computes exactly this.
+2. For t > 0, e^{−iωt} → 0 in the lower half ω-plane, so the contour can be closed there. The
+   residue theorem turns y(t) into a sum over the poles in the lower half-plane: a pole at ω_n
+   contributes (residue) × e^{−iω_n t}.
+3. A switched-on drive e^{−iω_c t} has X(ω) ∝ 1/(ω − ω_c). That pole gives H(ω_c) e^{−iω_c t},
+   the frequency-domain answer. Each pole ω_n of H gives c_n e^{−iω_n t}
+   = c_n e^{−i(Re ω_n)t} e^{−|Im ω_n| t}, a free oscillation. The turn-on shape changes the
+   amplitudes c_n only, never the exponents.
+4. Dividing by the drive:
+   y/x = H(ω_c) + Σ c_n e^{−(|Im ω_n| − |ω″|)t} e^{−i(Re ω_n − ω′)t}.
+   This settles to H(ω_c) iff |Im ω_n| > |ω″| for every pole n of the structure.
+5. Same statement from the ODE: D(ω_n) = 0 is exactly the condition for the undriven
+   P̈ + γṖ + ω₀²P = 0 to have the solution e^{−iω_n t}. A pole is a frequency at which the
+   system oscillates with no input.
+6. Single Lorentz: the pole is at −iγ/2 and Im ε(ω_c) ∝ (γ − 2|ω″|). Gain at ω_c therefore puts
+   the pole above the drive, so it diverges.
+
+## Material poles are necessary, not sufficient: thick virtual-gain slabs "lase" (2026-11-13)
+- **Material poles** are the poles of ε(ω), a bulk property: −iγ/2 for a single Lorentz;
+  −0.10 and −0.25 (two-line) or −0.110 and −0.140 (EIT), in units of ω_r.
+- **Slab poles** are the poles of t(ω) of the finite structure, i.e. the bright dots in the
+  B7 maps. They are Fabry–Pérot modes and they set the time domain. They pile up against each
+  material pole, where |ε| → ∞ and t → 0.
+- **Highest slab pole vs thickness** for a homogeneous slab with ε(ω_c) = 1 − 0.3i,
+  η = 0.05, drive at −0.05:
+
+| medium | L = 1λ | 2λ | 3λ | 4λ | 6λ |
+|---|---|---|---|---|---|
+| two-line | −0.061 | **−0.050** | −0.044 | −0.040 | −0.035 |
+| EIT | −0.070 | −0.052 | −0.042 | −0.036 | −0.028 |
+| single Lorentz | −0.026 | −0.025 | −0.025 | −0.025 | −0.025 |
+
+- Above about 2λ the two-pole slabs have a Fabry–Pérot pole above the drive. In the frame
+  that decays with the drive, the slab is a gain medium (ε″(ω_c) < 0) between two weak mirrors.
+  Once the round-trip gain beats the mirror loss, it lases. A rough estimate (|τ| = 2.41 per λ,
+  interface |r|² ≈ 0.006) puts the threshold near 3λ.
+- Implication: stability is a structure property. Check the poles of t and r for the actual
+  structure; the material alone isn't enough. B8 (sKK, about 4–5λ) settles in the time domain.
+  Plausibly that's because its gain is weak and local and it is reflectionless, so there is
+  little feedback. This hasn't been checked with a pole map yet.
+- **Not yet verified in the time domain**, only from the |t(ω)| pole maps.
