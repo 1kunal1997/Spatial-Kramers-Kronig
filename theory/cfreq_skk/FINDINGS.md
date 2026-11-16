@@ -479,3 +479,63 @@ Homogeneous slab in vacuum, ε(ω_c) = 1 − 0.3i, η = 0.05. Here k(ω) = n(ω)
    - Low-m modes are light-like: they leak through the faces and feel the virtual gain, so they are
      L-dependent and are the ones that cross the drive.
    - One band of modes, two ends.
+
+## External review triage (2026-11-16)
+A separate claude.ai session (literature only: no code, plots or numbers) listed concerns. Status of each:
+
+**Already covered:**
+- Per-term identity Im ε_j(ω_c) ∝ f_j(γ_j − 2|ω″|): see B3 "Cause" and the B7 notes.
+- A sum of positive-strength Lorentzians can't give stable virtual gain: see B3 "Cause".
+- Global passivity of the two-line medium:
+  - the exact real-axis condition f₂/f₁ ≤ γ₂/γ₁ is used in the design;
+  - min Im ε over real ω ≥ 0 is checked numerically for every layer (META min_im_eps_real).
+- Turn-on independence: B3 tested smooth C∞ turn-ons up to 40 periods, with no change. Theory says
+  the turn-on changes only the residues.
+- Long's own geometry in the time domain: B3d (their perfect lens, 1-D, normal incidence)
+  diverges; the strip pole is at −0.289 against the drive at −0.3185.
+- Prior art for the general "drive slower than every mode" condition: Lalanne & Wu
+  arXiv:2508.10742 and Xue et al. 2026 are already cited in B3.
+- Dynamic range / SNR: B7–B9 caveat 2 (e-folds needed).
+- Synthesized excitation: our TMM × FFT *is* the synthesized protocol (real-frequency response ×
+  spectrum of a truncated decaying drive). The ringing problem therefore shows up identically in
+  Guan-style experiments.
+
+**Worth adding (new notes or to-dos):**
+1. **Negative strength = coupling, not exotic.** A coupled bright + dark oscillator pair (EIT) has
+   positive physical strengths, but its χ, written as partial fractions, is broad-minus-narrow.
+   So the two-line medium is the partial-fraction form of a coupled-resonator meta-atom. Say this
+   in the paper. Sum rule: the net strength f₁ − f₂ = 0.64 f₁ > 0, which is trivially fine.
+2. **Scope of the single-pole identity.** It holds for underdamped Lorentz terms only.
+   - An overdamped term's slow pole −i(γ/2 − √(γ²/4 − ω₀²)) can sit above the line even when
+     γ > 2|ω″|.
+   - A Drude term has a pole at ω = 0, always above any decaying-drive line. Strictly, Drude
+     media (Guan's superlens) never settle asymptotically, although that pole may be weakly
+     excited by a narrowband drive. TO CHECK: residue size and window length for a Drude slab.
+   - Our two-line designs are underdamped: γ₁/2 = 0.25 ω_r < ω₀.
+3. **Finite observation window.** When a pole sits above the line with a small residue, the
+   output tracks the ω_c value for a while before the ringing takes over. Long-type media at
+   η = 0.01 show exactly this plateau (B8 notes). Write the window bound
+   t_obs ≈ ln(A_ss/A_tr)/(|ω″| − |Im ω_n|) and state which regime each result is in.
+4. **Novelty of the thickness law is modest.** Xue et al. (Nat. Commun. 17, 3359, 2026) report a
+   "threshold-like point" where virtual gain balances total loss in a WGM microcavity. That is the
+   lumped version of our L_th. Frame L_th as its distributed / Fabry–Pérot form, with the new parts
+   being: material poles as FP-chain endpoints, and reflectionless sKK pushing L_th → ∞.
+5. **Lalanne & Wu framing.** They argue that complex-frequency "loss compensation" is really an
+   artificial amplifying medium. Our claims are about the settled response at ω_c, not
+   real-frequency loss removal; say so explicitly.
+6. **Optional:** a 2λ map (right at threshold) next to 1λ and 5λ; a general theorem for which
+   multi-pole passive χ allow Im χ(ω_c) < 0 with all poles below the line (our two-line window is
+   one case).
+
+**Not needed now:**
+- The μ side: our structures are non-magnetic. It only matters for Long's lens/superscatterer,
+  which uses μ.
+- Window/periodicity artifacts of Guan-style synthesis: a property of the experiment, not the
+  physics.
+
+**To read** (only 2508.10742 and Xue 2026 verified to exist so far):
+- Lalanne & Wu, arXiv:2508.10742, full text and supplement;
+- Xue et al., Nat. Commun. 17, 3359 (2026);
+- arXiv 2506.03485, 2604.26628, 2605.12842, 2609.29293 (unverified);
+- Baranov–Krasnok–Alù, Optica 2017;
+- Kim et al., PRL 129, 203601 (2022).
