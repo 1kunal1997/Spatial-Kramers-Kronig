@@ -153,6 +153,11 @@ if __name__ == '__main__':
             data['skk_map_x'] = xr / a; data['skk_map_y'] = yi / a
             for name in ('lorentz', 'eit'):
                 data[f'skk_map_{name}'] = cmap_logabs(name, D[name], d, 'rR', xr, yi)
+            # two-line version of B8 (2026-11-16): taller window, its broad poles sit at -0.25
+            yt = a * np.linspace(-0.30, 0.006, 307); data['skk_tall_y'] = yt / a
+            for name in ('lorentz', 'fano2'):
+                data[f'skk_tallmap_{name}'] = cmap_logabs(name, D[name], d, 'rR', xr, yt)
+            data[f'{cname}_fano2_eps_real'] = cf.eps_fano2([a], D['fano2'])[0]
             # angles: frequency domain at w_c, s and p (ideal staircase vs EIT realisation)
             for pol in ('s', 'p'):
                 rows = []
