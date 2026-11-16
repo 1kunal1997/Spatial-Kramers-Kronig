@@ -505,6 +505,21 @@ A separate claude.ai session (literature only: no code, plots or numbers) listed
    positive physical strengths, but its χ, written as partial fractions, is broad-minus-narrow.
    So the two-line medium is the partial-fraction form of a coupled-resonator meta-atom. Say this
    in the paper. Sum rule: the net strength f₁ − f₂ = 0.64 f₁ > 0, which is trivially fine.
+   **Checked (2026-11-16):** at the passivity limit f₂/f₁ = γ₂/γ₁, the two-line χ is *exactly* (to
+   1e-16) a standard EIT medium:
+   - a lossless dark oscillator at ω₀;
+   - a bright oscillator at ω_b² = ω₀² + γ₁γ₂ with damping γ₁ + γ₂ and strength f₁ − f₂;
+   - coupling κ² = ω₀²γ₁γ₂.
+   The design value (0.9 of the limit) is not a standard EIT pair: matching the polynomials forces
+   κ = 0 unless the dark damping is 0. It should be realizable by a more general passive coupled
+   pair (e.g. both oscillators driven), but that is not yet checked. The physical requirement is
+   passivity (ε″ ≥ 0 at all real ω), which holds. The minus sign is a partial-fraction artefact,
+   not a negative-strength material.
+   **The B7 EIT medium is NOT in the two-line family.** Equivalence needs γ_b = γ₁ + γ₂,
+   κ² = ω₀²γ₁γ₂ and ω_b² − ω_d² = γ₁γ₂. B7's EIT has γ_b = 10b and κ = 6ab, so γ₁ + γ₂ = 10b and
+   γ₁γ₂ = 36b², which has no real roots (100 < 144). Its detuning (ω_b² − ω_d² ≈ 8b²) also
+   doesn't match. So the B7 EIT and two-line curves are genuinely different media: they share
+   only ε(ω_c), hence the same settled |τ| but different transients.
 2. **Scope of the single-pole identity.** It holds for underdamped Lorentz terms only.
    - An overdamped term's slow pole −i(γ/2 − √(γ²/4 − ω₀²)) can sit above the line even when
      γ > 2|ω″|.
