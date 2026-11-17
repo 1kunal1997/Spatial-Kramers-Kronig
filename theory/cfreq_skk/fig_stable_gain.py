@@ -72,7 +72,7 @@ def _map(ax, key, poles_list, eta, ykey=None, L=None):
     return im
 
 
-def fig_slab(stable='eit', fdtd=True):
+def fig_slab(stable='eit', fdtd=True, wide=False):
     """B7: same eps(w_c) = 1 - 0.3i in a homogeneous 1-lambda slab. Left column: single Lorentz
     (Long et al.); right column: one STABLE two-pole medium (`stable` = 'eit' or 'fano2').
     One figure per stable medium (split 2026-11-13: the shared map mixed two different slabs).
@@ -80,12 +80,19 @@ def fig_slab(stable='eit', fdtd=True):
     the material eps(w) itself (the slab poles pile up around them, where |eps| -> inf, t -> 0).
     e, f: T(t) = |t(t)/t_free(t)|^2 = |tau(t)|^2, dotted = frequency-domain T(w_c) (same for all
     media). fdtd=False is the presentation version (2026-11-16): titles on a, b; no text boxes or
-    legends."""
+    legends. wide=True (2026-11-17, slide layout): the same six panels as 2 rows x 3 columns, one
+    row per medium (eps, map, T(t)), lettered a-c / d-f across the rows."""
     pres = not fdtd
     title = {'eit': 'EIT', 'fano2': 'two-line'}[stable]
-    fig, axs, _ = C.panel_grid(3, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12,
-                               margin_t=C.LAYOUT_PAD_IN + (0.16 if pres else 0))
-    (ax_a, ax_b), (ax_c, ax_d), (ax_e, ax_f) = axs
+    if wide:   # rows = media; column gaps hold a twin axis / colourbar plus the next y-label
+        fig, axs, _ = C.panel_grid(2, 3, width_in=7.5, margin_l=0.47,
+                                   col_gap=0.16 + 2 * C.YLABEL_W_IN + C.CENTER_GAP_IN,
+                                   margin_t=C.LAYOUT_PAD_IN + (0.16 if pres else 0))
+        (ax_a, ax_c, ax_e), (ax_b, ax_d, ax_f) = axs
+    else:
+        fig, axs, _ = C.panel_grid(3, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12,
+                                   margin_t=C.LAYOUT_PAD_IN + (0.16 if pres else 0))
+        (ax_a, ax_b), (ax_c, ax_d), (ax_e, ax_f) = axs
     w = D['slab_w']
     for ax, nm, txt in ((ax_a, 'lorentz', 'single Lorentz'), (ax_b, stable, title)):
         e = D[f'slab_eps_{nm}']
@@ -112,7 +119,8 @@ def fig_slab(stable='eit', fdtd=True):
     for ax, txt in ((ax_c, 'single Lorentz'), (ax_d, title)):
         if not pres:
             ax.text(0.03, 0.06, txt + r' slab, $1\lambda_r$', transform=ax.transAxes, color='w', fontsize=6)
-    _cbar_right(fig, ax_d, im, r'$\log_{10}T(\omega)$' if pres else r'$\log_{10}|t(\omega)|$')
+    for ax in ((ax_c, ax_d) if wide else (ax_d,)):
+        _cbar_right(fig, ax, im, r'$\log_{10}T(\omega)$' if pres else r'$\log_{10}|t(\omega)|$')
 
     t = D['slab_t']; m = t > 1
     for ax, nm, txt in ((ax_e, 'lorentz', 'single Lorentz'), (ax_f, stable, title)):
@@ -129,8 +137,10 @@ def fig_slab(stable='eit', fdtd=True):
         ax.set_ylabel(r'$T(t)$')
         if not pres:
             ax.legend(loc='upper left', fontsize=5)
-    C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd'), (ax_e, 'e'), (ax_f, 'f')])
-    C.save(fig, os.path.join(OUT, f'B7_{stable}_slab.png' if fdtd else f'B7_{stable}_slab_noFDTD.png'))
+    order = (ax_a, ax_c, ax_e, ax_b, ax_d, ax_f) if wide else (ax_a, ax_b, ax_c, ax_d, ax_e, ax_f)
+    C.label_panels(fig, list(zip(order, 'abcdef')))
+    name = f'B7_{stable}_slab' + ('' if fdtd else '_noFDTD') + ('_wide' if wide else '')
+    C.save(fig, os.path.join(OUT, name + '.png'))
 
 
 def _pmap(ax, key, xkey, ykey, nm, lim=MAP_LIM, L=None):
@@ -497,6 +507,7 @@ def fig_angle():
 
 FIGS = {'slab': lambda: (fig_slab('eit'), fig_slab('fano2')), 'skk': fig_skk, 'angle': fig_angle,
         'skk_fano2': fig_skk_twoline, 'skk_fano2_params': fig_skk_twoline_params, 'slab_noFDTD': lambda: fig_slab('fano2', fdtd=False),
+        'slab_wide': lambda: fig_slab('fano2', fdtd=False, wide=True),
         'slab_thick': lambda: (fig_slab_thick('eit'), fig_slab_thick('fano2')),
         'eps_map': lambda: (fig_eps_map('eit'), fig_eps_map('fano2')), 'pole_vs_L': fig_pole_vs_L}
 if __name__ == '__main__':
