@@ -2,6 +2,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,mathtools,booktabs,enumitem,xcolor,array}
 \usepackage{tcolorbox}
+\usepackage{graphicx}
 \usepackage[colorlinks=true,linkcolor=blue!50!black]{hyperref}
 
 \newcommand{\wi}{|\omega''|}          % decay rate of the drive
@@ -349,5 +350,96 @@ slab's own poles (B8 stack, argument principle) & highest at $\Im\omega=-0.097\,
 \bottomrule
 \end{tabular}
 \end{center}
+
+
+%=====================================================================
+\appendix
+\section{Where the minus sign comes from}\label{app:sign}
+Start without deciding the sign of the second term. Allow each line a real strength of \emph{either} sign:
+\begin{equation}
+  \varepsilon(\omega) = 1 + \frac{f_1}{D_1(\omega)} + \frac{f_2}{D_2(\omega)},\qquad f_1,f_2\in\mathbb R .
+\end{equation}
+(The main text is the case $f_1=\wpa^2>0$, $f_2=-\wpb^2$.)
+
+\paragraph{C2 + C3 force one strength to be negative.}
+Step 2 of C3 holds for each term separately:
+\begin{equation}
+  \Im\frac{f_i}{D_i(\omega_c)} = f_i\,\frac{B_i}{A_i^2+B_i^2},\qquad B_i=\omega_r(\gamma_i-2\wi).
+\end{equation}
+C2 makes every $B_i>0$, so each term's contribution to $\Im\varepsilon(\omega_c)$ has the sign of its $f_i$.
+If both $f_i>0$ (adding the second oscillator with a plus sign), both contributions are positive and $\Im\varepsilon(\omega_c)>0$: loss, for \emph{every} choice of $\omega_0$, $f_i$, $\gamma_i$.
+\begin{result}
+With every pole below the drive line, a sum of positive-strength oscillators is always lossy at $\omega_c$. Gain at $\omega_c$ requires at least one $f_i<0$.
+\end{result}
+
+\paragraph{C1 forces only one to be negative, and it must be the weaker one.}
+Repeating Sec.~2 with general signs, Eq.~\eqref{eq:F} becomes
+\begin{equation}
+  F(\omega) = X\,(f_1\gamma_1+f_2\gamma_2) + \omega^2\gamma_1\gamma_2\,(f_1\gamma_2+f_2\gamma_1)\ \ge 0 .
+\end{equation}
+If both $f_i<0$, both brackets are negative and $F<0$ everywhere: not passive.
+So exactly one strength is negative. Call it $f_2=-\wpb^2$ and write $f_2/f_1=-\rho$.
+That is the minus sign in Eq.~\eqref{eq:eps}, and C1 then says $\rho\le\min(\gamma_1/\gamma_2,\gamma_2/\gamma_1)<1$: the negative term must be the weaker one.
+
+\medskip
+\noindent In words: if you try a second oscillator with a plus sign and impose C1--C3, the conditions tell you $f_2/f_1$ must be negative.
+For $\gamma_1>\gamma_2$, that ratio must lie between $-\gamma_2/\gamma_1$ and $-(\gamma_2-2\wi)/(\gamma_1-2\wi)$.
+The total strength $f_1+f_2>0$ stays positive.
+
+%=====================================================================
+\section{Why the single Lorentz is smooth and the two-line must jump}\label{app:jumps}
+
+\paragraph{What the target asks for.} Write $y+i\delta = r\,e^{i\theta}$. Then
+\begin{equation}
+  \chi_t(y) = \chi_m\frac{\delta^4}{(y+i\delta)^4}W(y) = \chi_m\Big(\frac{\delta}{r}\Big)^4 W(y)\; e^{-4i\theta}.
+\end{equation}
+Walking through the profile from left to right, $\theta$ goes from $\approx\pi$ to $\approx0$.
+So the \emph{direction} of $\chi_t$ in the complex plane turns by $4\times\tfrac12=2$ full turns (1.87 for $|y|\le2$; Fig.~\ref{fig:jumps}a).
+Every layer needs $\chi(\omega_c)$ pointing in its own direction, and the directions go around the clock about twice.
+
+\paragraph{One line: two knobs, so it can follow.} For $\chi=\omega_p^2/D(\omega_c)$, the direction of $\chi$ is set by the direction of
+\begin{equation}
+  D(\omega_c) = \underbrace{\big[\omega_0^2-\omega_r^2-\wi(\gamma-\wi)\big]}_{\text{moved by }\omega_0}
+  \;+\; i\,\underbrace{\omega_r\,(2\wi-\gamma)}_{\text{moved by }\gamma} .
+\end{equation}
+$\omega_0$ moves $D$ left and right, and $\gamma$ moves it up and down. With two independent directions, $D$ can be steered smoothly around the origin as many times as needed. So $\omega_0(y)$ and $\gamma(y)$ are smooth (Fig.~\ref{fig:jumps}b).
+But going around the origin means spending part of every turn in the upper half, where $\Im D>0$, i.e.\ $\gamma<2\wi$ (C2 violated).
+\textbf{The smoothness and the instability are the same fact.}
+
+\paragraph{One line with $\gamma$ fixed: half a turn at most.} Fix $\gamma>2\wi$. Now only $\omega_0$ moves, so $D$ slides along a horizontal line below the real axis ($\Im D = -B<0$).
+From that line, the origin is always seen ``from below''. As $\omega_0$ goes from $0$ to $\infty$, the direction of $D$, and so of $1/D$, can change by at most half a turn (0.44, because $\omega_0$ cannot go below 0).
+It stays on the loss side the whole time (Fig.~\ref{fig:jumps}d).
+
+\paragraph{Two lines with $\gamma_1,\gamma_2$ fixed: half a turn plus one loop.} $G(\omega_0)=1/D_1-\rho/D_2$:
+\begin{itemize}
+  \item \textbf{Far from resonance} ($|\omega_0^2-\omega_r^2|\gg\omega_r\gamma_i$): $1/D_1\approx1/D_2\approx1/(\omega_0^2-\omega_r^2)$, so $G\approx(1-\rho)/(\omega_0^2-\omega_r^2)$.
+  This is a real number, negative below resonance and positive above. It behaves like a single line.
+  \item \textbf{Near resonance:} by Eq.~\eqref{eq:onres} the narrow line wins and $G$ points into the gain half ($\Im G<0$).
+\end{itemize}
+So, as $\omega_0$ sweeps $0\to\infty$, $G$ starts out like a single line, gets dragged once around the origin through the gain side near $\omega_0\approx\omega_r$, and exits like a single line.
+That is half a turn plus one loop: about 1.5 turns, 1.41 because $\omega_0\ge0$ (Fig.~\ref{fig:jumps}e,f).
+There is only one resonance region, so there is only one extra loop.
+
+\paragraph{The jump.} The target needs 1.87 turns, and $\omega_0$ alone can deliver only 1.41.
+So $\omega_0(y)$ cannot follow continuously. At some layer it must snap back to the other end of its range, where $G$ points in the same direction one full turn earlier, and continue from there (Fig.~\ref{fig:jumps}c).
+$\varepsilon(\omega_c)$ is continuous across the jump. Only the recipe $(\omega_0,\wpa)$ jumps, and the neighbouring layers are separate materials anyway.
+
+\begin{result}
+\textbf{Plain version:} across the profile, the target's $\varepsilon(\omega_c)$ has to rotate around the complex plane about twice.
+A single Lorentz can rotate that far smoothly only by letting $\gamma$ drop below $2\wi$, which is the unstable gain.
+A two-line layer with fixed widths rotates only about one and a half times as $\omega_0$ goes from 0 to $\infty$, so the recipe has to restart once partway through.
+That restart is the jump.
+\end{result}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{two_line_jumps.png}
+  \caption{\textbf{a} Direction (phase) of the target $\chi_t(y)$, in turns.
+  \textbf{b} Single-Lorentz recipe (B1s): $\gamma/2\wi$ and $\omega_0/\omega_r$ are smooth, but $\gamma$ dips below $2\wi$ (shaded) where the target has gain.
+  \textbf{c} Two-line recipe (B8): $\omega_0$ jumps twice.
+  \textbf{d, e} Path of the response in the complex plane as $\omega_0$ sweeps $0\to\infty$, with the radius compressed ($r\to r^{0.4}$) so the whole path is visible. The one-line path stays on the loss side. The two-line path makes one extra loop through the gain side, at $\omega_0\approx\omega_r$.
+  \textbf{f} Total turning reachable with $\omega_0$ alone (one line 0.44, two lines 1.41) against what the target needs (1.87).}
+  \label{fig:jumps}
+\end{figure}
 
 \end{document}

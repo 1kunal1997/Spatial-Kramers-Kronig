@@ -596,3 +596,17 @@ A separate claude.ai session (literature only: no code, plots or numbers) listed
   (γ₁ − 2b)/(γ₂ − 2b) < ρ ≤ γ₁/γ₂, but only far off resonance where χ is nearly real: max −Im χ/|χ| = 0.05
   for γ₁ = 4b, γ₂ = 10b, ρ = 0.38. Pure-gain phases are unreachable there, so "γ₁ > γ₂" is a practical
   requirement, not a strict one. One-line summary: at ω_c every line looks as if its width were γ − 2b.
+
+## Lens at fixed k∥ ≠ 0: the background itself does not settle (2026-11-17, preliminary)
+- B3L2_lens_kpar.png (fig_lens_kx, backup, NOT for the talk): TM, Medium 1 outside, Medium 2 refit so
+  ε₂(ω_c) = −ε₁(ω_c), μ₂(ω_c) = −μ₁(ω_c) exactly (γ kept; ω_p, ω₀ change < 0.2 %), so |t(ω_c)|² = 1 at all k∥.
+- At fixed real k∥ ≠ 0, Medium 1's light-line branch points (ω²ε₁μ₁ = k∥², i.e. its grazing waves) sit ABOVE
+  the drive line: Im ω = −0.012, −0.096, −0.199, −0.291 ω_r at k∥/k₀ = 0.1, 0.3, 0.5, 0.8; at k∥ = k₀ one sits
+  exactly on ω_c; for k∥ > k₀ a high-frequency one (6.3 − 0.24i at k₀, 11.3 − 0.07i at 2k₀).
+- So Medium 1 ALONE (no lens, same planes) diverges too: |t(10 T_r)|² = 5.7e6 (0.1k₀), 4.0e4 (0.3k₀), 71 (0.5k₀),
+  vs the lens 3.9e6, 8.5e3, 4.7. Every point is checked on two contours (c, 0.75c), and they agree.
+  At k∥ = 0 Medium 1 alone settles (0.86 at t = 10, → 1) while the lens diverges: normal incidence is the clean test.
+- Not reached: k∥ ≥ 0.8k₀ (the two contours disagree) and evanescent k∥ (|t| ~ e^{2κλ₀} at real ω, beyond double precision).
+- Physics: a source with fixed spatial profile (Long's Gaussian) has fixed real k∥; in any background, waves near
+  grazing at that k∥ decay slower than the drive (in vacuum the branch point ω = k∥ is ON the real axis). Fixed-angle
+  excitation (B9, k∥ = ω sin θ) has no such branch point, which is why B9 settled. TO CHECK before any claim.

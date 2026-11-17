@@ -620,8 +620,8 @@ def fig_slab_wide():
     """B3s 2x3 (slide layout, 2026-11-16): rows = loss slab (1 + 0.3i), gain slab (1 - 0.3i).
     col 1: log10 T(w) over complex w (x = material pole, dashed = drive line, star = w_c).
     col 2: the raw powers at the exit face, no division: |E_out(t)|^2 (blue, COMSOL circles) and
-           what vacuum would deliver there, |E_inc(t - L/c)|^2 (gray dashed); dotted = the driven
-           term alone, T(w_c)|E_inc(t - L/c)|^2.
+           what vacuum would deliver there, |E_inc(t - L/c)|^2 (gray dashed). (The dotted driven-term
+           line T(w_c)|E_inc(t - L/c)|^2 was removed 2026-11-17 for the talk.)
     col 3: T(t) = |E_out(t)|^2 / |E_inc(t - L/c)|^2 = col 2 blue / col 2 gray (B3s c, d).
     Time axis: t - L/c after turn-on (when the first light can reach the exit face)."""
     sys.path.insert(0, os.path.join(_HERE, 'comsol'))
@@ -663,8 +663,6 @@ def fig_slab_wide():
         ok = (x > Ls) & (Pv > 1e-28)                                # nothing reaches the exit before L/c
         axp.semilogy(x[ok], Pv[ok], color='gray', ls='--', lw=C.LW_THIN, label=r'$|E_{\rm inc}(t-L/c)|^2$')
         axp.semilogy(x[ok], Po[ok], color=C.C_T, lw=C.LW_THIN, label=r'$|E_{\rm out}(t)|^2$')
-        axp.semilogy(x[ok], Tc * Pv[ok], color=C.C_T, ls=':', lw=C.LW_GUIDE,
-                     label=r'$T(\omega_c)\,|E_{\rm inc}(t-L/c)|^2$')
         tq, pq = _comsol_raw(tgt.imag, Ls); tq = tq + Ls
         sel = (tq >= 1) & (np.abs(np.round(tq / 5) * 5 - tq) < 1e-6)
         axp.plot(tq[sel], pq[sel], marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none', label='COMSOL')
@@ -800,6 +798,91 @@ def fig_lens():
     C.save(fig, os.path.join(OUT, 'B3L_long_lens.png'))
 
 
+def _lens_kx_setup():
+    """Lens media with Medium 2 refit so eps2(w_c) = -eps1(w_c), mu2(w_c) = -mu1(w_c) EXACTLY
+    (gamma kept; wp, w0 change < 0.2 %), so t(w_c) = 1 at every k_par as in Long Fig. 2c
+    (Table 1 rounding alone gives |t| = 0.40 at 1.5 k0)."""
+    LP = {k: {kk: vv.copy() for kk, vv in v.items()} for k, v in LENS_P.items()}
+    wc = cf.omega_c(LENS_ETA)
+    ev = lambda k, w: cf.eps_lorentz(np.atleast_1d(w), LP[k])[:, 0]
+    for k2, k1 in (('e2', 'e1'), ('m2', 'm1')):
+        chi = -ev(k1, wc)[0] - 1
+        base = -wc ** 2 - 1j * LP[k2]['gam'][0] * wc
+        wp2 = base.imag / np.imag(1 / chi)
+        LP[k2]['wp2'] = np.array([wp2]); LP[k2]['w02'] = np.array([(wp2 / chi - base).real])
+    return LP, ev
+
+
+def _q1_down(w, kx, ev, steps=40):
+    """q1 = sqrt(w^2 eps1 mu1 - kx^2) in Medium 1: Im q1 > 0 just above the real axis (outgoing),
+    continued straight down to Im w (valid while no Medium-1 branch point lies in between)."""
+    w = np.asarray(w, complex); prev = None
+    for s in np.linspace(0, 1, steps + 1):
+        ws = w.real + 1j * (1e-9 - s * (-w.imag + 1e-9))
+        q = np.sqrt(ws ** 2 * ev('e1', ws) * ev('m1', ws) - kx ** 2)
+        q = np.where(q.imag < 0, -q, q) if prev is None else np.where(np.abs(q - prev) > np.abs(q + prev), -q, q)
+        prev = q
+    return q
+
+
+def fig_lens_kx():
+    """B3L2 (backup, 2026-11-17; new block because it is a separate slide): the lens at fixed
+    real k_par (TM, Medium 1 outside), |t(t = 10 T_r)|^2 vs k_par, next to Medium 1 ALONE (no
+    lens, same planes). Frequency domain gives |t(w_c)|^2 = 1 for both. At k_par != 0 Medium 1's
+    own light-line branch points (w^2 eps1 mu1 = k_par^2) sit above the drive line, so even the
+    background never settles. Each point is computed on two contours (c, 0.75c) and kept only if
+    they agree. Range 0-0.7 k0: closer to k0 the branch point reaches the drive itself, and the
+    evanescent side (|t| ~ e^{2 kappa lam0} at real w) is beyond double precision."""
+    LP, ev = _lens_kx_setup()
+    P = np.polynomial.polynomial
+    a = cf.TWO_PI; wc = cf.omega_c(LENS_ETA); k0 = cf.TWO_PI / LENS_LAM0
+    d = np.array([0.5, 1.0, 0.5]) * LENS_LAM0
+
+    def lens(w, kx):
+        w = np.atleast_1d(np.asarray(w, complex))
+        e1, m1, e2, m2 = [ev(k, w) for k in ('e1', 'm1', 'e2', 'm2')]
+        M = cf._layer_product(np.stack([e1, e2, e1], 1), d, w, kx, np.stack([m1, m2, m1], 1), 'p')
+        return cf._rt_from_M(M, _q1_down(w, kx, ev) / e1)[1]
+
+    def medium1(w, kx):
+        w = np.atleast_1d(np.asarray(w, complex))
+        return np.exp(1j * _q1_down(w, kx, ev) * d.sum())
+
+    def top_branch(kx):          # highest root of w^2 eps1 mu1 = kx^2
+        def ND(k):
+            D = np.array([LP[k]['w02'][0], -1j * LP[k]['gam'][0], -1])
+            return P.polyadd(D, [LP[k]['wp2'][0]]), D
+        (Ne, De), (Nm, Dm) = ND('e1'), ND('m1')
+        r = P.polyroots(P.polysub(P.polymul([0, 0, 1], P.polymul(Ne, Nm)), P.polymul([kx ** 2], P.polymul(De, Dm))))
+        return r[np.abs(r) > 1e-6].imag.max()
+
+    t = np.arange(NT) * DT / 2; t_read = 10.0
+    kr = np.round(np.arange(0, 0.701, 0.05), 3)
+    res = {}
+    for nm, fn in (('lens', lens), ('m1', medium1)):
+        vals = []
+        for k in kr:
+            c = 0.28 * a if k == 0 else min(0.28 * a, 0.9 * abs(top_branch(k * k0)))
+            v = []
+            for cc in (c, 0.75 * c):
+                dcx, o = cf.complex_response_shifted(lambda w: fn(w, k * k0), t, LENS_ETA, 5.0, T0, cc)
+                v.append(np.interp(t_read, t - T0, np.abs(o / dcx) ** 2))
+            ok = np.all(np.isfinite(v)) and abs(np.log10(v[0] / v[1])) < 0.02
+            vals.append(v[0] if ok else np.nan)
+            print(f'B3L2 {nm} k/k0={k:.2f}: |t(10)|^2={v[0]:.3g} (check {v[1]:.3g}) {"ok" if ok else "DROPPED"}')
+        res[nm] = np.array(vals)
+    tc = abs(lens([wc], 0.5 * k0)[0]) ** 2
+    fig, axs, _ = C.panel_grid(1, 1, margin_l=0.47)
+    ax = axs[0][0]
+    ax.semilogy(kr, res['lens'], color=C.C_T, marker='o', ms=3, label='lens')
+    ax.semilogy(kr, res['m1'], color='gray', ls='--', marker='s', ms=3, mfc='none', label='Medium 1 alone')
+    ax.axhline(tc, color='k', ls=':', lw=C.LW_GUIDE, label=r'$|t(\omega_c)|^2$ (both)')
+    ax.set_xlabel(r'$k_\parallel/k_0$'); ax.set_ylabel(r'$|t(t)|^2$ at $t=10\,T_r$')
+    ax.set_xlim(0, 0.7)
+    ax.legend(loc='upper right', fontsize=5)
+    C.save(fig, os.path.join(OUT, 'B3L2_lens_kpar.png'))
+
+
 def fig_grow():
     """B4: the stable flip side. A GROWING drive (eta < 0) puts every pole below w_c, so the
     steady state is always reached; LOSSLESS Lorentz media (gam -> 0) then realise a lossy
@@ -841,7 +924,7 @@ def fig_grow():
 FIGS = {'freq': fig_freq, 'freq_simple': fig_freq_simple, 'eta_zero': fig_eta_zero, 'trunc': fig_trunc,
         'time': fig_time, 'grow': fig_grow, 'single_layer': fig_single_layer, 'slab_td': fig_slab_td,
         'slab_td_t': lambda: fig_slab_td('t'), 'slab_td_raw': lambda: fig_slab_td('raw'),
-        'lens': fig_lens, 'slab_wide': fig_slab_wide, 'drive_delay': fig_drive_delay}
+        'lens': fig_lens, 'lens_kx': fig_lens_kx, 'slab_wide': fig_slab_wide, 'drive_delay': fig_drive_delay}
 
 if __name__ == '__main__':
     names = sys.argv[1:] or list(FIGS)
