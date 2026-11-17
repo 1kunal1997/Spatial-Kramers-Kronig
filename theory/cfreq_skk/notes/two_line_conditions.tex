@@ -1,0 +1,353 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools,booktabs,enumitem,xcolor,array}
+\usepackage{tcolorbox}
+\usepackage[colorlinks=true,linkcolor=blue!50!black]{hyperref}
+
+\newcommand{\wi}{|\omega''|}          % decay rate of the drive
+\newcommand{\wpa}{\omega_{p1}}
+\newcommand{\wpb}{\omega_{p2}}
+\renewcommand{\Im}{\operatorname{Im}}
+\renewcommand{\Re}{\operatorname{Re}}
+\newtcolorbox{result}[1][]{colback=blue!3,colframe=blue!40!black,boxrule=0.6pt,arc=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt,#1}
+\newtcolorbox{aside}[1][]{colback=gray!6,colframe=gray!50,boxrule=0.4pt,arc=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt,#1}
+
+\title{The two-line medium: passivity, stability, and gain at $\omega_c$\\[2pt]
+\large step-by-step derivation, all symbols until Sec.~\ref{sec:numbers}}
+\author{}
+\date{2026-11-17}
+
+\begin{document}
+\maketitle
+
+\section{Setup}
+
+Time dependence $e^{-i\omega t}$. Every layer of the stack is the same kind of material,
+\begin{equation}
+  \varepsilon(\omega) = 1 + \frac{\wpa^2}{D_1(\omega)} - \frac{\wpb^2}{D_2(\omega)},
+  \qquad
+  D_i(\omega) = \omega_0^2 - \omega^2 - i\gamma_i\omega ,
+  \label{eq:eps}
+\end{equation}
+with real, positive $\wpa,\wpb,\gamma_1,\gamma_2,\omega_0$. Both lines share the same $\omega_0$.
+The ratio of the two strengths appears everywhere, so give it a name:
+\begin{equation}
+  \rho \equiv \frac{\wpb^2}{\wpa^2} \;>\; 0 .
+\end{equation}
+The drive is $e^{-i\omega_c t}$ with
+\begin{equation}
+  \omega_c = \omega_r - i\wi ,
+\end{equation}
+so it oscillates at $\omega_r$ and its amplitude decays as $e^{-\wi t}$.
+The material parameter $\omega_0$ and the drive frequency $\omega_r$ are \emph{independent numbers}.
+Nowhere below do we assume $\omega_0=\omega_r$ unless it is stated.
+
+\medskip
+\noindent We want three things:
+\begin{enumerate}[label=\textbf{C\arabic*.},leftmargin=3em]
+  \item \textbf{Passive:} $\Im\varepsilon(\omega)\ge 0$ at every \emph{real} frequency $\omega>0$.
+  (Since $\varepsilon(-\omega)=\varepsilon(\omega)^*$ on the real axis, $\omega>0$ is enough.)
+  \item \textbf{Stable:} every pole of $\varepsilon$ decays faster than the drive.
+  \item \textbf{Gain at the drive:} $\Im\varepsilon(\omega_c)<0$.
+\end{enumerate}
+C1 and C2 are statements about the material on its own. Only C3 involves $\omega_c$.
+
+%=====================================================================
+\section{C1: passive at every real frequency}
+
+\paragraph{Step 1: imaginary part of $1/D_i$ for real $\omega$.}
+For real $\omega$, $D_i = (\omega_0^2-\omega^2) - i\gamma_i\omega$. Multiply top and bottom by the conjugate:
+\begin{equation}
+  \frac{1}{D_i} = \frac{D_i^*}{|D_i|^2}
+  = \frac{(\omega_0^2-\omega^2) + i\gamma_i\omega}{|D_i|^2}
+  \quad\Longrightarrow\quad
+  \Im\frac{1}{D_i} = \frac{\gamma_i\,\omega}{|D_i|^2},
+  \qquad |D_i|^2 = (\omega_0^2-\omega^2)^2 + \gamma_i^2\omega^2 .
+\end{equation}
+
+\paragraph{Step 2: imaginary part of $\varepsilon$.}
+\begin{equation}
+  \Im\varepsilon(\omega) = \frac{\wpa^2\gamma_1\,\omega}{|D_1|^2} - \frac{\wpb^2\gamma_2\,\omega}{|D_2|^2}.
+\end{equation}
+
+\paragraph{Step 3: clear the denominators.}
+Multiply by $|D_1|^2|D_2|^2/\omega$, which is positive for $\omega>0$, so the sign does not change:
+\begin{equation}
+  \Im\varepsilon(\omega)\ge 0
+  \iff
+  \wpa^2\gamma_1\,|D_2|^2 - \wpb^2\gamma_2\,|D_1|^2 \;\ge\; 0 .
+  \label{eq:c1a}
+\end{equation}
+
+\paragraph{Step 4: use the shared $\omega_0$.}
+Both denominators contain the same $(\omega_0^2-\omega^2)^2$ because $\omega_0$ is shared. Call it
+\begin{equation}
+  X \equiv (\omega_0^2-\omega^2)^2 \;\ge 0,
+  \qquad |D_i|^2 = X + \gamma_i^2\omega^2 .
+\end{equation}
+Substitute into \eqref{eq:c1a}:
+\begin{align}
+  &\wpa^2\gamma_1\,(X+\gamma_2^2\omega^2) - \wpb^2\gamma_2\,(X+\gamma_1^2\omega^2) \nonumber\\
+  &\quad= X\,\underbrace{\big(\wpa^2\gamma_1 - \wpb^2\gamma_2\big)}_{\equiv\,P}
+   \;+\; \omega^2\,\underbrace{\gamma_1\gamma_2\big(\wpa^2\gamma_2 - \wpb^2\gamma_1\big)}_{\equiv\,Q}
+   \;\equiv\; F(\omega).
+  \label{eq:F}
+\end{align}
+So C1 is: $F(\omega) = X P + \omega^2 Q \ge 0$ for every real $\omega>0$.
+$P$ and $Q$ are two fixed numbers, while $X$ and $\omega^2$ change with $\omega$.
+
+\paragraph{Step 5: necessary conditions (test frequencies).}
+$F\ge0$ has to hold at \emph{every} real $\omega$, so it has to hold at any particular one we choose to test.
+\begin{itemize}
+  \item \textbf{Test at $\omega=\omega_0$.} There $X=0$, so $F=\omega_0^2 Q$. We need $Q\ge0$.
+  \item \textbf{Test at $\omega\to0^+$.} There $X\to\omega_0^4$ and $\omega^2\to0$, so $F\to\omega_0^4 P$. We need $P\ge0$.
+  (The limit $\omega\to\infty$, where $X\approx\omega^4\gg\omega^2$, gives the same thing.)
+\end{itemize}
+
+\begin{aside}
+\textbf{Why are we allowed to set $\omega=\omega_0$ when $\omega_0\neq\omega_r$ in general?}
+In C1, $\omega$ is \emph{any} real frequency, and the drive is not involved at all.
+$\omega=\omega_0$ is just a convenient real frequency to test, because one term of $F$ vanishes there.
+It is not an assumption that the drive is on resonance.
+Physically, $\omega=\omega_0$ is where both lines peak, and $\omega\to0$ or $\infty$ is where only their tails are left.
+\end{aside}
+
+\paragraph{Step 6: sufficiency.}
+If $P\ge0$ and $Q\ge0$, then $F = XP+\omega^2Q$ is a sum of non-negative terms, because $X\ge0$ and $\omega^2>0$.
+So $F\ge0$ at every $\omega$. The two conditions are therefore necessary \emph{and} sufficient.
+
+\paragraph{Step 7: write $P\ge0$, $Q\ge0$ in terms of $\rho$.} Divide by $\wpa^2>0$:
+\begin{equation}
+  P\ge 0 \iff \rho \le \frac{\gamma_1}{\gamma_2}, \qquad
+  Q\ge 0 \iff \rho \le \frac{\gamma_2}{\gamma_1}.
+\end{equation}
+
+\begin{result}
+\textbf{C1 (passivity), exact:}
+\begin{equation}
+  \rho \;\le\; \rho_{\rm pass} \equiv \min\!\left(\frac{\gamma_1}{\gamma_2},\,\frac{\gamma_2}{\gamma_1}\right).
+  \label{eq:C1}
+\end{equation}
+$\omega_0$ has cancelled out. Passivity does not depend on where the lines sit, only on their widths and relative strength.
+\end{result}
+
+Reading: the subtracted line has to lose against the positive line both at the peak (heights $\propto\omega_{pi}^2/\gamma_i$, giving $Q$) and in the tails (heights $\propto\omega_{pi}^2\gamma_i$, giving $P$).
+Whichever line is narrower, one of the two comparisons is the binding one.
+
+%=====================================================================
+\section{C2: every material pole decays faster than the drive}
+
+The poles of $\varepsilon$ are the zeros of $D_1$ and of $D_2$. For line $i$:
+\begin{equation}
+  \omega_0^2-\omega^2-i\gamma_i\omega = 0
+  \iff \omega^2 + i\gamma_i\omega - \omega_0^2 = 0
+  \iff \omega = \frac{-i\gamma_i \pm\sqrt{-\gamma_i^2+4\omega_0^2}}{2}
+  = \pm\sqrt{\omega_0^2-\frac{\gamma_i^2}{4}} \;-\; i\,\frac{\gamma_i}{2}.
+\end{equation}
+For an underdamped line ($\gamma_i<2\omega_0$) the square root is real, so each pole sits at $\Im\omega = -\gamma_i/2$.
+A pole at $\omega_n$ rings as $e^{-i\omega_n t}\propto e^{-(\gamma_i/2)t}$, while the drive decays as $e^{-\wi t}$. So the pole decays faster than the drive exactly when
+\begin{result}
+\textbf{C2 (stability):}
+\begin{equation}
+  \gamma_1 > 2\wi \quad\text{and}\quad \gamma_2 > 2\wi
+  \qquad(\text{assuming } \gamma_i < 2\omega_0).
+  \label{eq:C2}
+\end{equation}
+\end{result}
+\begin{aside}
+\textbf{Caveats.} (i) If a line is overdamped ($\gamma_i>2\omega_0$), its poles lie on the imaginary axis at
+$-i\big[\gamma_i/2\pm\sqrt{\gamma_i^2/4-\omega_0^2}\big]$. The slower one can sit above the drive line even when $\gamma_i>2\wi$, so underdamping has to be checked.
+(ii) C2 is about the \emph{material}. The finished slab also has its own Fabry--P\'erot poles, which are checked numerically (Sec.~\ref{sec:numbers}).
+\end{aside}
+
+%=====================================================================
+\section{C3: gain at the drive frequency}
+
+\subsection*{Step 1: $D_i(\omega_c)$ for any $\omega_0$ (no resonance assumption)}
+Define the detuning
+\begin{equation}
+  \Delta \equiv \omega_0^2 - \omega_r^2 \qquad (\Delta=0 \text{ means on resonance}).
+\end{equation}
+Expand the two pieces:
+\begin{align}
+  \omega_c^2 &= (\omega_r-i\wi)^2 = \omega_r^2 - 2i\omega_r\wi - \wi^2,\\
+  -i\gamma_i\omega_c &= -i\gamma_i(\omega_r - i\wi) = -i\gamma_i\omega_r - \gamma_i\wi .
+\end{align}
+So
+\begin{align}
+  D_i(\omega_c) &= \omega_0^2 - \omega_r^2 + 2i\omega_r\wi + \wi^2 - i\gamma_i\omega_r - \gamma_i\wi \nonumber\\
+  &= \underbrace{\big[\Delta - \wi(\gamma_i-\wi)\big]}_{\equiv\,A_i}
+     \;-\; i\,\underbrace{\omega_r(\gamma_i-2\wi)}_{\equiv\,B_i}.
+  \label{eq:AB}
+\end{align}
+With $\Delta=0$ this is exactly the line in your notes. C2 makes $B_i>0$.
+
+\subsection*{Step 2: imaginary part of $1/D_i(\omega_c)$}
+Multiply by the conjugate as before:
+\begin{equation}
+  \frac{1}{D_i(\omega_c)} = \frac{A_i + iB_i}{A_i^2+B_i^2}
+  \quad\Longrightarrow\quad
+  \Im\frac{1}{D_i(\omega_c)} = \frac{B_i}{A_i^2+B_i^2}
+  = \frac{\omega_r(\gamma_i-2\wi)}{A_i^2+B_i^2}.
+  \label{eq:imD}
+\end{equation}
+
+\subsection*{Step 3: why one line can never do it}
+A single line $\omega_p^2/D$ gives $\Im\chi(\omega_c) = \omega_p^2\,\omega_r(\gamma-2\wi)/(A^2+B^2)$. Its sign is the sign of $\gamma-2\wi$, \emph{whatever} $\omega_0$ and $\omega_p$ are:
+\begin{result}
+\textbf{Single line:} gain at $\omega_c$ $\iff$ $\gamma<2\wi$ $\iff$ its pole decays \emph{slower} than the drive.
+C2 and C3 are the same inequality pointing in opposite directions.
+\end{result}
+This is why Long et al.'s single-Lorentz gain layers have $\gamma<2\wi$, and why they never settle in the time domain.
+The gain has to come from the minus sign in \eqref{eq:eps}.
+
+\subsection*{Step 4: two lines, general detuning}
+From \eqref{eq:imD},
+\begin{equation}
+  \Im\varepsilon(\omega_c) = \wpa^2\frac{B_1}{A_1^2+B_1^2} - \wpb^2\frac{B_2}{A_2^2+B_2^2}.
+\end{equation}
+Under C2 both fractions are positive. Gain needs the second term to win. Divide by $\wpa^2$:
+\begin{equation}
+  \Im\varepsilon(\omega_c)<0 \iff
+  \rho \;>\; \rho_{\rm gain}(\Delta) \equiv \frac{B_1}{B_2}\cdot\frac{A_2^2+B_2^2}{A_1^2+B_1^2}.
+  \label{eq:rhogain}
+\end{equation}
+This is exact. It depends on $\omega_0$ through $\Delta$ (inside $A_i$).
+
+\subsection*{Step 5: your derivation is the $\Delta=0$ case, finished}
+With $\Delta=0$: $A_i=-\wi(\gamma_i-\wi)$ and $B_i=\omega_r(\gamma_i-2\wi)$. Your last line was
+\begin{equation}
+  \Im\varepsilon = \omega_r\left[\frac{\wpa^2(\gamma_1-2\wi)}{|D_1|^2} - \frac{\wpb^2(\gamma_2-2\wi)}{|D_2|^2}\right],
+  \qquad
+  |D_i|^2 = \underbrace{\wi^2(\gamma_i-\wi)^2}_{A_i^2} + \underbrace{\omega_r^2(\gamma_i-2\wi)^2}_{B_i^2}.
+\end{equation}
+The missing step is to compare the two terms of $|D_i|^2$.
+Their ratio is $A_i^2/B_i^2 = (\wi/\omega_r)^2\,(\gamma_i-\wi)^2/(\gamma_i-2\wi)^2$, which is of order $(\wi/\omega_r)^2$.
+So $|D_i|^2\approx\omega_r^2(\gamma_i-2\wi)^2$, and \textbf{one factor of $(\gamma_i-2\wi)$ cancels against the numerator}:
+\begin{equation}
+  \Im\varepsilon(\omega_c)\Big|_{\Delta=0} \approx \frac{1}{\omega_r}\left[\frac{\wpa^2}{\gamma_1-2\wi} - \frac{\wpb^2}{\gamma_2-2\wi}\right].
+  \label{eq:onres}
+\end{equation}
+Compare the passivity test at the real peak $\omega=\omega_0$ from C1:
+\begin{equation}
+  \Im\varepsilon(\omega_0) = \frac{1}{\omega_0}\left[\frac{\wpa^2}{\gamma_1} - \frac{\wpb^2}{\gamma_2}\right].
+\end{equation}
+\begin{result}
+\textbf{The whole trick in one line:} a drive decaying at rate $\wi$ sees every line as if its width were $\gamma_i-2\wi$ instead of $\gamma_i$.
+A narrow line sharpens proportionally more, so a subtracted narrow line can lose on the real axis (passive) and still win at $\omega_c$ (gain).
+\end{result}
+
+\subsection*{Step 6: which detuning is easiest?}
+Is resonance special, or just the case we happened to compute? Look at how $\rho_{\rm gain}$ changes with $\Delta$.
+$A_1$ and $A_2$ differ from $\Delta$ only by $\wi(\gamma_i-\wi)$, which is small next to $B_i$. Setting $A_1\approx A_2\approx\Delta$:
+\begin{equation}
+  \rho_{\rm gain}(\Delta) \approx \frac{B_1}{B_2}\cdot\frac{\Delta^2+B_2^2}{\Delta^2+B_1^2},
+  \qquad
+  \frac{d}{d(\Delta^2)}\,\frac{\Delta^2+B_2^2}{\Delta^2+B_1^2} = \frac{B_1^2-B_2^2}{(\Delta^2+B_1^2)^2}.
+\end{equation}
+Since $B_i=\omega_r(\gamma_i-2\wi)$, the sign of that derivative is the sign of $\gamma_1-\gamma_2$.
+\begin{itemize}
+  \item $\gamma_1>\gamma_2$ (broad positive line, narrow subtracted line): $\rho_{\rm gain}$ is \emph{smallest on resonance}, where
+  $\rho_{\rm gain}(0)=B_2/B_1=(\gamma_2-2\wi)/(\gamma_1-2\wi)$. It grows with $|\Delta|$, so gain is easiest at $\omega_0\approx\omega_r$.
+  \item $\gamma_1<\gamma_2$: $\rho_{\rm gain}$ is smallest far off resonance ($|\Delta|\to\infty$), approaching $(\gamma_1-2\wi)/(\gamma_2-2\wi)$.
+  Out there $\chi$ is almost real, and its gain part is only a small fraction of $|\chi|$.
+  \item $\gamma_1=\gamma_2$: $\rho_{\rm gain}=1$, but C1 needs $\rho\le1$. No gain, because the medium is then one line of strength $\wpa^2-\wpb^2$.
+\end{itemize}
+So for $\gamma_1>\gamma_2$, checking the on-resonance case answers ``does gain exist at all?''.
+Layers that need loss, or a different phase, simply use $\Delta\neq0$ (Sec.~\ref{sec:design}).
+
+%=====================================================================
+\section{All three together (still symbolic)}
+Take $\gamma_1>\gamma_2>2\wi$ (C2). C1 gives $\rho\le\gamma_2/\gamma_1$. C3, at its easiest detuning, gives $\rho>(\gamma_2-2\wi)/(\gamma_1-2\wi)$:
+\begin{result}
+\begin{equation}
+  \frac{\gamma_2-2\wi}{\gamma_1-2\wi} \;<\; \rho \;\le\; \frac{\gamma_2}{\gamma_1}.
+  \label{eq:window}
+\end{equation}
+\end{result}
+\noindent\textbf{Is the window ever non-empty?} Subtract the two ends:
+\begin{equation}
+  \frac{\gamma_2}{\gamma_1} - \frac{\gamma_2-2\wi}{\gamma_1-2\wi}
+  = \frac{\gamma_2(\gamma_1-2\wi) - \gamma_1(\gamma_2-2\wi)}{\gamma_1(\gamma_1-2\wi)}
+  = \frac{2\wi\,(\gamma_1-\gamma_2)}{\gamma_1(\gamma_1-2\wi)} \;>\;0 .
+\end{equation}
+It is non-empty whenever $\gamma_1>\gamma_2$, and its width is proportional to $\wi$.
+With no decay ($\wi\to0$) the window closes, as it must, because a passive medium has no gain at a real frequency.
+
+\begin{aside}
+For $\gamma_1<\gamma_2$, the same algebra gives a non-empty window $(\gamma_1-2\wi)/(\gamma_2-2\wi)<\rho\le\gamma_1/\gamma_2$.
+That gain only exists far off resonance, where $\chi(\omega_c)$ is nearly real.
+For example, with $\gamma_1=4\wi$, $\gamma_2=10\wi$, $\rho=0.38$, the largest reachable $-\Im\chi/|\chi|$ is $0.05$.
+An sKK target needs phases all the way to pure gain ($-\Im\chi/|\chi|=1$), so $\gamma_1>\gamma_2$ is the useful ordering.
+\end{aside}
+
+%=====================================================================
+\section{Designing one layer}\label{sec:design}
+Now fix $\gamma_1,\gamma_2,\rho$ once for the whole stack, inside the window \eqref{eq:window}. Each layer must hit its own target $\chi_t(y)=\varepsilon_t(y)-1$ at $\omega_c$. Write
+\begin{equation}
+  \chi(\omega_c) = \wpa^2\,G(\omega_0),\qquad
+  G(\omega_0) \equiv \frac{1}{D_1(\omega_c)} - \frac{\rho}{D_2(\omega_c)} .
+\end{equation}
+That is one complex equation (two real ones) for two real unknowns per layer:
+\begin{itemize}
+  \item \textbf{phase:} solve $\arg G(\omega_0) = \arg\chi_t(y)$ for $\omega_0$ (one real equation, one unknown);
+  \item \textbf{size:} then $\wpa^2 = |\chi_t(y)|/|G(\omega_0)|$, which is positive.
+\end{itemize}
+\begin{result}
+\textbf{Why $\gamma_1,\gamma_2$ can be fixed up front:} C1 involves only $(\rho,\gamma_1,\gamma_2)$, and C2 involves only $\gamma_i$ (plus underdamping).
+Neither involves $\omega_0$ or $\wpa$.
+So we satisfy C1 and C2 once, globally, and spend the remaining freedom $(\omega_0,\wpa)$ on hitting each layer's target.
+Every layer is then automatically passive and stable.
+\end{result}
+\noindent Compare the single line. There the sign of $\Im\chi(\omega_c)$ is set by $\gamma$ itself (Step 3), so $\gamma$ \emph{must} change from layer to layer and drop below $2\wi$ wherever the target has gain.
+That is Long et al.'s one-parameter family (their SI Eq.~S18).
+
+\paragraph{Why $\omega_0(y)$ jumps.}
+The target in B1s/B8 is
+\begin{equation}
+  \varepsilon_t(y) = 1 + \chi_m\,\frac{\delta^4}{(y+i\delta)^4}\,W(y),
+  \qquad \arg\chi_t = -4\arg(y+i\delta).
+\end{equation}
+Going through the profile from $y=-\infty$ to $+\infty$, $\arg(y+i\delta)$ turns by half a turn, so $\chi_t$ circles the origin $4\times\tfrac12=2$ times.
+($W$ is the $\cos^2$ edge window.)
+$\arg G(\omega_0)$ only changes monotonically, by a limited total amount, as $\omega_0$ runs over $(0,\infty)$.
+If that total is less than the target's winding, a continuous $\omega_0(y)$ cannot keep up.
+$\omega_0$ must then jump back by one full turn of $\arg G$ and start again.
+At a jump, two neighbouring layers have almost the same $\varepsilon(\omega_c)$, reached with different $(\omega_0,\wpa)$.
+
+%=====================================================================
+\section{Numbers (only now)}\label{sec:numbers}
+Drive: $\eta=\wi/\omega_r = 0.05$.
+\begin{enumerate}[leftmargin=2em]
+  \item \textbf{C2 margin.} Choose $\gamma_2=4\wi=0.2\,\omega_r$, so the narrow line's poles decay at $2\wi$, twice as fast as the drive.
+  Choose $\gamma_1=10\wi=0.5\,\omega_r$ (decays $5\times$ faster).
+  These are choices: any $\gamma_1>\gamma_2>2\wi$ works.
+  \item \textbf{Window \eqref{eq:window}:}
+  $\dfrac{4-2}{10-2}=0.25 \;<\;\rho\;\le\; \dfrac{4}{10}=0.40$.
+  \item \textbf{Pick $\rho=0.9\times0.40=0.36$}, so $\wpb=0.6\,\wpa$.
+  At exactly $\rho=\gamma_2/\gamma_1$, $\Im\varepsilon(\omega_0)=0$: the medium is lossless at one real frequency, which is exactly the classic EIT medium.
+  The factor 0.9 keeps it strictly lossy.
+  \item \textbf{Boost factors} $\gamma_i/(\gamma_i-2\wi)$: broad line $10/8=1.25$, narrow line $4/2=2$.
+  On the real axis the hole is $0.36\times10/4=0.9$ of the broad line's peak (passive). At $\omega_c$ it is $0.36\times8/2=1.44$ of it (net gain).
+  \item \textbf{Design range} (B8 target): $\omega_0\in[0.885,\,1.155]\,\omega_r$, so $2\omega_0\ge1.77\,\omega_r>\gamma_1$. Both lines are underdamped and C2 applies.
+  \item \textbf{Phase budget:} $\arg G$ spans $1.41$ turns over all $\omega_0\in(0,\infty)$, while the target winds $1.87$ turns over $|y|\le2$ ($\delta=0.2\lambda_r$).
+  So at least one $\omega_0$ jump is forced. The least-$\wpa$ rule makes two.
+\end{enumerate}
+
+\paragraph{Numerical checks} (exact formulas, no approximations):
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.47\linewidth}>{\raggedright\arraybackslash}p{0.49\linewidth}@{}}
+\toprule
+check & result \\
+\midrule
+C1 at $\rho=0.99\,\rho_{\rm pass}$, $\omega_0=0.5,\,1.0,\,1.3\,\omega_r$ & $\min_{\omega\in\mathbb R}\Im\varepsilon\ge0$ (all three)\\
+C1 at $\rho=1.01\,\rho_{\rm pass}$, same $\omega_0$ & $\min\Im\varepsilon<0$ (all three): the limit is independent of $\omega_0$\\
+exact $\rho_{\rm gain}$ at $\omega_0=\omega_r$ & $0.2506$ (approximation \eqref{eq:onres}: $0.25$)\\
+smallest $\rho_{\rm gain}$ over $\omega_0\in[0.5,1.5]\,\omega_r$ & $0.2496$, at $\omega_0=1.003\,\omega_r$ (on resonance, as Step 6 says)\\
+sign of $\Im\varepsilon(\omega_c)$ at $\omega_0=\omega_r$: $\rho=0.25,\ 0.30,\ 0.36$ & $+,\ -,\ -$\\
+slab's own poles (B8 stack, argument principle) & highest at $\Im\omega=-0.097\,\omega_r$, below the drive line $-0.05\,\omega_r$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

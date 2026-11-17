@@ -558,7 +558,15 @@ A separate claude.ai session (literature only: no code, plots or numbers) listed
 ## Lens replication + two-line ω₀ jumps (2026-11-16)
 - **B3L now uses semi-infinite Medium 1 on both sides** (was vacuum). Evidence that Long et al. use
   Medium 1 as the surrounding/reference medium: their Fig. 2e propagating/evanescent boundaries sit at
-  ±0.46 k₀ = Re n₁(ω_r)·ω_r/c, Medium 1's light line (vacuum's would be ±0.185 k₀). With exactly
+  ±0.46 k₀ = Re n₁(ω_r)·ω_r/c, Medium 1's light line (vacuum's would be ±0.185 k₀).
+  **Caveat (2026-11-17):** that light line would describe the Medium-1 layers whatever is outside, so it is
+  weak evidence. The paper never states the outside medium. Supporting hints: the source sits at z = 0 in
+  Medium 1, the image at z = 2λ₀; k₀ is "the wavevector in Medium 1"; SI §VIII's bandwidth study tracks only
+  k₀ (Medium 1) and k₁ (Medium 2), with no vacuum wavevector. It doesn't matter for the conclusion: both
+  claddings diverge almost identically (below). B3L now plots |t(t)|², |r(t)|² (same-instant ratio, no L/c
+  shift; target t = 1). Fig. 2c itself came from a scattering-matrix code (their ref. 62); their bandwidth
+  study (S7) varies only Re ω at fixed Im ω, so it never leaves the drive line and cannot see the poles above
+  it. With exactly
   complementary media the stack's transfer matrix is the identity, so t = 1, r = 0 for ANY cladding
   and any k∥ (checked, 50-digit mpmath). Numbers with Medium 1 outside: T(ω_c) = 0.988, R = 1.0e-9;
   time domain at t = 40: T = 8.3e4, R = 1.0e4 (diverges as before; vacuum gave 8.0e4 / 1.5e4).
@@ -572,11 +580,19 @@ A separate claude.ai session (literature only: no code, plots or numbers) listed
   their plot peaks at |t| ≈ 0.58. Unexplained (maybe an unstated normalisation). Keep 2e off the slide.
 - **Two-line ω₀ jumps are unavoidable** for this target. With γ₁, γ₂ fixed and a common ω₀, the phase
   of G(ω₀) = 1/D₁ − ρ/D₂ at ω_c is monotonic in ω₀ and spans only 1.41 turns over ω₀ ∈ (0, ∞)
-  (1.28 turns on the 0.6–1.4 ω_r design window). The target's arg χ(y) winds 1.73 turns across the
-  active layers (4th-order pole: 4 × the half-turn of y + iδ). A continuous ω₀(y) would need span ≥ 1.73
-  turns, so at least one jump is forced (least-f₁ choice gives two). Single Lorentz has no jumps because
+  (1.28 turns on the 0.6–1.4 ω_r design window). The target's arg χ(y) winds 1.87 turns over all non-zero
+  layers, |y| ≤ 1.94 (1.77 if layers below 1e-3 max|χ| are dropped; 2 for an infinite profile: a 4th-order
+  pole gives 4 × the half-turn of y + iδ). A continuous ω₀(y) would need span ≥ 1.87 turns, so at least one
+  jump is forced (least-f₁ choice gives two). Single Lorentz has no jumps because
   γ is a second knob: D = (ω₀² − a² + b² − γb) + i·a(2b − γ) can circle the origin continuously, but only
   by passing γ < 2b, i.e. the gain that makes it diverge.
 - **Two-line gain window (on resonance, a ≫ b).** Im χ(ω_c) ∝ (γ₁ − 2b)⁻¹ − ρ(γ₂ − 2b)⁻¹ with ρ = f₂/f₁;
   gain needs ρ > (γ₂ − 2b)/(γ₁ − 2b), passivity needs ρ ≤ γ₂/γ₁; compatible iff γ₁ > γ₂. For γ₁ = 10b,
   γ₂ = 4b: 0.25 < ρ ≤ 0.40; design uses 0.36 (checked: ρ = 0.25 lossy, 0.30 gain).
+  **Refined (2026-11-17), full derivation in notes/two_line_conditions.pdf:** passivity is exactly
+  ρ ≤ min(γ₁/γ₂, γ₂/γ₁), independent of ω₀. For general detuning Δ = ω₀² − ω_r², gain needs
+  ρ > ρ_gain(Δ) = (B₁/B₂)(A₂² + B₂²)/(A₁² + B₁²), with A_i = Δ − b(γ_i − b) and B_i = ω_r(γ_i − 2b). For γ₁ > γ₂
+  this is smallest on resonance (exact minimum 0.2496 at ω₀ = 1.003ω_r). For γ₁ < γ₂ a window also exists,
+  (γ₁ − 2b)/(γ₂ − 2b) < ρ ≤ γ₁/γ₂, but only far off resonance where χ is nearly real: max −Im χ/|χ| = 0.05
+  for γ₁ = 4b, γ₂ = 10b, ρ = 0.38. Pure-gain phases are unreachable there, so "γ₁ > γ₂" is a practical
+  requirement, not a strict one. One-line summary: at ω_c every line looks as if its width were γ − 2b.

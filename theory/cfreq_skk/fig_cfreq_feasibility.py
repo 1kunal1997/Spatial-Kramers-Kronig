@@ -748,7 +748,7 @@ def fig_lens():
     # is in view too
     xr = a * np.linspace(0.6, 2.0, 351); yi = a * np.linspace(-1.0, 0.01, 253)
     W = (xr[None, :] + 1j * yi[:, None]).ravel()
-    Z = _lens_map(xr, yi)                    # T = |t|^2 (see b)
+    Z = _lens_map(xr, yi)                    # |t|^2 (see b)
     im = _tmap(ax_a, xr / a, yi / a, Z)
     _drive_marks(ax_a, LENS_ETA, line='w', star='c')
     # inset: zoom on the drive line around w_r, where medium 2's poles sit just above it
@@ -778,17 +778,17 @@ def fig_lens():
     axi.text(1.005, -LENS_ETA - 0.018, r'$\omega_c$', color='c', fontsize=6)
     ax_a.text(0.03, 0.04, 'Long et al. lens', transform=ax_a.transAxes, color='w', fontsize=6)
     ax_a.set_xlabel(r"Re $\omega/\omega_r$"); ax_a.set_ylabel(r"Im $\omega/\omega_r$")
-    _cbar_right(fig, ax_a, im, r'$\log_{10}T(\omega)$', extend='max').set_ticks([-2, 0, 2, 4, 6])
+    _cbar_right(fig, ax_a, im, r'$\log_{10}|t(\omega)|^2$', extend='max').set_ticks([-2, 0, 2, 4, 6])
 
-    # b: T = |t|^2, R = |r|^2 (out / drive at the same instant). No t_free here: a perfect lens is
-    # designed for t = 1 itself (Long et al. Fig. 2c), the complementary slabs cancel the path.
+    # b: |t(t)|^2, |r(t)|^2 = out / drive at the SAME instant (no L/c shift, so not called T, R):
+    # a perfect lens is designed for t = 1 itself (Long et al. Fig. 2c), image = source.
     t, tl, rl, oc = _lens_td()
     # start at L/c (0.37 T_r), the first instant light can reach the exit face; before it the
     # output is zero and the drive is still ~0 (Planck ramp), so the ratio is 0/0 noise
     m = t > LENS_D.sum()
     t, tl, rl = t[m], tl[m], rl[m]
-    ax_b.semilogy(t, np.abs(tl) ** 2, color=C.C_T, label=r'$T(t)$')
-    ax_b.semilogy(t, np.abs(rl) ** 2, color=C.C_R, label=r'$R(t)$')
+    ax_b.semilogy(t, np.abs(tl) ** 2, color=C.C_T, label=r'$|t(t)|^2$')
+    ax_b.semilogy(t, np.abs(rl) ** 2, color=C.C_R, label=r'$|r(t)|^2$')
     ax_b.axhline(abs(oc['tL'][0]) ** 2, color=C.C_T, ls=':', lw=C.LW_GUIDE)
     ax_b.axhline(abs(oc['rL'][0]) ** 2, color=C.C_R, ls=':', lw=C.LW_GUIDE)
     print(f'B3L at w_c: T={abs(oc["tL"][0])**2:.4f} R={abs(oc["rL"][0])**2:.2e}; at t=40: '
