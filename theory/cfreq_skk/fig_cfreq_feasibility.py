@@ -236,6 +236,55 @@ def fig_eta_zero():
     C.save(fig, os.path.join(OUT, 'B1z_eta_to_zero.png'))
 
 
+def fig_eta_zero_row():
+    """B1z2 (slide backup, 2026-11-17; new block because B1z itself is kept unchanged): the three
+    panels of B1z that carry the eta -> 0 argument, in one row and in the deck's conventions
+    (T = |tau|^2, profile zoomed to |y| <= 1 like B1s).
+    a: eps''(y) of the layers at real w_r for three eta (target at w_c dashed): the same passive
+       profile every time, never the gain target.
+    b: eps''(w) of the most gain-like layer vs real w: the line narrows as eta -> 0.
+    c: T(w_c) stays 1, T(w_r) stays 0.695 (the real-frequency structure is a fixed lossy one),
+       while the linewidth (~eta) and strength (~sqrt(eta)) needed both shrink to zero."""
+    y, chi, d = cf.discretize(simple_target, -S_Y, S_Y, S_N)
+    etas = [0.05, 0.01, 0.002]
+    cols = plt.cm.viridis(np.linspace(0, 0.8, len(etas)))
+    fig, axs, _ = C.panel_grid(1, 3, width_in=7.5, margin_l=0.56, margin_b=0.42,
+                               col_gap=C.YLABEL_W_IN + C.CENTER_GAP_IN + 0.3)
+    ax_a, ax_b, ax_c = axs[0]
+    j = np.argmin(chi.imag)
+    ax_a.plot(y, chi.imag, color='gray', ls='--', lw=C.LW_THIN, label=r'target, $\omega_c$')
+    for e, col, lw in zip(etas, cols, [2.6, 1.6, 0.8]):
+        w = cf.omega_c(e); a = w.real
+        p = cf.lorentz_design(chi, w, 0.5 * cf.kappa_max(chi, w)); assert p['ok']
+        er = cf.eps_lorentz([a], p)[0]
+        ax_a.plot(y, er.imag, color=col, lw=lw, label=rf'$\omega_r$, $\eta={e}$')
+        wr = a * np.linspace(0.8, 1.2, 8001)
+        ax_b.plot(wr / a, cf.eps_lorentz(wr, p)[:, j].imag, color=col, lw=C.LW_MAIN, label=rf'$\eta={e}$')
+    ax_a.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':'); ax_b.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
+    ax_a.fill_between(y, chi.imag, 0, where=chi.imag < 0, color=C.C_EPS_IM, alpha=0.15, lw=0)
+    ax_a.set_xlim(-1, 1); ax_a.set_xlabel(r'$y/\lambda_r$'); ax_a.set_ylabel(r"$\epsilon''(y)$")
+    ax_a.legend(loc='upper left', fontsize=5)
+    ax_b.set_xlim(0.8, 1.2); ax_b.set_xlabel(r'real frequency $\omega/\omega_r$')
+    ax_b.set_ylabel(r"$\epsilon''(\omega)$, one layer"); ax_b.legend(loc='upper left', fontsize=5)
+    es = np.geomspace(1e-4, 0.1, 31); res = []
+    for e in es:
+        w = cf.omega_c(e); a = w.real
+        p = cf.lorentz_design(chi, w, 0.5 * cf.kappa_max(chi, w)); assert p['ok']
+        oc = cf.rt(cf.eps_lorentz([w], p), d, [w]); orr = cf.rt(cf.eps_lorentz([a], p), d, [a])
+        res.append([abs(oc['tauL'][0]) ** 2, abs(orr['tauL'][0]) ** 2,
+                    p['gam'].max() / a, np.sqrt(p['wp2'].max()) / a])
+    res = np.array(res)
+    ax_c.loglog(es, res[:, 0], color=C.C_T, label=r'$T(\omega_c)$')
+    ax_c.loglog(es, res[:, 1], color=C.C_T, ls='--', label=r'$T(\omega_r)$')
+    ax_c.loglog(es, res[:, 2], color=C.C_EPS_IM, label=r'linewidth $\gamma_{max}/\omega_r$')
+    ax_c.loglog(es, res[:, 3], color=C_ORANGE, label=r'strength $\omega_{p,max}/\omega_r$')
+    ax_c.set_xlabel(r'decay ratio $\eta$'); ax_c.set_ylim(1e-4, 5)
+    ax_c.legend(loc='lower right', fontsize=5)
+    print(f'B1z2: T(w_c) {res[0,0]:.5f}..{res[-1,0]:.5f}; T(w_r) {res[0,1]:.3f}..{res[-1,1]:.3f}')
+    C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c')], dx_in=0.54)
+    C.save(fig, os.path.join(OUT, 'B1z2_eta_to_zero_row.png'))
+
+
 def fig_trunc():
     """B2: complex frequency amplifies far-side truncation as ~e^{4|k''|L}."""
     fig, axs, _ = C.panel_grid(1, 2, margin_l=0.45, margin_b=0.33, col_gap=0.55)
@@ -954,7 +1003,7 @@ def fig_grow():
     C.save(fig, os.path.join(OUT, 'B4_growing_drive_lossless.png'))
 
 
-FIGS = {'freq': fig_freq, 'freq_simple': fig_freq_simple, 'eta_zero': fig_eta_zero, 'trunc': fig_trunc,
+FIGS = {'freq': fig_freq, 'freq_simple': fig_freq_simple, 'eta_zero': fig_eta_zero, 'eta_zero_row': fig_eta_zero_row, 'trunc': fig_trunc,
         'time': fig_time, 'grow': fig_grow, 'single_layer': fig_single_layer, 'slab_td': fig_slab_td,
         'slab_td_t': lambda: fig_slab_td('t'), 'slab_td_raw': lambda: fig_slab_td('raw'),
         'lens': fig_lens, 'lens_kx': fig_lens_kx, 'lens_angles': fig_lens_angles, 'slab_wide': fig_slab_wide, 'drive_delay': fig_drive_delay}
