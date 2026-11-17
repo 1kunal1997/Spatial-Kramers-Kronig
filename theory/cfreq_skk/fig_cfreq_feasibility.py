@@ -123,7 +123,7 @@ def fig_freq_simple():
 
     yf = np.linspace(-S_Y, S_Y, 4001); tf = simple_target(yf)
     axr = C.profile_panel(ax_a, yf, 1 + tf.real, tf.imag, xlabel=r'$y/\lambda_r$',
-                          ylab_im=r"$\epsilon''(y,\omega_c)$", xlim=(-S_Y, S_Y))
+                          ylab_im=r"$\epsilon''(y,\omega_c)$", xlim=(-1, 1))
     ax_a.set_ylabel(r"$\epsilon'(y,\omega_c)$", color=C.C_EPS_RE)
     axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
     axr.fill_between(yf, tf.imag, 0, where=tf.imag < 0, color=C.C_EPS_IM, alpha=0.15, lw=0)
@@ -131,7 +131,7 @@ def fig_freq_simple():
 
     er = cf.eps_lorentz([a], p)[0]
     axr = C.profile_panel(ax_b, y, er.real, er.imag, xlabel=r'$y/\lambda_r$',
-                          ylab_im=r"$\epsilon''(y,\omega_r)$", xlim=(-S_Y, S_Y))
+                          ylab_im=r"$\epsilon''(y,\omega_r)$", xlim=(-1, 1))
     ax_b.set_ylabel(r"$\epsilon'(y,\omega_r)$", color=C.C_EPS_RE)
     axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
     wr = a * np.linspace(0.05, 5, 4000)
@@ -141,39 +141,40 @@ def fig_freq_simple():
           f'|tau|^2={abs(orr["tauL"][0])**2:.3g}')
 
     # realised single-Lorentz structure, re-designed at every eta, evaluated at its own w_c
-    etas = np.linspace(0.005, 0.12, 47); res = []
+    # 2026-11-16: R = |r|^2, T = |tau|^2 = |t/t_free|^2 (T = 1 <=> same as vacuum); eta from 0.001
+    etas = np.linspace(0.001, 0.12, 120); res = []
     for e in etas:
         w = cf.omega_c(e); q = cf.lorentz_design(chi, w, 0.5 * cf.kappa_max(chi, w)); assert q['ok']
         o = cf.rt(cf.eps_lorentz([w], q), d, [w]); res.append([o['rL'][0], o['rR'][0], o['tauL'][0]])
-    res = np.array(res)
-    ax_c.semilogy(etas, np.abs(res[:, 0]) ** 2, color=C.C_R, label=r'$|r_L|^2$ (from left)')
-    ax_c.semilogy(etas, np.abs(res[:, 1]) ** 2, color=C.C_R, ls='--', label=r'$|r_R|^2$ (from right)')
-    ax_c.semilogy(etas, np.abs(res[:, 2] - 1), color=C.C_T, label=r'$|\tau-1|$')
+    res = np.abs(np.array(res)) ** 2
+    ax_c.semilogy(etas, res[:, 0], color=C.C_R, label=r'$R_L$')
+    ax_c.semilogy(etas, res[:, 1], color=C.C_R, ls='--', label=r'$R_R$')
+    ax_c.semilogy(etas, res[:, 2], color=C.C_T, label=r'$T$')
     ax_c.axvline(ETA, color='gray', lw=C.LW_GUIDE, ls=':')
     ax_c.set_xlabel(r'decay ratio $\eta = |\omega^{\prime\prime}|/\omega^{\prime}$')
     ax_c.set_ylabel(r'response at $\omega_c$')
-    ax_c.set_xlim(0, etas[-1]); ax_c.set_ylim(1e-12, 1e4); ax_c.legend(loc='upper left', ncol=2, fontsize=5)
+    ax_c.set_xlim(0, 0.12); ax_c.set_ylim(1e-12, 1e4); ax_c.legend(loc='upper left', ncol=3, fontsize=5)
     i = np.argmin(abs(etas - ETA))
-    print(f'B1s at eta={etas[i]:.3f}: |rL|^2={abs(res[i,0])**2:.2e} |rR|^2={abs(res[i,1])**2:.3g} '
-          f'|tau-1|={abs(res[i,2]-1):.2e}')
+    print(f'B1s at eta={etas[i]:.3f}: R_L={res[i,0]:.2e} R_R={res[i,1]:.3g} T={res[i,2]:.6f}')
 
-    # 2026-11-16: black dashed line = the drive's decay rate (gamma/2 = |w''|), so each layer's
-    # damping reads against it; the resonance is shown as a detuning (w0 - w_r)/|w''| so that it
-    # no longer lies on top of that line
+    # d: the pole of layer j sits at ~ w0 - i gam/2 and the drive at w_r - i|w''|, so gam is read
+    # against 2|w''| (< 1: pole above the drive line = gain at w_c) and w0 against w_r; w_p is the
+    # strength (no partner on the drive), in units of w_r on the right axis
     g = p['gam'] / (2 * b)
-    ax_d.plot(y, g, color=C.C_EPS_IM, label=r'damping $\gamma/2|\omega^{\prime\prime}|$')
-    ax_d.plot(y, (np.sqrt(p['w02']) - a) / b, color=C.C_EPS_RE,
-              label=r'detuning $(\omega_0-\omega_r)/|\omega^{\prime\prime}|$')
-    ax_d.plot(y, 10 * np.sqrt(p['wp2']) / a, color=C_ORANGE, label=r'strength $10\,\omega_p/\omega_r$')
+    ax_d.plot(y, g, color=C.C_EPS_IM, label=r'$\gamma/2|\omega^{\prime\prime}|$')
+    ax_d.plot(y, np.sqrt(p['w02']) / a, color=C.C_EPS_RE, label=r'$\omega_0/\omega_r$')
     ax_d.fill_between(y, g, 1, where=g < 1, color=C.C_EPS_IM, alpha=0.15, lw=0)
-    ax_d.axhline(1, color='k', lw=C.LW_THIN, ls='--')
-    ax_d.text(0.97, 1.0, r"drive decay $|\omega''|$", transform=ax_d.get_yaxis_transform(),
-              fontsize=6, ha='right', va='bottom')
-    ax_d.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
-    print(f'B1s panel d: gamma/2|w\'\'| in [{g.min():.2f}, {g.max():.2f}], detuning in '
-          f'[{((np.sqrt(p["w02"]) - a) / b).min():.2f}, {((np.sqrt(p["w02"]) - a) / b).max():.2f}]')
-    ax_d.set_xlabel(r'$y/\lambda_r$'); ax_d.set_ylabel('Lorentz parameters')
-    ax_d.set_xlim(-S_Y, S_Y); ax_d.legend(loc='upper left', fontsize=5)
+    ax_d.text(-0.42, 0.62, 'gain', color=C.C_EPS_IM, fontsize=6)
+    axd2 = ax_d.twinx(); ax_d._skk_twin = [axd2]
+    axd2.plot(y, np.sqrt(p['wp2']) / a, color=C_ORANGE)
+    axd2.set_ylabel(r'$\omega_p/\omega_r$', color=C_ORANGE)
+    axd2.tick_params(axis='y', labelcolor=C_ORANGE); axd2.set_ylim(0, 0.25)
+    ax_d.plot([], [], color=C_ORANGE, label=r'$\omega_p/\omega_r$ (right)')
+    print(f'B1s panel d: gamma/2|w\'\'| in [{g.min():.2f}, {g.max():.2f}], w0/w_r in '
+          f'[{(np.sqrt(p["w02"]) / a).min():.4f}, {(np.sqrt(p["w02"]) / a).max():.4f}], '
+          f'wp/w_r max {(np.sqrt(p["wp2"]) / a).max():.3f}')
+    ax_d.set_xlabel(r'$y/\lambda_r$'); ax_d.set_ylabel(r'$\gamma/2|\omega^{\prime\prime}|$,  $\omega_0/\omega_r$')
+    ax_d.set_xlim(-1, 1); ax_d.set_ylim(0.4, 1.6); ax_d.legend(loc='upper left', fontsize=5)
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd')])
     C.save(fig, os.path.join(OUT, 'B1s_single_lorentz_simple.png'))
 
@@ -330,13 +331,23 @@ def lorentz_poles(p, j=0):
     return np.roots([-1, -1j * p['gam'][j], p['w02'][j]])
 
 
-def _cbar_right(fig, ax, im, label, gap_in=0.08, w_in=0.08):
+def _cbar_right(fig, ax, im, label, gap_in=0.08, w_in=0.08, extend='neither'):
     """Colorbar beside `ax` in the space reserved to its right, without touching its 4:3 box."""
     W, H = fig.get_size_inches()
     pos = ax.get_position()
     cax = fig.add_axes([pos.x1 + gap_in / W, pos.y0, w_in / W, pos.height])
-    cb = fig.colorbar(im, cax=cax); cb.set_label(label); cb.outline.set_linewidth(0.6)
+    cb = fig.colorbar(im, cax=cax, extend=extend); cb.set_label(label); cb.outline.set_linewidth(0.6)
     return cb
+
+
+# |t| maps: magma, values above the top of the colour range (near slab poles) drawn white and
+# flagged by the triangle on the colourbar (2026-11-16)
+MAGMA_OVER = plt.get_cmap('magma').copy(); MAGMA_OVER.set_over('w')
+
+
+def _tmap(ax, x, y, Z, lim=(-2, 6)):
+    return ax.pcolormesh(x, y, np.maximum(Z, lim[0]), cmap=MAGMA_OVER, vmin=lim[0], vmax=lim[1],
+                         shading='auto', rasterized=True)
 
 
 def _drive_marks(ax, eta, line='k', star='k'):
@@ -444,17 +455,19 @@ def fig_single_layer():
     xr = a * np.linspace(0.85, 1.15, 301); yi = a * np.linspace(-0.10, 0.01, 221)
     W = xr[None, :] + 1j * yi[:, None]
     Z = cf.eps_lorentz(W.ravel(), p)[:, 0].imag.reshape(W.shape)
-    im = ax_a.pcolormesh(xr / a, yi / a, np.clip(Z, -0.6, 0.6), cmap='RdBu_r', vmin=-0.6, vmax=0.6,
+    # 2026-11-16: viridis, not red/blue (those are eps'/eps'' in panel b); white contour = eps'' = 0
+    im = ax_a.pcolormesh(xr / a, yi / a, np.clip(Z, -0.6, 0.6), cmap='viridis', vmin=-0.6, vmax=0.6,
                          shading='auto', rasterized=True)
-    _drive_marks(ax_a, ETA)
+    ax_a.contour(xr / a, yi / a, Z, levels=[0], colors='w', linewidths=C.LW_GUIDE)
+    _drive_marks(ax_a, ETA, line='w', star='w')
     pole = lorentz_poles(p); pole = pole[pole.real > 0][0] / a
-    ax_a.plot(pole.real, pole.imag, marker='x', color='k', ms=5, mew=1.0, ls='none')
-    ax_a.text(0.865, -ETA + 0.003, 'drive', fontsize=6)
-    ax_a.text(0.865, 0.0025, 'real axis', fontsize=6)
-    ax_a.text(0.865, -0.093, r"gain, $\epsilon''<0$", fontsize=6, color=C.C_EPS_RE)
-    ax_a.text(0.865, -0.016, r"loss, $\epsilon''>0$", fontsize=6, color=C.C_EPS_IM)
-    ax_a.text(pole.real + 0.008, pole.imag + 0.002, r'pole $-i\gamma/2$', fontsize=6)
-    ax_a.text(1.008, -ETA - 0.008, r'$\omega_c$', fontsize=6)
+    ax_a.plot(pole.real, pole.imag, marker='x', color='w', ms=5, mew=1.0, ls='none')
+    ax_a.text(0.865, -ETA + 0.003, 'drive', fontsize=6, color='w')
+    ax_a.text(0.865, 0.0025, 'real axis', fontsize=6, color='w')
+    ax_a.text(0.865, -0.093, r"gain, $\epsilon''<0$", fontsize=6, color='w')
+    ax_a.text(0.865, -0.016, r"loss, $\epsilon''>0$", fontsize=6, color='w')
+    ax_a.text(pole.real + 0.008, pole.imag + 0.002, r'pole $-i\gamma/2$', fontsize=6, color='w')
+    ax_a.text(1.008, -ETA - 0.008, r'$\omega_c$', fontsize=6, color='w')
     ax_a.set_xlabel(r"Re $\omega/\omega_r$"); ax_a.set_ylabel(r"Im $\omega/\omega_r$")
     _cbar_right(fig, ax_a, im, r"$\epsilon''(\omega)$")
 
@@ -463,10 +476,10 @@ def fig_single_layer():
     axr = C.profile_panel(ax_b, x, er.real, er.imag, xlabel=r'Re $\omega/\omega_r$',
                           ylab_im=r"$\epsilon''(\omega)$", xlim=(0.8, 1.2))
     ax_b.set_ylabel(r"$\epsilon'(\omega)$", color=C.C_EPS_RE)
-    ax_b.plot(x, ec.real, color=C.C_EPS_RE, lw=C.LW_MAIN, ls='--')
+    # gam = |w''| here, so eps on the drive line is exactly conj(eps on the real axis): the dashed
+    # eps' lies on top of the solid one (drawn blue/white so both are visible)
+    ax_b.plot(x, ec.real, color=C.C_EPS_RE, lw=C.LW_MAIN, ls='--', gapcolor='w')
     axr.plot(x, ec.imag, color=C.C_EPS_IM, lw=C.LW_MAIN, ls='--')
-    axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
-    ax_b.axvline(1, color='gray', lw=C.LW_GUIDE, ls=':')
     ax_b.set_ylim(0.6, 1.4); axr.set_ylim(-0.6, 0.6)
     ax_b.plot([], [], color='k', lw=C.LW_MAIN, label='real axis')
     ax_b.plot([], [], color='k', lw=C.LW_MAIN, ls='--', label='drive line')
@@ -493,12 +506,17 @@ def _comsol_ratio(chi_im, Ls=1.0):
     return R['t'][ok] - T0 - Ls, np.abs(ec[ok]) / np.abs(fc[ok]), os.path.basename(files[-1])
 
 
-def fig_slab_td():
+def fig_slab_td(mode='T'):
     """B3s: B3a's two Long-type single-Lorentz 1 lam_r slabs, side by side.
     left: eps(w_c) = 1 + 0.3i (gam/2|w''| = 1.5, loss at w_c); right: 1 - 0.3i (0.5, gain).
     a, b: log10|t(w)| over complex w (bright = slab poles; x = material pole; dashed = drive).
-    c, d: |t(t)/t_free(t)| by TMM x FFT (line) and COMSOL (circles, one per 5 T_r); dotted =
-    the frequency-domain |tau(w_c)|."""
+    c, d, by `mode`:
+      'T'   (B3s)  T(t) = |E_out(t)|^2 / |E_inc(t - L/c)|^2 = |t(t)/t_free(t)|^2, the output
+                   compared with the drive that entered one vacuum transit time earlier (vacuum:
+                   T = 1). TMM x FFT (line), COMSOL (circles, one per 5 T_r); dotted = T(w_c).
+      't'   (B3s2) |t(t)|^2 = |E_out(t)|^2 / |E_inc(t)|^2, same instant: only the constant
+                   |t_free|^2 = e^{2|w''|L/c} = 1.87 differs (B3s x 1.87).
+      'raw' (B3s3) no division at all: |E_out(t)|^2 (blue) and the drive |E_inc(t)|^2 (gray)."""
     sys.path.insert(0, os.path.join(_HERE, 'comsol'))
     wc = cf.omega_c(ETA); a, b = wc.real, abs(wc.imag)
     fig, axs, _ = C.panel_grid(2, 2, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12)
@@ -507,42 +525,62 @@ def fig_slab_td():
     xr = a * np.linspace(0.9, 1.1, 241); yi = a * np.linspace(-0.12, 0.006, 190)
     W = (xr[None, :] + 1j * yi[:, None]).ravel()
     Ls, nl = 1.0, 40; d = np.full(nl, Ls / nl)
+    sh = int(round(Ls / DT))
     for (tgt, g, lab), axm, axt in zip(SLAB_CASES, (ax_a, ax_b), (ax_c, ax_d)):
         p = cf.lorentz_design_gamma(np.array([tgt - 1]), wc, g * 2 * b); assert p['ok']
         e = lambda w: np.repeat(cf.eps_lorentz(w, p), nl, axis=1)
-        Z = np.log10(np.abs(cf.rt(e(W), d, W)['tL'])).reshape(yi.size, xr.size)
-        im = axm.pcolormesh(xr / a, yi / a, np.clip(Z, -1, 3), cmap='magma', vmin=-1, vmax=3,
-                            shading='auto', rasterized=True)
+        # T(w) = |t/t_free|^2 over complex w (same poles as t; same quantity as panels c, d)
+        Z = 2 * np.log10(np.abs(cf.rt(e(W), d, W)['tauL'])).reshape(yi.size, xr.size)
+        im = _tmap(axm, xr / a, yi / a, Z)
         _drive_marks(axm, ETA, line='w', star='c')
         axm.text(1.005, -ETA + 0.004, r'$\omega_c$', color='c', fontsize=6)
         pole = lorentz_poles(p); pole = pole[pole.real > 0][0] / a
         axm.plot(pole.real, pole.imag, marker='x', color='w', ms=4, mew=0.9, ls='none')
         axm.text(0.03, 0.06, rf'$\epsilon(\omega_c)={tgt.real:.0f}{tgt.imag:+.1f}i$, '
                  rf'$\gamma/2|\omega^{{\prime\prime}}|={g}$', transform=axm.transAxes, color='w', fontsize=6)
-        axm.set_xlabel(r"Re $\omega/\omega_r$"); axm.set_ylabel(r"Im $\omega/\omega_r$")
+        axm.set_xlabel(r"Re $\omega/\omega_r$")
 
-        tau_c = cf.rt(e([wc]), d, [wc])['tauL'][0]
+        oc = cf.rt(e([wc]), d, [wc])
         o = cf.rt(e(wr), d, wr)
-        t, rt_ = _td(o['tL'], ETA); _, rf = _td(np.exp(1j * wr * Ls), ETA)
-        sh = int(round(Ls / DT))
-        axt.semilogy(t[sh:] - Ls, np.abs(rt_[sh:]) / np.abs(rf[sh:]), color=C.C_T, lw=C.LW_THIN,
-                     label=r'TMM $\times$ FFT')
-        tq, qc, fname = _comsol_ratio(tgt.imag, Ls)
-        sel = (tq >= 1) & (np.abs(np.round(tq / 5) * 5 - tq) < 1e-6)
-        axt.plot(tq[sel], qc[sel], marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none',
-                 label='COMSOL')
-        axt.axhline(abs(tau_c), color=C.C_T, lw=C.LW_GUIDE, ls=':')
+        t = np.arange(NT) * DT
+        if mode == 'raw':
+            dcx, out = cf.complex_response(o['tL'], t, ETA, T_ON, T0)
+            ok = np.abs(dcx) > 1e-14 * np.abs(dcx).max()
+            axt.semilogy(t[ok] - T0, np.abs(dcx[ok]) ** 2, color='gray', lw=C.LW_THIN, ls='--',
+                         label=r'drive $|E_{\rm inc}(t)|^2$')
+            axt.semilogy(t[ok] - T0, np.abs(out[ok]) ** 2, color=C.C_T, lw=C.LW_THIN,
+                         label=r'output $|E_{\rm out}(t)|^2$')
+            axt.set_ylim(1e-24, 1e1); axt.set_ylabel('power at the faces')
+        else:
+            tt, rt_ = _td(o['tL'], ETA); _, rf = _td(np.exp(1j * wr * Ls), ETA)
+            if mode == 'T':
+                Tt, Tc = (np.abs(rt_[sh:]) / np.abs(rf[sh:])) ** 2, abs(oc['tauL'][0]) ** 2
+                xt = tt[sh:] - Ls
+            else:
+                Tt, Tc, xt = np.abs(rt_) ** 2, abs(oc['tL'][0]) ** 2, tt
+            mk = xt > 1                                # skip the 0/0 before the light arrives
+            axt.semilogy(xt[mk], Tt[mk], color=C.C_T, lw=C.LW_THIN, label=r'TMM $\times$ FFT')
+            if mode == 'T':
+                tq, qc, fname = _comsol_ratio(tgt.imag, Ls)
+                sel = (tq >= 1) & (np.abs(np.round(tq / 5) * 5 - tq) < 1e-6)
+                axt.plot(tq[sel], qc[sel] ** 2, marker='o', mfc='none', mec='k', ms=3, mew=0.6,
+                         ls='none', label='COMSOL')
+            axt.axhline(Tc, color=C.C_T, lw=C.LW_GUIDE, ls=':')
+            axt.set_ylim(1e-3, 1e6)
+            i60 = np.argmin(abs(xt - 60))
+            print(f'B3s[{mode}] {tgt}: pole/w_r={pole:.4f}, T(w_c)={Tc:.4g}, TMMxFFT at t=60: {Tt[i60]:.4g}'
+                  + (f', COMSOL ({fname}) at t=60: {np.interp(60, tq, qc) ** 2:.4g}' if mode == 'T' else ''))
         axt.text(0.97, 0.06, lab, transform=axt.transAxes, fontsize=6, ha='right')
-        axt.set_xlim(0, 60); axt.set_ylim(1e-2, 1e3)
-        axt.set_xlabel(r'time after turn-on ($T_r$)'); axt.set_ylabel(r'$|t(t)/t_{\rm free}(t)|$')
-        axt.legend(loc='upper left', fontsize=5)
-        i60 = np.argmin(abs(t[sh:] - Ls - 60))
-        print(f'B3s {tgt}: pole/w_r={pole:.4f}, |tau(w_c)|={abs(tau_c):.3f}, TMMxFFT at t=60: '
-              f'{np.abs(rt_[sh:][i60]) / np.abs(rf[sh:][i60]):.3g}, COMSOL ({fname}) at t=60: '
-              f'{np.interp(60, tq, qc):.3g}')
-    _cbar_right(fig, ax_b, im, r'$\log_{10}|t(\omega)|$').set_ticks([-1, 0, 1, 2, 3])
+        axt.set_xlim(0, 60)
+        axt.set_xlabel(r'time after turn-on ($T_r$)')
+        axt.legend(loc='lower left' if mode == 'raw' else 'upper left', fontsize=5)
+    ax_a.set_ylabel(r"Im $\omega/\omega_r$")
+    if mode != 'raw':
+        ax_c.set_ylabel(r'$T(t)$' if mode == 'T' else r'$|t(t)|^2$')
+    _cbar_right(fig, ax_b, im, r'$\log_{10}T(\omega)$', extend='max').set_ticks([-2, 0, 2, 4, 6])
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd')])
-    C.save(fig, os.path.join(OUT, 'B3s_slab_loss_vs_gain.png'))
+    C.save(fig, os.path.join(OUT, {'T': 'B3s_slab_loss_vs_gain.png', 't': 'B3s2_no_tfree.png',
+                                   'raw': 'B3s3_raw_power.png'}[mode]))
 
 
 def fig_lens():
@@ -554,33 +592,55 @@ def fig_lens():
     fig, axs, _ = C.panel_grid(1, 2, margin_l=0.47, col_gap=gap)
     ax_a, ax_b = axs[0]
     wcL = cf.omega_c(LENS_ETA); a = wcL.real
-    xr = a * np.linspace(0.7, 1.3, 241); yi = a * np.linspace(-0.5, 0.01, 205)
+    # 2026-11-16: window widened to Re 0.6-2.0, Im down to -1.0 so medium 1's eps pole (1.83 - 0.89i)
+    # is in view too
+    xr = a * np.linspace(0.6, 2.0, 351); yi = a * np.linspace(-1.0, 0.01, 253)
     W = (xr[None, :] + 1j * yi[:, None]).ravel()
-    Z = np.log10(np.abs(_lens_rt(W)['tL'])).reshape(yi.size, xr.size)
-    im = ax_a.pcolormesh(xr / a, yi / a, np.clip(Z, -1, 3), cmap='magma', vmin=-1, vmax=3,
-                         shading='auto', rasterized=True)
+    Z = 2 * np.log10(np.abs(_lens_rt(W)['tL'])).reshape(yi.size, xr.size)   # T = |t|^2 (see b)
+    im = _tmap(ax_a, xr / a, yi / a, Z)
     _drive_marks(ax_a, LENS_ETA, line='w', star='c')
-    ax_a.text(1.01, -LENS_ETA + 0.012, r'$\omega_c$', color='c', fontsize=6)
-    for k, mk in (('e1', 'x'), ('m1', 'x'), ('e2', 'x'), ('m2', 'x')):
+    # inset: zoom on the drive line around w_r, where medium 2's poles sit just above it
+    zx, zy = (0.84, 1.16), (-0.40, -0.24)
+    axi = ax_a.inset_axes([0.5, 0.45, 0.47, 0.5])
+    mx = (xr / a >= zx[0] - 0.01) & (xr / a <= zx[1] + 0.01)
+    yz = a * np.linspace(zy[0], zy[1], 161)
+    Wz = (xr[mx][None, :] + 1j * yz[:, None]).ravel()
+    Zz = 2 * np.log10(np.abs(_lens_rt(Wz)['tL'])).reshape(yz.size, mx.sum())
+    _tmap(axi, xr[mx] / a, yz / a, Zz)
+    _drive_marks(axi, LENS_ETA, line='w', star='c')
+    axi.set_xlim(*zx); axi.set_ylim(*zy)
+    axi.tick_params(labelsize=5, color='w', labelcolor='w', length=2, pad=1)
+    for sp in axi.spines.values():
+        sp.set_color('w')
+    ax_a.add_patch(plt.Rectangle((zx[0], zy[0]), zx[1] - zx[0], zy[1] - zy[0], fill=False, ec='w',
+                                 lw=C.LW_GUIDE))
+    names = {'e1': r'$\epsilon_1$', 'm1': r'$\mu_1$', 'e2': r'$\epsilon_2$', 'm2': r'$\mu_2$'}
+    for k in ('e1', 'm1', 'e2', 'm2'):
         pl = lorentz_poles(LENS_P[k]); pl = pl[pl.real > 0][0] / a
         print(f'B3L material pole {k}: {pl:.4f}  ({"above" if pl.imag > -LENS_ETA else "below"} the drive line)')
-        if 0.7 < pl.real < 1.3:
-            ax_a.plot(pl.real, pl.imag, marker=mk, color='w', ms=4, mew=0.9, ls='none')
-            dx, ha = (-0.012, 'right') if k == 'e2' else (0.012, 'left')
-            ax_a.text(pl.real + dx, pl.imag + 0.012,
-                      {'e1': r'$\epsilon_1$', 'm1': r'$\mu_1$', 'e2': r'$\epsilon_2$', 'm2': r'$\mu_2$'}[k],
-                      color='w', fontsize=6, ha=ha)
+        inz = zx[0] < pl.real < zx[1] and zy[0] < pl.imag < zy[1]
+        ax = axi if inz else ax_a
+        ax.plot(pl.real, pl.imag, marker='x', color='w', ms=4, mew=0.9, ls='none')
+        dx, ha = ((-0.006, 'right') if k == 'e2' else (0.006, 'left')) if inz else (0.03, 'left')
+        ax.text(pl.real + dx, pl.imag + (0.006 if inz else 0.02), names[k], color='w', fontsize=6, ha=ha)
+    axi.text(1.005, -LENS_ETA - 0.018, r'$\omega_c$', color='c', fontsize=6)
     ax_a.text(0.03, 0.04, 'Long et al. lens', transform=ax_a.transAxes, color='w', fontsize=6)
     ax_a.set_xlabel(r"Re $\omega/\omega_r$"); ax_a.set_ylabel(r"Im $\omega/\omega_r$")
-    _cbar_right(fig, ax_a, im, r'$\log_{10}|t(\omega)|$').set_ticks([-1, 0, 1, 2, 3])
+    _cbar_right(fig, ax_a, im, r'$\log_{10}T(\omega)$', extend='max').set_ticks([-2, 0, 2, 4, 6])
 
+    # b: T = |t|^2, R = |r|^2 (out / drive at the same instant). No t_free here: a perfect lens is
+    # designed for t = 1 itself (Long et al. Fig. 2c), the complementary slabs cancel the path.
     t, tl, rl, oc = _lens_td()
-    ax_b.semilogy(t, np.abs(tl), color=C.C_T, label=r'$|t(t)|/|E_{\rm inc}(t)|$')
-    ax_b.semilogy(t, np.abs(rl), color=C.C_R, label=r'$|r(t)|/|E_{\rm inc}(t)|$')
-    ax_b.axhline(abs(oc['tL'][0]), color=C.C_T, ls='--', lw=C.LW_GUIDE)
-    ax_b.axhline(abs(oc['rL'][0]), color=C.C_R, ls='--', lw=C.LW_GUIDE)
-    ax_b.set_xlim(0, 40); ax_b.set_ylim(1e-3, 1e3)
-    ax_b.set_xlabel(r'time after turn-on ($T_r$)'); ax_b.set_ylabel('output / drive')
+    m = t > 1                                  # skip the ratio's 0/0 before the drive is on
+    t, tl, rl = t[m], tl[m], rl[m]
+    ax_b.semilogy(t, np.abs(tl) ** 2, color=C.C_T, label=r'$T(t)$')
+    ax_b.semilogy(t, np.abs(rl) ** 2, color=C.C_R, label=r'$R(t)$')
+    ax_b.axhline(abs(oc['tL'][0]) ** 2, color=C.C_T, ls=':', lw=C.LW_GUIDE)
+    ax_b.axhline(abs(oc['rL'][0]) ** 2, color=C.C_R, ls=':', lw=C.LW_GUIDE)
+    print(f'B3L at w_c: T={abs(oc["tL"][0])**2:.4f} R={abs(oc["rL"][0])**2:.2e}; at t=40: '
+          f'T={np.interp(40, t, np.abs(tl)**2):.3g} R={np.interp(40, t, np.abs(rl)**2):.3g}')
+    ax_b.set_xlim(0, 40); ax_b.set_ylim(1e-6, 1e6)
+    ax_b.set_xlabel(r'time after turn-on ($T_r$)')
     ax_b.legend(loc='upper left', fontsize=5)
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b')])
     C.save(fig, os.path.join(OUT, 'B3L_long_lens.png'))
@@ -626,6 +686,7 @@ def fig_grow():
 
 FIGS = {'freq': fig_freq, 'freq_simple': fig_freq_simple, 'eta_zero': fig_eta_zero, 'trunc': fig_trunc,
         'time': fig_time, 'grow': fig_grow, 'single_layer': fig_single_layer, 'slab_td': fig_slab_td,
+        'slab_td_t': lambda: fig_slab_td('t'), 'slab_td_raw': lambda: fig_slab_td('raw'),
         'lens': fig_lens}
 
 if __name__ == '__main__':

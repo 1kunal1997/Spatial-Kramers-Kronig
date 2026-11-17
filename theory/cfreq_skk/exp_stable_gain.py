@@ -158,6 +158,12 @@ if __name__ == '__main__':
             for name in ('lorentz', 'fano2'):
                 data[f'skk_tallmap_{name}'] = cmap_logabs(name, D[name], d, 'rR', xr, yt)
             data[f'{cname}_fano2_eps_real'] = cf.eps_fano2([a], D['fano2'])[0]
+            # B8 two-line, 2026-11-16 revision: transmission maps (log10|t|) instead of r_R
+            for name in ('lorentz', 'fano2'):
+                data[f'skk_tallmap_t_{name}'] = cmap_logabs(name, D[name], d, 'tL', xr, yt)
+                act = np.flatnonzero(np.abs(chi) > 1e-3)          # skip the near-vacuum tail layers
+                mp = np.concatenate([material_poles(name, D[name], j) for j in act])
+                data[f'skk_matpoles_{name}'] = mp[mp.real > 0] / a
             # angles: frequency domain at w_c, s and p (ideal staircase vs EIT realisation)
             for pol in ('s', 'p'):
                 rows = []

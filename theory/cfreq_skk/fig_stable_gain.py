@@ -33,19 +33,34 @@ FD_EVERY = 100                       # FDTD samples are 0.05 T_r apart -> a mark
 
 
 def _cbar_right(fig, ax, im, label, gap_in=0.08, w_in=0.08):
-    """Colorbar in the reserved right margin, beside `ax`, without touching its 4:3 box."""
+    """Colorbar in the reserved right margin, beside `ax`, without touching its 4:3 box. The
+    triangle on top = values above the range (drawn white on the maps, 2026-11-16)."""
     W, H = fig.get_size_inches()
     pos = ax.get_position()
     cax = fig.add_axes([pos.x1 + gap_in / W, pos.y0, w_in / W, pos.height])
-    cb = fig.colorbar(im, cax=cax); cb.set_label(label); cb.outline.set_linewidth(0.6)
+    cb = fig.colorbar(im, cax=cax, extend='max'); cb.set_label(label); cb.outline.set_linewidth(0.6)
     return cb
 
 
-def _map(ax, key, poles_list, eta, ykey=None):
+MAGMA_OVER = plt.get_cmap('magma').copy(); MAGMA_OVER.set_over('w')
+
+
+T_LIM = (-2.0, 6.0)
+
+
+def _to_T(Z, y, L):
+    """log10|t| map -> log10 T = 2 log10|t/t_free|, |t_free(w)| = e^{-Im(w) L} (c = 1, w = 2 pi y).
+    Same poles as |t|; removes the vacuum propagation factor that otherwise dominates thick stacks
+    far below the real axis (2026-11-16, presentation maps)."""
+    return 2 * (Z + (2 * np.pi * np.asarray(y))[:, None] * L / np.log(10))
+
+
+def _map(ax, key, poles_list, eta, ykey=None, L=None):
     ykey = ykey or ('map_y' if 'slab' in key else 'skk_map_y')
+    Z, lim = (D[key], MAP_LIM) if L is None else (_to_T(D[key], D[ykey], L), T_LIM)
     im = ax.pcolormesh(D['map_x'] if 'slab' in key else D['skk_map_x'], D[ykey],
-                       np.clip(D[key], *MAP_LIM), cmap='magma', vmin=MAP_LIM[0], vmax=MAP_LIM[1],
-                       shading='auto', rasterized=True)
+                       np.maximum(Z, lim[0]), cmap=MAGMA_OVER, vmin=lim[0],
+                       vmax=lim[1], shading='auto', rasterized=True)
     ax.axhline(-eta, color='w', lw=C.LW_GUIDE, ls='--')
     ax.axhline(0, color='w', lw=C.LW_GUIDE, ls=':')
     ax.plot([1], [-eta], marker='*', color='c', ms=7, ls='none')
@@ -63,9 +78,13 @@ def fig_slab(stable='eit', fdtd=True):
     One figure per stable medium (split 2026-11-13: the shared map mixed two different slabs).
     c, d: log10|t(w)| of THAT slab over complex w (bright = slab poles); white markers = poles of
     the material eps(w) itself (the slab poles pile up around them, where |eps| -> inf, t -> 0).
-    e, f: |t(t)/t_free(t)| = |tau(t)|, dotted = frequency-domain |tau(w_c)| (same for all media)."""
+    e, f: T(t) = |t(t)/t_free(t)|^2 = |tau(t)|^2, dotted = frequency-domain T(w_c) (same for all
+    media). fdtd=False is the presentation version (2026-11-16): titles on a, b; no text boxes or
+    legends."""
+    pres = not fdtd
     title = {'eit': 'EIT', 'fano2': 'two-line'}[stable]
-    fig, axs, _ = C.panel_grid(3, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12)
+    fig, axs, _ = C.panel_grid(3, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12,
+                               margin_t=C.LAYOUT_PAD_IN + (0.16 if pres else 0))
     (ax_a, ax_b), (ax_c, ax_d), (ax_e, ax_f) = axs
     w = D['slab_w']
     for ax, nm, txt in ((ax_a, 'lorentz', 'single Lorentz'), (ax_b, stable, title)):
@@ -76,41 +95,50 @@ def fig_slab(stable='eit', fdtd=True):
         axr.set_ylim(0, 0.42); ax.set_ylim(0.8, 1.25)
         axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
         ax.axvline(1, color='gray', lw=C.LW_GUIDE, ls=':')
-        ax.text(0.06, 0.92, txt, transform=ax.transAxes, fontsize=6, va='top')
+        if pres:
+            ax.set_title(txt[0].upper() + txt[1:] + r' oscillator, $\epsilon(\omega_c)=1-0.3i$', fontsize=7)
+        else:
+            ax.text(0.06, 0.92, txt, transform=ax.transAxes, fontsize=6, va='top')
 
     if stable == 'fano2':        # tall window: shows the broad pole (-0.25) and its FP chain too
-        im = _pmap(ax_c, 'tallmap_t_lorentz', 'tall_x', 'tall_y', 'lorentz')
-        _pmap(ax_d, 'tallmap_t_fano2', 'tall_x', 'tall_y', 'fano2')
+        Lm = 1.0 if pres else None
+        im = _pmap(ax_c, 'tallmap_t_lorentz', 'tall_x', 'tall_y', 'lorentz', L=Lm)
+        _pmap(ax_d, 'tallmap_t_fano2', 'tall_x', 'tall_y', 'fano2', L=Lm)
     else:
         im = _map(ax_c, 'slab_map_lorentz', [(D['slab_poles_lorentz'], 'x')], ETA_SLAB)
         _map(ax_d, f'slab_map_{stable}', [(D[f'slab_poles_{stable}'], 'x')], ETA_SLAB)
         for ax in (ax_c, ax_d):
             ax.set_ylim(D['map_y'][0], D['map_y'][-1])
     for ax, txt in ((ax_c, 'single Lorentz'), (ax_d, title)):
-        ax.text(0.03, 0.06, txt + r' slab, $1\lambda_r$', transform=ax.transAxes, color='w', fontsize=6)
-    _cbar_right(fig, ax_d, im, r'$\log_{10}|t(\omega)|$')
+        if not pres:
+            ax.text(0.03, 0.06, txt + r' slab, $1\lambda_r$', transform=ax.transAxes, color='w', fontsize=6)
+    _cbar_right(fig, ax_d, im, r'$\log_{10}T(\omega)$' if pres else r'$\log_{10}|t(\omega)|$')
 
     t = D['slab_t']; m = t > 1
     for ax, nm, txt in ((ax_e, 'lorentz', 'single Lorentz'), (ax_f, stable, title)):
         tc = META['slab'][nm]['tau_c']
-        ax.semilogy(t[m], D[f'slab_tau_{nm}'][m] * tc, color=C.C_T, lw=C.LW_THIN, label=txt)
+        ax.semilogy(t[m], (D[f'slab_tau_{nm}'][m] * tc) ** 2, color=C.C_T, lw=C.LW_THIN, label=txt)
         if fdtd:
             ft, fr = F[f'slab_{nm}_t'], F[f'slab_{nm}_tau']
             k = (ft > 2) & (ft < 70)
-            ax.plot(ft[k][::FD_EVERY], fr[k][::FD_EVERY] * tc, marker='o', mfc='none', mec='k', ms=3,
+            ax.plot(ft[k][::FD_EVERY], (fr[k][::FD_EVERY] * tc) ** 2, marker='o', mfc='none', mec='k', ms=3,
                     mew=0.6, ls='none', label='FDTD')
-        ax.axhline(tc, color=C.C_T, lw=C.LW_GUIDE, ls=':')
-        ax.set_xlim(0, 100); ax.set_ylim(1e-2, 1e3)
+        ax.axhline(tc ** 2, color=C.C_T, lw=C.LW_GUIDE, ls=':')
+        ax.set_xlim(0, 100); ax.set_ylim(1e-3, 1e6)
         ax.set_xlabel(r'time after turn-on ($T_r$)')
-        ax.set_ylabel(r'$|t(t)/t_{\rm free}(t)|$')
-        ax.legend(loc='upper left', fontsize=5)
+        ax.set_ylabel(r'$T(t)$')
+        if not pres:
+            ax.legend(loc='upper left', fontsize=5)
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd'), (ax_e, 'e'), (ax_f, 'f')])
     C.save(fig, os.path.join(OUT, f'B7_{stable}_slab.png' if fdtd else f'B7_{stable}_slab_noFDTD.png'))
 
 
-def _pmap(ax, key, xkey, ykey, nm, lim=MAP_LIM):
+def _pmap(ax, key, xkey, ykey, nm, lim=MAP_LIM, L=None):
     """Like _map, for data/slab_poles.npz maps (material-pole x markers of medium nm)."""
-    im = ax.pcolormesh(P[xkey], P[ykey], np.clip(P[key], *lim), cmap='magma', vmin=lim[0],
+    Z = P[key]
+    if L is not None:
+        Z, lim = _to_T(Z, P[ykey], L), T_LIM
+    im = ax.pcolormesh(P[xkey], P[ykey], np.maximum(Z, lim[0]), cmap=MAGMA_OVER, vmin=lim[0],
                        vmax=lim[1], shading='auto', rasterized=True)
     ax.axhline(-ETA_SLAB, color='w', lw=C.LW_GUIDE, ls='--')
     ax.axhline(0, color='w', lw=C.LW_GUIDE, ls=':')
@@ -296,6 +324,71 @@ def fig_skk(stable='eit'):
     C.save(fig, os.path.join(OUT, 'B8_one_way_invisible_skk.png' if stable == 'eit' else 'B8_fano2_skk.png'))
 
 
+def fig_skk_twoline():
+    """B8 (two-line, presentation version 2026-11-16): the B1s 4th-order-pole target at eta = 0.05.
+    a: target eps(y, w_c) (any realisation hits it); b: the two-line layers at real w_r (passive);
+    c, d: log10 T(w) = log10|t/t_free|^2 over complex w of the single-Lorentz and the two-line stack,
+          x = material poles of every layer (|chi| > 1e-3);
+    e, f: R_L, R_R, T(t) = |t/t_free|^2 in the time domain, dotted = frequency-domain values.
+    Single Lorentz (e) is plotted while the drive is > 1e-12 of its peak (unshifted synthesis)."""
+    fig, axs, _ = C.panel_grid(3, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12,
+                               margin_t=C.LAYOUT_PAD_IN + 0.16,
+                               row_gap=C.XLABEL_H_IN + C.GAP_WS_IN + 0.16)
+    (ax_a, ax_b), (ax_c, ax_d), (ax_e, ax_f) = axs
+    case = 'simple_eta0.05'
+    y, chi = D[f'{case}_y'], D[f'{case}_chi']
+    yf = np.linspace(-1, 1, 2001); s = META['simple']
+    tf = s['chimax'] * s['delta'] ** 4 / (yf + 1j * s['delta']) ** 4
+    axr = C.profile_panel(ax_a, yf, 1 + tf.real, tf.imag, xlabel=r'$y/\lambda_r$',
+                          ylab_im=r"$\epsilon''(y,\omega_c)$", xlim=(-1, 1))
+    ax_a.set_ylabel(r"$\epsilon'(y,\omega_c)$", color=C.C_EPS_RE)
+    axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
+    axr.fill_between(yf, tf.imag, 0, where=tf.imag < 0, color=C.C_EPS_IM, alpha=0.15, lw=0)
+    axr.text(0.62, 0.08, 'gain', transform=axr.transAxes, color=C.C_EPS_IM, fontsize=6)
+    er = D[f'{case}_fano2_eps_real']
+    axr = C.profile_panel(ax_b, y, er.real, er.imag, xlabel=r'$y/\lambda_r$',
+                          ylab_im=r"$\epsilon''(y,\omega_r)$", xlim=(-1, 1))
+    ax_b.set_ylabel(r"$\epsilon'(y,\omega_r)$", color=C.C_EPS_RE)
+    axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
+    axr.set_ylim(bottom=-0.02)
+    ax_a.set_title(r'target at $\omega_c$', fontsize=7)
+    ax_b.set_title(r'two-line layers at real $\omega_r$', fontsize=7)
+
+    for ax, nm, txt in ((ax_c, 'lorentz', 'single Lorentz'), (ax_d, 'fano2', 'two-line')):
+        im = _map(ax, f'skk_tallmap_t_{nm}', [], 0.05, ykey='skk_tall_y', L=2 * META['simple']['Y'])
+        mp = D[f'skk_matpoles_{nm}']                         # one per layer (x), as in B3s / B7
+        ax.plot(mp.real, mp.imag, marker='x', color='w', ms=2.5, mew=0.5, ls='none')
+        ax.plot([1], [-0.05], marker='*', color='c', ms=7, ls='none', zorder=5)   # w_c on top
+        ax.set_ylim(D['skk_tall_y'][0], D['skk_tall_y'][-1])
+        ax.set_title(txt + ' layers', fontsize=7)
+    # c zoomed onto its ring of material poles around w_c (half above the drive line = the gain
+    # layers); at d's window the ring is a dot
+    ax_c.set_xlim(0.95, 1.07); ax_c.set_ylim(-0.09, 0.005)
+    _cbar_right(fig, ax_d, im, r'$\log_{10}T(\omega)$')
+
+    t = D[f'{case}_t']; M = META['skk'][case]
+    for ax, nm in ((ax_e, 'lorentz'), (ax_f, 'fano2')):
+        m = (t > 1) & (t <= 150)
+        if nm == 'lorentz':
+            m &= t < np.log(1e12) / (2 * np.pi * 0.05)
+        for key, ref, col, ls in (('rL', 'rL', C.C_R, '-'), ('rR', 'rR', C.C_R, '--'),
+                                  ('tauL', 'tau', C.C_T, '-')):
+            ax.semilogy(t[m], D[f'{case}_{nm}_{key}'][m] ** 2, color=col, ls=ls, lw=C.LW_MAIN)
+            ax.axhline(M[nm][ref] ** 2, color=col, ls=':', lw=C.LW_GUIDE)
+        ax.set_xlim(0, 150); ax.set_ylim(1e-12, 1e6)
+        ax.set_xlabel(r'time after turn-on ($T_r$)')
+        ax.text(0.97, 0.72, r'$R_R$', transform=ax.transAxes, color=C.C_R, fontsize=6, ha='right')
+        ax.text(0.97, 0.62, r'$T$', transform=ax.transAxes, color=C.C_T, fontsize=6, ha='right')
+        ax.text(0.97, 0.10, r'$R_L$', transform=ax.transAxes, color=C.C_R, fontsize=6, ha='right')
+        i = np.searchsorted(t, 85.0)
+        print(f'B8 two-line fig, {nm}: at t=85 R_L={D[f"{case}_{nm}_rL"][i]**2:.3g} '
+              f'R_R={D[f"{case}_{nm}_rR"][i]**2:.3g} T={D[f"{case}_{nm}_tauL"][i]**2:.4g}; predicted '
+              f'R_L={M[nm]["rL"]**2:.3g} R_R={M[nm]["rR"]**2:.3g} T={M[nm]["tau"]**2:.4f}')
+    ax_e.set_ylabel(r'$R_L,\ R_R,\ T$')
+    C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd'), (ax_e, 'e'), (ax_f, 'f')])
+    C.save(fig, os.path.join(OUT, 'B8_fano2_skk.png'))
+
+
 def fig_angle():
     """B9: angle dependence at w_c (EIT realisation, s and p) + time-domain checks; EIT layers."""
     fig, axs, _ = C.panel_grid(1, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12)
@@ -331,7 +424,7 @@ def fig_angle():
 
 
 FIGS = {'slab': lambda: (fig_slab('eit'), fig_slab('fano2')), 'skk': fig_skk, 'angle': fig_angle,
-        'skk_fano2': lambda: fig_skk('fano2'), 'slab_noFDTD': lambda: fig_slab('fano2', fdtd=False),
+        'skk_fano2': fig_skk_twoline, 'slab_noFDTD': lambda: fig_slab('fano2', fdtd=False),
         'slab_thick': lambda: (fig_slab_thick('eit'), fig_slab_thick('fano2')),
         'eps_map': lambda: (fig_eps_map('eit'), fig_eps_map('fano2')), 'pole_vs_L': fig_pole_vs_L}
 if __name__ == '__main__':
