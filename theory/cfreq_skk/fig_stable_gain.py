@@ -324,19 +324,13 @@ def fig_skk(stable='eit'):
     C.save(fig, os.path.join(OUT, 'B8_one_way_invisible_skk.png' if stable == 'eit' else 'B8_fano2_skk.png'))
 
 
-def fig_skk_twoline():
-    """B8 (two-line, presentation version 2026-11-16): the B1s 4th-order-pole target at eta = 0.05.
-    a: target eps(y, w_c) (any realisation hits it); b: the two-line layers at real w_r (passive);
-    c, d: log10 T(w) = log10|t/t_free|^2 over complex w of the single-Lorentz and the two-line stack,
-          x = material poles of every layer (|chi| > 1e-3);
-    e, f: R_L, R_R, T(t) = |t/t_free|^2 in the time domain, dotted = frequency-domain values.
-    Single Lorentz (e) is plotted while the drive is > 1e-12 of its peak (unshifted synthesis)."""
-    fig, axs, _ = C.panel_grid(3, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + 0.12,
-                               margin_t=C.LAYOUT_PAD_IN + 0.16,
-                               row_gap=C.XLABEL_H_IN + C.GAP_WS_IN + 0.16)
-    (ax_a, ax_b), (ax_c, ax_d), (ax_e, ax_f) = axs
+B8_MAP_LIM = (-1.0, 2.0)            # 2026-11-16: narrower than T_LIM so the stack's features show
+
+
+def _b8_profiles(ax_a, ax_d):
+    """a: target eps(y, w_c) (every realisation hits it); d: the two-line layers at real w_r."""
     case = 'simple_eta0.05'
-    y, chi = D[f'{case}_y'], D[f'{case}_chi']
+    y = D[f'{case}_y']
     yf = np.linspace(-1, 1, 2001); s = META['simple']
     tf = s['chimax'] * s['delta'] ** 4 / (yf + 1j * s['delta']) ** 4
     axr = C.profile_panel(ax_a, yf, 1 + tf.real, tf.imag, xlabel=r'$y/\lambda_r$',
@@ -344,49 +338,127 @@ def fig_skk_twoline():
     ax_a.set_ylabel(r"$\epsilon'(y,\omega_c)$", color=C.C_EPS_RE)
     axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
     axr.fill_between(yf, tf.imag, 0, where=tf.imag < 0, color=C.C_EPS_IM, alpha=0.15, lw=0)
-    axr.text(0.62, 0.08, 'gain', transform=axr.transAxes, color=C.C_EPS_IM, fontsize=6)
     er = D[f'{case}_fano2_eps_real']
-    axr = C.profile_panel(ax_b, y, er.real, er.imag, xlabel=r'$y/\lambda_r$',
+    axr = C.profile_panel(ax_d, y, er.real, er.imag, xlabel=r'$y/\lambda_r$',
                           ylab_im=r"$\epsilon''(y,\omega_r)$", xlim=(-1, 1))
-    ax_b.set_ylabel(r"$\epsilon'(y,\omega_r)$", color=C.C_EPS_RE)
+    ax_d.set_ylabel(r"$\epsilon'(y,\omega_r)$", color=C.C_EPS_RE)
     axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
     axr.set_ylim(bottom=-0.02)
     ax_a.set_title(r'target at $\omega_c$', fontsize=7)
-    ax_b.set_title(r'two-line layers at real $\omega_r$', fontsize=7)
+    ax_d.set_title(r'two-line layers at real $\omega_r$', fontsize=7)
 
-    for ax, nm, txt in ((ax_c, 'lorentz', 'single Lorentz'), (ax_d, 'fano2', 'two-line')):
-        im = _map(ax, f'skk_tallmap_t_{nm}', [], 0.05, ykey='skk_tall_y', L=2 * META['simple']['Y'])
-        mp = D[f'skk_matpoles_{nm}']                         # one per layer (x), as in B3s / B7
-        ax.plot(mp.real, mp.imag, marker='x', color='w', ms=2.5, mew=0.5, ls='none')
-        ax.plot([1], [-0.05], marker='*', color='c', ms=7, ls='none', zorder=5)   # w_c on top
-        ax.set_ylim(D['skk_tall_y'][0], D['skk_tall_y'][-1])
-        ax.set_title(txt + ' layers', fontsize=7)
-    # c zoomed onto its ring of material poles around w_c (half above the drive line = the gain
-    # layers); at d's window the ring is a dot
-    ax_c.set_xlim(0.95, 1.07); ax_c.set_ylim(-0.09, 0.005)
-    _cbar_right(fig, ax_d, im, r'$\log_{10}T(\omega)$')
+
+def _b8_lorentz_zoom():
+    """Fine log10|t| map of the single-Lorentz stack around w_c (Re 0.95-1.05, Im -0.09-0.005), for
+    B8 b; the stored tall map is too coarse there. Same design call as exp_stable_gain.py; cached."""
+    fn = os.path.join(_HERE, 'data', 'b8_lorentz_zoom.npz')
+    if os.path.exists(fn):
+        Q = np.load(fn); return Q['x'], Q['y'], Q['Z']
+    sys.path.insert(0, _HERE)
+    import cfreq_lib as cf
+    case = 'simple_eta0.05'
+    y, chi = D[f'{case}_y'], D[f'{case}_chi']
+    d = np.full(y.size, 2 * META['simple']['Y'] / y.size)
+    wc = cf.omega_c(0.05); a = wc.real
+    p = cf.lorentz_design(chi, wc, 0.5 * cf.kappa_max(chi, wc)); assert p['ok']
+    x = np.linspace(0.95, 1.05, 301); yy = np.linspace(-0.09, 0.005, 286)
+    W = (a * (x[None, :] + 1j * yy[:, None])).ravel()
+    Z = np.log10(np.abs(cf.rt_model(cf.eps_lorentz, p, d, W)['tL'])).reshape(yy.size, x.size)
+    np.savez(fn, x=x, y=yy, Z=Z)
+    return x, yy, Z
+
+
+def fig_skk_twoline():
+    """B8 (two-line, slide layout 2x3, 2026-11-16): the B1s 4th-order-pole target at eta = 0.05.
+    rows: single-Lorentz layers (top), two-line layers (bottom).
+    a: target eps(y, w_c); d: the two-line layers at real w_r (passive).
+    b, e: log10 T(w) = log10|t/t_free|^2 over complex w of each stack (colour range -1..2).
+    c, f: R_L, R_R, T(t) = |t/t_free|^2 in the time domain, dotted = frequency-domain values.
+    Time axes stop at t = 88, where the single-Lorentz drive has fallen to 1e-12 of its peak
+    (beyond that its unshifted synthesis is noise)."""
+    gap = 0.08 + 0.08 + 2 * C.YLABEL_W_IN + C.CENTER_GAP_IN
+    fig, axs, _ = C.panel_grid(2, 3, has_twin=True, width_in=7.5, margin_l=0.56, col_gap=gap,
+                               margin_t=C.LAYOUT_PAD_IN + 0.16,
+                               row_gap=C.XLABEL_H_IN + C.GAP_WS_IN + 0.16)
+    (ax_a, ax_b, ax_c), (ax_d, ax_e, ax_f) = axs
+    case = 'simple_eta0.05'
+    _b8_profiles(ax_a, ax_d)
+
+    Lst = 2 * META['simple']['Y']
+    for ax in (ax_b, ax_e):
+        nm = 'lorentz' if ax is ax_b else 'fano2'
+        if nm == 'lorentz':
+            xm, ym, Zl = _b8_lorentz_zoom()
+        else:
+            xm, ym, Zl = D['skk_map_x'], D['skk_tall_y'], D[f'skk_tallmap_t_{nm}']
+        Z = _to_T(Zl, ym, Lst)
+        im = ax.pcolormesh(xm, ym, np.maximum(Z, B8_MAP_LIM[0]),
+                           cmap=MAGMA_OVER, vmin=B8_MAP_LIM[0], vmax=B8_MAP_LIM[1],
+                           shading='auto', rasterized=True)
+        ax.axhline(-0.05, color='w', lw=C.LW_GUIDE, ls='--')
+        ax.axhline(0, color='w', lw=C.LW_GUIDE, ls=':')
+        ax.plot([1], [-0.05], marker='*', color='c', ms=7, ls='none', zorder=5)
+        ax.text(1.008, -0.05 + 0.004, r'$\omega_c$', color='c', fontsize=6)
+        ax.set_xlabel(r"Re $\omega/\omega_r$"); ax.set_ylabel(r"Im $\omega/\omega_r$")
+        ax.set_ylim(ym[0], ym[-1])
+        _cbar_right(fig, ax, im, r'$\log_{10}T(\omega)$')
+    # b zoomed onto the single-Lorentz stack's ring of features around w_c (its layer poles; half
+    # lie above the drive line); at e's window that ring is a dot
+    ax_b.set_title('single Lorentz layers', fontsize=7); ax_e.set_title('two-line layers', fontsize=7)
 
     t = D[f'{case}_t']; M = META['skk'][case]
-    for ax, nm in ((ax_e, 'lorentz'), (ax_f, 'fano2')):
-        m = (t > 1) & (t <= 150)
-        if nm == 'lorentz':
-            m &= t < np.log(1e12) / (2 * np.pi * 0.05)
-        for key, ref, col, ls in (('rL', 'rL', C.C_R, '-'), ('rR', 'rR', C.C_R, '--'),
-                                  ('tauL', 'tau', C.C_T, '-')):
-            ax.semilogy(t[m], D[f'{case}_{nm}_{key}'][m] ** 2, color=col, ls=ls, lw=C.LW_MAIN)
+    for ax, nm in ((ax_c, 'lorentz'), (ax_f, 'fano2')):
+        m = (t > 1) & (t < np.log(1e12) / (2 * np.pi * 0.05))
+        for key, ref, col, ls, lab in (('rL', 'rL', C.C_R, '-', r'$R_L$'), ('rR', 'rR', C.C_R, '--', r'$R_R$'),
+                                       ('tauL', 'tau', C.C_T, '-', r'$T$')):
+            ax.semilogy(t[m], D[f'{case}_{nm}_{key}'][m] ** 2, color=col, ls=ls, lw=C.LW_MAIN, label=lab)
             ax.axhline(M[nm][ref] ** 2, color=col, ls=':', lw=C.LW_GUIDE)
-        ax.set_xlim(0, 150); ax.set_ylim(1e-12, 1e6)
-        ax.set_xlabel(r'time after turn-on ($T_r$)')
-        ax.text(0.97, 0.72, r'$R_R$', transform=ax.transAxes, color=C.C_R, fontsize=6, ha='right')
-        ax.text(0.97, 0.62, r'$T$', transform=ax.transAxes, color=C.C_T, fontsize=6, ha='right')
-        ax.text(0.97, 0.10, r'$R_L$', transform=ax.transAxes, color=C.C_R, fontsize=6, ha='right')
+        ax.set_xlim(0, 88); ax.set_ylim(1e-9, 1e3)
+        ax.set_ylabel(r'$R_L,\ R_R,\ T$')
+        ax.legend(loc='center right', fontsize=5)
         i = np.searchsorted(t, 85.0)
         print(f'B8 two-line fig, {nm}: at t=85 R_L={D[f"{case}_{nm}_rL"][i]**2:.3g} '
               f'R_R={D[f"{case}_{nm}_rR"][i]**2:.3g} T={D[f"{case}_{nm}_tauL"][i]**2:.4g}; predicted '
               f'R_L={M[nm]["rL"]**2:.3g} R_R={M[nm]["rR"]**2:.3g} T={M[nm]["tau"]**2:.4f}')
-    ax_e.set_ylabel(r'$R_L,\ R_R,\ T$')
-    C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd'), (ax_e, 'e'), (ax_f, 'f')])
+    ax_c.set_title('single Lorentz layers', fontsize=7); ax_f.set_title('two-line layers', fontsize=7)
+    ax_f.set_xlabel(r'time after turn-on ($T_r$)'); ax_c.set_xlabel(r'time after turn-on ($T_r$)')
+    C.label_panels(fig, [(ax, l) for ax, l in zip(axs.ravel(), 'abcdef')], dx_in=0.54)
     C.save(fig, os.path.join(OUT, 'B8_fano2_skk.png'))
+
+
+def fig_skk_twoline_params():
+    """B8 backup (2x2): a, b = B8 a, d; c, d = per-layer parameters of the two lines,
+    eps = 1 + wp1^2/(w0^2 - w^2 - i g1 w) - wp2^2/(w0^2 - w^2 - i g2 w), common w0,
+    g1/2|w''| = 5 (broad), g2/2|w''| = 2 (narrow), wp2^2 = 0.9 (g2/g1) wp1^2 (cfreq_lib.fano2_design;
+    recomputed here from the stored chi(y), same call as exp_stable_gain.py)."""
+    sys.path.insert(0, _HERE)
+    import cfreq_lib as cf
+    case = 'simple_eta0.05'
+    y, chi = D[f'{case}_y'], D[f'{case}_chi']
+    wc = cf.omega_c(0.05); a, b = wc.real, abs(wc.imag)
+    p = cf.fano2_design(chi, wc)
+    fig, axs, _ = C.panel_grid(2, 2, has_twin=True, margin_l=0.47, margin_r=C.YLABEL_W_IN + C.LAYOUT_PAD_IN,
+                               margin_t=C.LAYOUT_PAD_IN + 0.16,
+                               row_gap=C.XLABEL_H_IN + C.GAP_WS_IN + 0.16)
+    (ax_a, ax_b), (ax_c, ax_d) = axs
+    _b8_profiles(ax_a, ax_b)
+    act = np.abs(chi) > 1e-3                    # vacuum-like tail layers carry no oscillator
+    for ax, g, f, ttl in ((ax_c, p['g1'], p['f1'], r'broad line ($+$): $\gamma_1/2|\omega^{\prime\prime}|=%g$'),
+                          (ax_d, p['g2'], p['f2'], r'narrow line ($-$): $\gamma_2/2|\omega^{\prime\prime}|=%g$')):
+        ax.plot(y[act], p['w0'][act] / a, color=C.C_EPS_RE, label=r'$\omega_0/\omega_r$')
+        ax.set_ylim(0.8, 1.2); ax.set_xlim(-1, 1)
+        ax.set_ylabel(r'$\omega_0/\omega_r$', color=C.C_EPS_RE)
+        ax.tick_params(axis='y', labelcolor=C.C_EPS_RE)
+        ax2 = ax.twinx(); ax._skk_twin = [ax2]
+        ax2.plot(y[act], np.sqrt(f[act]) / a, color=C_ORANGE)
+        ax2.set_ylabel(r'$\omega_p/\omega_r$', color=C_ORANGE)
+        ax2.tick_params(axis='y', labelcolor=C_ORANGE); ax2.set_ylim(0, 0.7)
+        ax.set_xlabel(r'$y/\lambda_r$')
+        ax.set_title(ttl % round(g / (2 * b), 6), fontsize=7)
+    print(f'B8 params: w0/w_r in [{(p["w0"][act]/a).min():.3f}, {(p["w0"][act]/a).max():.3f}], '
+          f'wp1/w_r max {np.sqrt(p["f1"]).max()/a:.3f}, wp2/w_r max {np.sqrt(p["f2"]).max()/a:.3f}')
+    C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b'), (ax_c, 'c'), (ax_d, 'd')])
+    C.save(fig, os.path.join(OUT, 'B8b_fano2_params.png'))
 
 
 def fig_angle():
@@ -424,7 +496,7 @@ def fig_angle():
 
 
 FIGS = {'slab': lambda: (fig_slab('eit'), fig_slab('fano2')), 'skk': fig_skk, 'angle': fig_angle,
-        'skk_fano2': fig_skk_twoline, 'slab_noFDTD': lambda: fig_slab('fano2', fdtd=False),
+        'skk_fano2': fig_skk_twoline, 'skk_fano2_params': fig_skk_twoline_params, 'slab_noFDTD': lambda: fig_slab('fano2', fdtd=False),
         'slab_thick': lambda: (fig_slab_thick('eit'), fig_slab_thick('fano2')),
         'eps_map': lambda: (fig_eps_map('eit'), fig_eps_map('fano2')), 'pole_vs_L': fig_pole_vs_L}
 if __name__ == '__main__':

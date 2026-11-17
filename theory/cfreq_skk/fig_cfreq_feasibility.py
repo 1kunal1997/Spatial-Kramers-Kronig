@@ -127,7 +127,6 @@ def fig_freq_simple():
     ax_a.set_ylabel(r"$\epsilon'(y,\omega_c)$", color=C.C_EPS_RE)
     axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
     axr.fill_between(yf, tf.imag, 0, where=tf.imag < 0, color=C.C_EPS_IM, alpha=0.15, lw=0)
-    axr.text(0.62, 0.08, 'gain', transform=axr.transAxes, color=C.C_EPS_IM, fontsize=6)
 
     er = cf.eps_lorentz([a], p)[0]
     axr = C.profile_panel(ax_b, y, er.real, er.imag, xlabel=r'$y/\lambda_r$',
@@ -153,7 +152,7 @@ def fig_freq_simple():
     ax_c.axvline(ETA, color='gray', lw=C.LW_GUIDE, ls=':')
     ax_c.set_xlabel(r'decay ratio $\eta = |\omega^{\prime\prime}|/\omega^{\prime}$')
     ax_c.set_ylabel(r'response at $\omega_c$')
-    ax_c.set_xlim(0, 0.12); ax_c.set_ylim(1e-12, 1e4); ax_c.legend(loc='upper left', ncol=3, fontsize=5)
+    ax_c.set_xlim(0, 0.12); ax_c.set_ylim(1e-12, 1e4); ax_c.legend(loc='center right', fontsize=5)
     i = np.argmin(abs(etas - ETA))
     print(f'B1s at eta={etas[i]:.3f}: R_L={res[i,0]:.2e} R_R={res[i,1]:.3g} T={res[i,2]:.6f}')
 
@@ -164,12 +163,11 @@ def fig_freq_simple():
     ax_d.plot(y, g, color=C.C_EPS_IM, label=r'$\gamma/2|\omega^{\prime\prime}|$')
     ax_d.plot(y, np.sqrt(p['w02']) / a, color=C.C_EPS_RE, label=r'$\omega_0/\omega_r$')
     ax_d.fill_between(y, g, 1, where=g < 1, color=C.C_EPS_IM, alpha=0.15, lw=0)
-    ax_d.text(-0.42, 0.62, 'gain', color=C.C_EPS_IM, fontsize=6)
     axd2 = ax_d.twinx(); ax_d._skk_twin = [axd2]
     axd2.plot(y, np.sqrt(p['wp2']) / a, color=C_ORANGE)
     axd2.set_ylabel(r'$\omega_p/\omega_r$', color=C_ORANGE)
     axd2.tick_params(axis='y', labelcolor=C_ORANGE); axd2.set_ylim(0, 0.25)
-    ax_d.plot([], [], color=C_ORANGE, label=r'$\omega_p/\omega_r$ (right)')
+    ax_d.plot([], [], color=C_ORANGE, label=r'$\omega_p/\omega_r$')
     print(f'B1s panel d: gamma/2|w\'\'| in [{g.min():.2f}, {g.max():.2f}], w0/w_r in '
           f'[{(np.sqrt(p["w02"]) / a).min():.4f}, {(np.sqrt(p["w02"]) / a).max():.4f}], '
           f'wp/w_r max {(np.sqrt(p["wp2"]) / a).max():.3f}')
@@ -455,17 +453,14 @@ def fig_single_layer():
     xr = a * np.linspace(0.85, 1.15, 301); yi = a * np.linspace(-0.10, 0.01, 221)
     W = xr[None, :] + 1j * yi[:, None]
     Z = cf.eps_lorentz(W.ravel(), p)[:, 0].imag.reshape(W.shape)
-    # 2026-11-16: viridis, not red/blue (those are eps'/eps'' in panel b); white contour = eps'' = 0
+    # 2026-11-16: viridis, not red/blue (those are eps'/eps'' in panel b)
     im = ax_a.pcolormesh(xr / a, yi / a, np.clip(Z, -0.6, 0.6), cmap='viridis', vmin=-0.6, vmax=0.6,
                          shading='auto', rasterized=True)
-    ax_a.contour(xr / a, yi / a, Z, levels=[0], colors='w', linewidths=C.LW_GUIDE)
     _drive_marks(ax_a, ETA, line='w', star='w')
     pole = lorentz_poles(p); pole = pole[pole.real > 0][0] / a
     ax_a.plot(pole.real, pole.imag, marker='x', color='w', ms=5, mew=1.0, ls='none')
     ax_a.text(0.865, -ETA + 0.003, 'drive', fontsize=6, color='w')
     ax_a.text(0.865, 0.0025, 'real axis', fontsize=6, color='w')
-    ax_a.text(0.865, -0.093, r"gain, $\epsilon''<0$", fontsize=6, color='w')
-    ax_a.text(0.865, -0.016, r"loss, $\epsilon''>0$", fontsize=6, color='w')
     ax_a.text(pole.real + 0.008, pole.imag + 0.002, r'pole $-i\gamma/2$', fontsize=6, color='w')
     ax_a.text(1.008, -ETA - 0.008, r'$\omega_c$', fontsize=6, color='w')
     ax_a.set_xlabel(r"Re $\omega/\omega_r$"); ax_a.set_ylabel(r"Im $\omega/\omega_r$")
@@ -476,9 +471,8 @@ def fig_single_layer():
     axr = C.profile_panel(ax_b, x, er.real, er.imag, xlabel=r'Re $\omega/\omega_r$',
                           ylab_im=r"$\epsilon''(\omega)$", xlim=(0.8, 1.2))
     ax_b.set_ylabel(r"$\epsilon'(\omega)$", color=C.C_EPS_RE)
-    # gam = |w''| here, so eps on the drive line is exactly conj(eps on the real axis): the dashed
-    # eps' lies on top of the solid one (drawn blue/white so both are visible)
-    ax_b.plot(x, ec.real, color=C.C_EPS_RE, lw=C.LW_MAIN, ls='--', gapcolor='w')
+    # gam = |w''| here, so eps on the drive line is exactly conj(eps on the real axis): eps' is the
+    # same on both lines (one solid curve), eps'' flips sign
     axr.plot(x, ec.imag, color=C.C_EPS_IM, lw=C.LW_MAIN, ls='--')
     ax_b.set_ylim(0.6, 1.4); axr.set_ylim(-0.6, 0.6)
     ax_b.plot([], [], color='k', lw=C.LW_MAIN, label='real axis')
@@ -583,6 +577,89 @@ def fig_slab_td(mode='T'):
                                    'raw': 'B3s3_raw_power.png'}[mode]))
 
 
+def _comsol_raw(chi_im, Ls=1.0):
+    """COMSOL (finest step) exit-face field E_out(t) itself, |E_out|^2, on the B3s time axis."""
+    import glob
+    files = sorted(glob.glob(os.path.join(_HERE, 'data', 'b3a_comsol_dt*_rho0.75.npz')),
+                   key=lambda f: int(os.path.basename(f).split('_dt')[1].split('_')[0]))
+    R = np.load(files[-1])
+    k = [i for i in range(0, len(R['combos']), 2) if np.isclose(R['combos'][i, 0], chi_im)][0]
+    ec = R['e_exit'][k] - 1j * R['e_exit'][k + 1]
+    return R['t'] - T0 - Ls, np.abs(ec) ** 2
+
+
+def fig_slab_wide():
+    """B3s 2x3 (slide layout, 2026-11-16): rows = loss slab (1 + 0.3i), gain slab (1 - 0.3i).
+    col 1: log10 T(w) over complex w (x = material pole, dashed = drive line, star = w_c).
+    col 2: the raw powers at the exit face, no division: |E_out(t)|^2 (blue, COMSOL circles) and
+           what vacuum would deliver there, |E_inc(t - L/c)|^2 (gray dashed); dotted = the driven
+           term alone, T(w_c)|E_inc(t - L/c)|^2.
+    col 3: T(t) = |E_out(t)|^2 / |E_inc(t - L/c)|^2 = col 2 blue / col 2 gray (B3s c, d).
+    Time axis: t - L/c after turn-on (when the first light can reach the exit face)."""
+    sys.path.insert(0, os.path.join(_HERE, 'comsol'))
+    wc = cf.omega_c(ETA); a, b = wc.real, abs(wc.imag)
+    gap = 0.08 + 0.08 + C.YLABEL_W_IN + C.YLABEL_W_IN + C.CENTER_GAP_IN
+    fig, axs, _ = C.panel_grid(2, 3, width_in=7.5, margin_l=0.56, col_gap=gap,
+                               margin_t=C.LAYOUT_PAD_IN + 0.16)
+    wr = cf.rfft_omega(NT, DT)
+    xr = a * np.linspace(0.9, 1.1, 241); yi = a * np.linspace(-0.12, 0.006, 190)
+    W = (xr[None, :] + 1j * yi[:, None]).ravel()
+    Ls, nl = 1.0, 40; d = np.full(nl, Ls / nl)
+    sh = int(round(Ls / DT))
+    t = np.arange(NT) * DT
+    _, vac = cf.complex_response(np.exp(1j * wr * Ls), t, ETA, T_ON, T0)   # E_inc(t - L/c)
+    for (tgt, g, lab), (axm, axp, axt) in zip(SLAB_CASES, axs):
+        p = cf.lorentz_design_gamma(np.array([tgt - 1]), wc, g * 2 * b); assert p['ok']
+        e = lambda w: np.repeat(cf.eps_lorentz(w, p), nl, axis=1)
+        Z = 2 * np.log10(np.abs(cf.rt(e(W), d, W)['tauL'])).reshape(yi.size, xr.size)
+        im = _tmap(axm, xr / a, yi / a, Z)
+        _drive_marks(axm, ETA, line='w', star='c')
+        axm.text(1.005, -ETA + 0.004, r'$\omega_c$', color='c', fontsize=6)
+        pole = lorentz_poles(p); pole = pole[pole.real > 0][0] / a
+        axm.plot(pole.real, pole.imag, marker='x', color='w', ms=4, mew=0.9, ls='none')
+        axm.text(0.03, 0.06, rf'$\epsilon(\omega_c)={tgt.real:.0f}{tgt.imag:+.1f}i$, '
+                 rf'$\gamma/2|\omega^{{\prime\prime}}|={g}$', transform=axm.transAxes, color='w', fontsize=6)
+        axm.set_ylabel(r"Im $\omega/\omega_r$")
+        _cbar_right(fig, axm, im, r'$\log_{10}T(\omega)$', extend='max').set_ticks([-2, 0, 2, 4, 6])
+
+        Tc = abs(cf.rt(e([wc]), d, [wc])['tauL'][0]) ** 2
+        _, out = cf.complex_response(cf.rt(e(wr), d, wr)['tL'], t, ETA, T_ON, T0)
+        x = t[sh:] - T0 - Ls; Po, Pv = np.abs(out[sh:]) ** 2, np.abs(vac[sh:]) ** 2
+        ok = (x > 0) & (Pv > 1e-28)
+        axp.semilogy(x[ok], Pv[ok], color='gray', ls='--', lw=C.LW_THIN, label=r'$|E_{\rm inc}(t-L/c)|^2$')
+        axp.semilogy(x[ok], Po[ok], color=C.C_T, lw=C.LW_THIN, label=r'$|E_{\rm out}(t)|^2$')
+        axp.semilogy(x[ok], Tc * Pv[ok], color=C.C_T, ls=':', lw=C.LW_GUIDE)
+        tq, pq = _comsol_raw(tgt.imag, Ls)
+        sel = (tq >= 1) & (np.abs(np.round(tq / 5) * 5 - tq) < 1e-6)
+        axp.plot(tq[sel], pq[sel], marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none', label='COMSOL')
+        axp.set_ylim(1e-20, 1e1); axp.set_ylabel('power at the exit face')
+
+        Tt = Po[ok] / Pv[ok]; xt = x[ok]
+        mk = xt > 1
+        axt.semilogy(xt[mk], Tt[mk], color=C.C_T, lw=C.LW_THIN, label=r'TMM $\times$ FFT')
+        tq2, qc, _ = _comsol_ratio(tgt.imag, Ls)
+        sel = (tq2 >= 1) & (np.abs(np.round(tq2 / 5) * 5 - tq2) < 1e-6)
+        axt.plot(tq2[sel], qc[sel] ** 2, marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none',
+                 label='COMSOL')
+        axt.axhline(Tc, color=C.C_T, lw=C.LW_GUIDE, ls=':')
+        axt.set_ylim(1e-3, 1e6); axt.set_ylabel(r'$T(t)$')
+        i60 = np.argmin(abs(xt - 60)); j60 = np.argmin(abs(tq - 60))
+        print(f'B3s wide {tgt}: T(w_c)={Tc:.4g}; t=60: T={Tt[i60]:.4g}, |E_out|^2 TMM={Po[ok][i60]:.3e} '
+              f'COMSOL={pq[j60]:.3e}, |E_inc(t-L)|^2={Pv[ok][i60]:.3e}')
+        for ax in (axp, axt):
+            ax.set_xlim(0, 60)
+        axt.text(0.97, 0.06, lab, transform=axt.transAxes, fontsize=6, ha='right')
+    for ax in axs[1]:
+        ax.set_xlabel(r'time after turn-on ($T_r$)')
+    axs[1][0].set_xlabel(r"Re $\omega/\omega_r$"); axs[0][0].set_xlabel(r"Re $\omega/\omega_r$")
+    axs[0][1].legend(loc='lower left', fontsize=5); axs[0][2].legend(loc='upper left', fontsize=5)
+    for ax, ttl in zip(axs[0], (r'$T(\omega)$ over complex $\omega$', 'raw powers (no division)',
+                                r'$T(t)=|E_{\rm out}(t)|^2/|E_{\rm inc}(t-L/c)|^2$')):
+        ax.set_title(ttl, fontsize=7)
+    C.label_panels(fig, [(ax, l) for ax, l in zip(axs.ravel(), 'abcdef')], dx_in=0.54)
+    C.save(fig, os.path.join(OUT, 'B3s4_slab_2x3.png'))
+
+
 def fig_lens():
     """B3L: Long et al.'s own perfect lens (Table 1 media, 1-D normal incidence, eta = 0.32).
     a: log10|t(w)| of the lens over complex w; x = material poles of eps and mu of medium 1
@@ -631,7 +708,9 @@ def fig_lens():
     # b: T = |t|^2, R = |r|^2 (out / drive at the same instant). No t_free here: a perfect lens is
     # designed for t = 1 itself (Long et al. Fig. 2c), the complementary slabs cancel the path.
     t, tl, rl, oc = _lens_td()
-    m = t > 1                                  # skip the ratio's 0/0 before the drive is on
+    # start at L/c (0.37 T_r), the first instant light can reach the exit face; before it the
+    # output is zero and the drive is still ~0 (Planck ramp), so the ratio is 0/0 noise
+    m = t > LENS_D.sum()
     t, tl, rl = t[m], tl[m], rl[m]
     ax_b.semilogy(t, np.abs(tl) ** 2, color=C.C_T, label=r'$T(t)$')
     ax_b.semilogy(t, np.abs(rl) ** 2, color=C.C_R, label=r'$R(t)$')
@@ -687,7 +766,7 @@ def fig_grow():
 FIGS = {'freq': fig_freq, 'freq_simple': fig_freq_simple, 'eta_zero': fig_eta_zero, 'trunc': fig_trunc,
         'time': fig_time, 'grow': fig_grow, 'single_layer': fig_single_layer, 'slab_td': fig_slab_td,
         'slab_td_t': lambda: fig_slab_td('t'), 'slab_td_raw': lambda: fig_slab_td('raw'),
-        'lens': fig_lens}
+        'lens': fig_lens, 'slab_wide': fig_slab_wide}
 
 if __name__ == '__main__':
     names = sys.argv[1:] or list(FIGS)
