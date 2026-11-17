@@ -554,3 +554,29 @@ A separate claude.ai session (literature only: no code, plots or numbers) listed
 - arXiv 2506.03485, 2604.26628, 2605.12842, 2609.29293 (unverified);
 - Baranov–Krasnok–Alù, Optica 2017;
 - Kim et al., PRL 129, 203601 (2022).
+
+## Lens replication + two-line ω₀ jumps (2026-11-16)
+- **B3L now uses semi-infinite Medium 1 on both sides** (was vacuum). Evidence that Long et al. use
+  Medium 1 as the surrounding/reference medium: their Fig. 2e propagating/evanescent boundaries sit at
+  ±0.46 k₀ = Re n₁(ω_r)·ω_r/c, Medium 1's light line (vacuum's would be ±0.185 k₀). With exactly
+  complementary media the stack's transfer matrix is the identity, so t = 1, r = 0 for ANY cladding
+  and any k∥ (checked, 50-digit mpmath). Numbers with Medium 1 outside: T(ω_c) = 0.988, R = 1.0e-9;
+  time domain at t = 40: T = 8.3e4, R = 1.0e4 (diverges as before; vacuum gave 8.0e4 / 1.5e4).
+  Medium 1's poles/zeros are branch points of t; the map continues κ = ω√(ε₁/μ₁) down each column,
+  so the cuts hang vertically below them (all below the drive line).
+- **Table 1 rounding.** Their Lorentz parameters reproduce their ω_r values, but at ω_c
+  ε₂/(−ε₁) = 1.0001 and μ₂/(−μ₁) = 0.994. Fine at k∥ = 0 (|t| = 0.994) but evanescent k∥ amplify it:
+  |t| = 0.40 at 1.5k₀, 6e-4 at 2k₀. Their Fig. 2c (|t| = 1 to 5k₀) must use the exact ω_c values.
+- **Their Fig. 2e is not reproduced.** At ω_r, k∥ = 0 we get t = −0.021 − 0.018i (|t| = 0.028, for
+  either cladding), consistent with bulk absorption e^{−Im(n₁)ω_r λ₀/c}·e^{−Im(n₂)ω_r λ₀/c} = 0.18 × 0.16;
+  their plot peaks at |t| ≈ 0.58. Unexplained (maybe an unstated normalisation). Keep 2e off the slide.
+- **Two-line ω₀ jumps are unavoidable** for this target. With γ₁, γ₂ fixed and a common ω₀, the phase
+  of G(ω₀) = 1/D₁ − ρ/D₂ at ω_c is monotonic in ω₀ and spans only 1.41 turns over ω₀ ∈ (0, ∞)
+  (1.28 turns on the 0.6–1.4 ω_r design window). The target's arg χ(y) winds 1.73 turns across the
+  active layers (4th-order pole: 4 × the half-turn of y + iδ). A continuous ω₀(y) would need span ≥ 1.73
+  turns, so at least one jump is forced (least-f₁ choice gives two). Single Lorentz has no jumps because
+  γ is a second knob: D = (ω₀² − a² + b² − γb) + i·a(2b − γ) can circle the origin continuously, but only
+  by passing γ < 2b, i.e. the gain that makes it diverge.
+- **Two-line gain window (on resonance, a ≫ b).** Im χ(ω_c) ∝ (γ₁ − 2b)⁻¹ − ρ(γ₂ − 2b)⁻¹ with ρ = f₂/f₁;
+  gain needs ρ > (γ₂ − 2b)/(γ₁ − 2b), passivity needs ρ ≤ γ₂/γ₁; compatible iff γ₁ > γ₂. For γ₁ = 10b,
+  γ₂ = 4b: 0.25 < ρ ≤ 0.40; design uses 0.36 (checked: ρ = 0.25 lossy, 0.30 gain).

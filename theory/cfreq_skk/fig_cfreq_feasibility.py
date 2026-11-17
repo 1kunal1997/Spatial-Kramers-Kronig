@@ -305,9 +305,36 @@ def _lens_em(w):
     return cat(e1, e2), cat(m1, m2)
 
 
-def _lens_rt(w):
+def _lens_rt(w, clad='m1'):
+    """r, t of the lens at normal incidence. clad='m1' (default since 2026-11-16): semi-infinite
+    Medium 1 on both sides, as in Long et al. Fig. 2 (their source sits in Medium 1 and their
+    propagating/evanescent boundaries are Medium 1's light lines); 'vac': vacuum outside.
+    t = exit-face field / entry-face incident field. With Medium 1 outside only its impedance
+    enters, kappa = w sqrt(eps1)/sqrt(mu1) (principal roots: the passive branch on the real axis;
+    branch points at Medium 1's own poles/zeros, Im w <= -0.365 w_r, below the drive line)."""
     E, U = _lens_em(w)
-    return cf.rt(E, LENS_D, w, mu=U)
+    if clad == 'vac':
+        return cf.rt(E, LENS_D, w, mu=U)
+    w = np.atleast_1d(np.asarray(w, complex))
+    e1, m1 = E[:, 0], U[:, 0]
+    kap = w * np.sqrt(e1) / np.sqrt(m1)
+    rL, tL = cf._rt_from_M(cf._layer_product(E, LENS_D, w, 0.0, U, 's'), kap)
+    return dict(rL=rL, tL=tL)
+
+
+def _lens_map(xr, yi):
+    """log10 T(w) = 2 log10|t| of the Medium-1-clad lens on the grid xr + i yi (yi ascending).
+    kappa = w sqrt(eps1/mu1) is continued DOWN each column from the real axis (sign chosen
+    closest to the row above), so the branch cuts from Medium 1's poles/zeros point straight
+    down (-i infinity) instead of lying horizontally as principal roots would put them."""
+    W = xr[None, :] + 1j * yi[:, None]
+    E, U = _lens_em(W.ravel())
+    k = (W.ravel() * np.sqrt(E[:, 0] / U[:, 0])).reshape(W.shape)
+    for i in range(yi.size - 2, -1, -1):
+        flip = np.abs(k[i] + k[i + 1]) < np.abs(k[i] - k[i + 1])
+        k[i, flip] *= -1
+    _, tL = cf._rt_from_M(cf._layer_product(E, LENS_D, W.ravel(), 0.0, U, 's'), k.ravel())
+    return 2 * np.log10(np.abs(tL)).reshape(W.shape)
 
 
 def _lens_td():
@@ -474,6 +501,7 @@ def fig_single_layer():
     # gam = |w''| here, so eps on the drive line is exactly conj(eps on the real axis): eps' is the
     # same on both lines (one solid curve), eps'' flips sign
     axr.plot(x, ec.imag, color=C.C_EPS_IM, lw=C.LW_MAIN, ls='--')
+    axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')     # eps'' = 0: the mirror line of the conjugate symmetry
     ax_b.set_ylim(0.6, 1.4); axr.set_ylim(-0.6, 0.6)
     ax_b.plot([], [], color='k', lw=C.LW_MAIN, label='real axis')
     ax_b.plot([], [], color='k', lw=C.LW_MAIN, ls='--', label='drive line')
@@ -601,6 +629,13 @@ def fig_slab_wide():
     gap = 0.08 + 0.08 + C.YLABEL_W_IN + C.YLABEL_W_IN + C.CENTER_GAP_IN
     fig, axs, _ = C.panel_grid(2, 3, width_in=7.5, margin_l=0.56, col_gap=gap,
                                margin_t=C.LAYOUT_PAD_IN + 0.16)
+    # only column 1 carries a colourbar: pull column 3 back to the normal gap, shrink the figure
+    W0, H0 = fig.get_size_inches(); dx = gap - (C.YLABEL_W_IN + C.CENTER_GAP_IN)
+    boxes = [(ax, ax.get_position()) for ax in axs.ravel()]
+    fig.set_size_inches(W0 - dx, H0)
+    for ax, p in boxes:
+        x0 = p.x0 * W0 - (dx if ax in axs[:, 2] else 0)
+        ax.set_position([x0 / (W0 - dx), p.y0, p.width * W0 / (W0 - dx), p.height])
     wr = cf.rfft_omega(NT, DT)
     xr = a * np.linspace(0.9, 1.1, 241); yi = a * np.linspace(-0.12, 0.006, 190)
     W = (xr[None, :] + 1j * yi[:, None]).ravel()
@@ -624,20 +659,21 @@ def fig_slab_wide():
 
         Tc = abs(cf.rt(e([wc]), d, [wc])['tauL'][0]) ** 2
         _, out = cf.complex_response(cf.rt(e(wr), d, wr)['tL'], t, ETA, T_ON, T0)
-        x = t[sh:] - T0 - Ls; Po, Pv = np.abs(out[sh:]) ** 2, np.abs(vac[sh:]) ** 2
-        ok = (x > 0) & (Pv > 1e-28)
+        x = t - T0; Po, Pv = np.abs(out) ** 2, np.abs(vac) ** 2     # x = t since turn-on
+        ok = (x > Ls) & (Pv > 1e-28)                                # nothing reaches the exit before L/c
         axp.semilogy(x[ok], Pv[ok], color='gray', ls='--', lw=C.LW_THIN, label=r'$|E_{\rm inc}(t-L/c)|^2$')
         axp.semilogy(x[ok], Po[ok], color=C.C_T, lw=C.LW_THIN, label=r'$|E_{\rm out}(t)|^2$')
-        axp.semilogy(x[ok], Tc * Pv[ok], color=C.C_T, ls=':', lw=C.LW_GUIDE)
-        tq, pq = _comsol_raw(tgt.imag, Ls)
+        axp.semilogy(x[ok], Tc * Pv[ok], color=C.C_T, ls=':', lw=C.LW_GUIDE,
+                     label=r'$T(\omega_c)\,|E_{\rm inc}(t-L/c)|^2$')
+        tq, pq = _comsol_raw(tgt.imag, Ls); tq = tq + Ls
         sel = (tq >= 1) & (np.abs(np.round(tq / 5) * 5 - tq) < 1e-6)
         axp.plot(tq[sel], pq[sel], marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none', label='COMSOL')
         axp.set_ylim(1e-20, 1e1); axp.set_ylabel('power at the exit face')
 
         Tt = Po[ok] / Pv[ok]; xt = x[ok]
-        mk = xt > 1
+        mk = xt > Ls + 0.5                       # skip the 0/0 at the arrival of the first light
         axt.semilogy(xt[mk], Tt[mk], color=C.C_T, lw=C.LW_THIN, label=r'TMM $\times$ FFT')
-        tq2, qc, _ = _comsol_ratio(tgt.imag, Ls)
+        tq2, qc, _ = _comsol_ratio(tgt.imag, Ls); tq2 = tq2 + Ls
         sel = (tq2 >= 1) & (np.abs(np.round(tq2 / 5) * 5 - tq2) < 1e-6)
         axt.plot(tq2[sel], qc[sel] ** 2, marker='o', mfc='none', mec='k', ms=3, mew=0.6, ls='none',
                  label='COMSOL')
@@ -653,11 +689,50 @@ def fig_slab_wide():
         ax.set_xlabel(r'time after turn-on ($T_r$)')
     axs[1][0].set_xlabel(r"Re $\omega/\omega_r$"); axs[0][0].set_xlabel(r"Re $\omega/\omega_r$")
     axs[0][1].legend(loc='lower left', fontsize=5); axs[0][2].legend(loc='upper left', fontsize=5)
-    for ax, ttl in zip(axs[0], (r'$T(\omega)$ over complex $\omega$', 'raw powers (no division)',
+    for ax, ttl in zip(axs[0], (r'$T(\omega)$ over complex $\omega$', 'raw powers',
                                 r'$T(t)=|E_{\rm out}(t)|^2/|E_{\rm inc}(t-L/c)|^2$')):
         ax.set_title(ttl, fontsize=7)
-    C.label_panels(fig, [(ax, l) for ax, l in zip(axs.ravel(), 'abcdef')], dx_in=0.54)
+    C.label_panels(fig, [(ax, l) for ax, l in zip(axs[:, :2].ravel(), 'abde')], dx_in=0.54)
+    C.label_panels(fig, [(axs[0][2], 'c'), (axs[1][2], 'f')], dx_in=0.42)
     C.save(fig, os.path.join(OUT, 'B3s4_slab_2x3.png'))
+
+
+def fig_drive_delay():
+    """B3s0 (explainer for B3s4): the drive at the entry face E_inc(t) and the same drive delayed by
+    the vacuum transit time, E_inc(t - L/c) = what vacuum would deliver to the exit face at t
+    (L = 1 lam_r, so L/c = 1 T_r). a: the fields, linear; b: their powers, log. Because the drive
+    decays, the delayed copy is ALWAYS larger, by e^{|w''|L/c} = 1.37 (power 1.87)."""
+    Ls = 1.0
+    fig, axs, _ = C.panel_grid(1, 2, margin_l=0.47)
+    ax_a, ax_b = axs[0]
+    t = np.arange(NT) * DT; wr = cf.rfft_omega(NT, DT)
+    dcx, vac = cf.complex_response(np.exp(1j * wr * Ls), t, ETA, T_ON, T0)
+    x = t - T0
+    m = (x > 12) & (x < 20)
+    ax_a.plot(x[m], dcx[m].real, color='0.75', lw=C.LW_THIN)
+    ax_a.plot(x[m], np.abs(dcx[m]), color='0.45', lw=C.LW_MAIN, label=r'$E_{\rm inc}(t)$')
+    ax_a.plot(x[m], np.abs(vac[m]), color='0.45', lw=C.LW_MAIN, ls='--', label=r'$E_{\rm inc}(t-L/c)$')
+    h = np.interp(15.0, x, np.abs(dcx))                       # same height, one transit time apart
+    ax_a.annotate('', xy=(16.0, h), xytext=(15.0, h),
+                  arrowprops=dict(arrowstyle='<->', lw=0.7, color='k', shrinkA=0, shrinkB=0))
+    ax_a.text(15.5, h - 0.003, r'$L/c$', ha='center', va='top', fontsize=6)
+    ax_a.set_xlim(12, 20); ax_a.set_ylim(-0.04, 0.04)
+    ax_a.set_xlabel(r'time after turn-on ($T_r$)'); ax_a.set_ylabel('field')
+    ax_a.legend(loc='lower left', fontsize=5)
+    ok = x > Ls + 0.5
+    ratio = np.abs(vac[ok]) ** 2 / np.abs(dcx[ok]) ** 2
+    ax_b.plot(x[ok], ratio, color='0.45', lw=C.LW_MAIN)
+    ax_b.axhline(np.exp(2 * cf.TWO_PI * ETA * Ls), color='k', lw=C.LW_GUIDE, ls=':')
+    ax_b.text(59, np.exp(2 * cf.TWO_PI * ETA * Ls) + 0.05, r'$e^{2|\omega^{\prime\prime}|L/c}=1.87$',
+              ha='right', va='bottom', fontsize=6)
+    i = np.argmin(abs(x[ok] - 40))
+    print(f'B3s0: |E_inc(t-L/c)|^2/|E_inc(t)|^2 at t=40: {ratio[i]:.4f} '
+          f'(e^(2|w"|L/c) = {np.exp(2*cf.TWO_PI*ETA*Ls):.4f})')
+    ax_b.set_xlim(0, 60); ax_b.set_ylim(0, 2.5)
+    ax_b.set_xlabel(r'time after turn-on ($T_r$)')
+    ax_b.set_ylabel(r'$|E_{\rm inc}(t-L/c)|^2\,/\,|E_{\rm inc}(t)|^2$')
+    C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b')])
+    C.save(fig, os.path.join(OUT, 'B3s0_drive_delay.png'))
 
 
 def fig_lens():
@@ -673,7 +748,7 @@ def fig_lens():
     # is in view too
     xr = a * np.linspace(0.6, 2.0, 351); yi = a * np.linspace(-1.0, 0.01, 253)
     W = (xr[None, :] + 1j * yi[:, None]).ravel()
-    Z = 2 * np.log10(np.abs(_lens_rt(W)['tL'])).reshape(yi.size, xr.size)   # T = |t|^2 (see b)
+    Z = _lens_map(xr, yi)                    # T = |t|^2 (see b)
     im = _tmap(ax_a, xr / a, yi / a, Z)
     _drive_marks(ax_a, LENS_ETA, line='w', star='c')
     # inset: zoom on the drive line around w_r, where medium 2's poles sit just above it
@@ -682,7 +757,7 @@ def fig_lens():
     mx = (xr / a >= zx[0] - 0.01) & (xr / a <= zx[1] + 0.01)
     yz = a * np.linspace(zy[0], zy[1], 161)
     Wz = (xr[mx][None, :] + 1j * yz[:, None]).ravel()
-    Zz = 2 * np.log10(np.abs(_lens_rt(Wz)['tL'])).reshape(yz.size, mx.sum())
+    Zz = _lens_map(xr[mx], yz)
     _tmap(axi, xr[mx] / a, yz / a, Zz)
     _drive_marks(axi, LENS_ETA, line='w', star='c')
     axi.set_xlim(*zx); axi.set_ylim(*zy)
@@ -718,7 +793,7 @@ def fig_lens():
     ax_b.axhline(abs(oc['rL'][0]) ** 2, color=C.C_R, ls=':', lw=C.LW_GUIDE)
     print(f'B3L at w_c: T={abs(oc["tL"][0])**2:.4f} R={abs(oc["rL"][0])**2:.2e}; at t=40: '
           f'T={np.interp(40, t, np.abs(tl)**2):.3g} R={np.interp(40, t, np.abs(rl)**2):.3g}')
-    ax_b.set_xlim(0, 40); ax_b.set_ylim(1e-6, 1e6)
+    ax_b.set_xlim(0, 40); ax_b.set_ylim(1e-10, 1e6)
     ax_b.set_xlabel(r'time after turn-on ($T_r$)')
     ax_b.legend(loc='upper left', fontsize=5)
     C.label_panels(fig, [(ax_a, 'a'), (ax_b, 'b')])
@@ -766,7 +841,7 @@ def fig_grow():
 FIGS = {'freq': fig_freq, 'freq_simple': fig_freq_simple, 'eta_zero': fig_eta_zero, 'trunc': fig_trunc,
         'time': fig_time, 'grow': fig_grow, 'single_layer': fig_single_layer, 'slab_td': fig_slab_td,
         'slab_td_t': lambda: fig_slab_td('t'), 'slab_td_raw': lambda: fig_slab_td('raw'),
-        'lens': fig_lens, 'slab_wide': fig_slab_wide}
+        'lens': fig_lens, 'slab_wide': fig_slab_wide, 'drive_delay': fig_drive_delay}
 
 if __name__ == '__main__':
     names = sys.argv[1:] or list(FIGS)
