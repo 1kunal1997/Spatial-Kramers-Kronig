@@ -305,8 +305,9 @@ def _lens_em(w):
     return cat(e1, e2), cat(m1, m2)
 
 
-def _lens_rt(w, clad='m1'):
-    """r, t of the lens at normal incidence. clad='m1' (default since 2026-11-16): semi-infinite
+def _lens_rt(w, clad='vac'):
+    """r, t of the lens at normal incidence. Default clad='vac' (back to vacuum 2026-11-17: no
+    branch cuts in the map; the time domain is the same, 8.0e4 vs 8.3e4 at t = 40). clad='m1': semi-infinite
     Medium 1 on both sides, as in Long et al. Fig. 2 (their source sits in Medium 1 and their
     propagating/evanescent boundaries are Medium 1's light lines); 'vac': vacuum outside.
     t = exit-face field / entry-face incident field. With Medium 1 outside only its impedance
@@ -323,18 +324,10 @@ def _lens_rt(w, clad='m1'):
 
 
 def _lens_map(xr, yi):
-    """log10 T(w) = 2 log10|t| of the Medium-1-clad lens on the grid xr + i yi (yi ascending).
-    kappa = w sqrt(eps1/mu1) is continued DOWN each column from the real axis (sign chosen
-    closest to the row above), so the branch cuts from Medium 1's poles/zeros point straight
-    down (-i infinity) instead of lying horizontally as principal roots would put them."""
-    W = xr[None, :] + 1j * yi[:, None]
-    E, U = _lens_em(W.ravel())
-    k = (W.ravel() * np.sqrt(E[:, 0] / U[:, 0])).reshape(W.shape)
-    for i in range(yi.size - 2, -1, -1):
-        flip = np.abs(k[i] + k[i + 1]) < np.abs(k[i] - k[i + 1])
-        k[i, flip] *= -1
-    _, tL = cf._rt_from_M(cf._layer_product(E, LENS_D, W.ravel(), 0.0, U, 's'), k.ravel())
-    return 2 * np.log10(np.abs(tL)).reshape(W.shape)
+    """log10 |t(w)|^2 of the vacuum-clad lens on the grid xr + i yi (no branch cuts: vacuum's
+    k = w is single-valued). The Medium-1-clad version (2026-11-16) is in git history (ed85492)."""
+    W = (xr[None, :] + 1j * yi[:, None]).ravel()
+    return 2 * np.log10(np.abs(_lens_rt(W)['tL'])).reshape(yi.size, xr.size)
 
 
 def _lens_td():
@@ -883,6 +876,46 @@ def fig_lens_kx():
     C.save(fig, os.path.join(OUT, 'B3L2_lens_kpar.png'))
 
 
+def fig_lens_angles():
+    """B3L3 (backup, 2026-11-17; new block = separate slide): the vacuum-clad lens hit by a plane
+    wave from a FIXED ANGLE theta (TM, k_par = w sin theta at every frequency, as in B9), Medium 2
+    refit so t(w_c) = 1 exactly at every angle. |t(t)|^2 = |out(t)/drive(t)|^2 diverges at every
+    angle, as at normal incidence. (Fixed REAL k_par instead -- B3L2 -- is confounded: the outside
+    medium's own grazing waves, at its light line, outlast the drive even with no lens.)
+    Each curve uses the largest contour shift c that two independent shifts (c, c2) confirm; points
+    where they differ by > 2 % are dropped, and each curve stops where the shifted drive reaches
+    the double-precision floor."""
+    LP, ev = _lens_kx_setup()
+    a = cf.TWO_PI; d = np.array([0.5, 1.0, 0.5]) * LENS_LAM0
+
+    def lens(w, th):
+        w = np.atleast_1d(np.asarray(w, complex)); w = np.where(w == 0, 1e-9, w)
+        e1, m1, e2, m2 = [ev(k, w) for k in ('e1', 'm1', 'e2', 'm2')]
+        M = cf._layer_product(np.stack([e1, e2, e1], 1), d, w, w * np.sin(np.radians(th)),
+                              np.stack([m1, m2, m1], 1), 'p')
+        return cf._rt_from_M(M, w * np.cos(np.radians(th)))[1]
+
+    t = np.arange(NT) * DT / 2
+    fig, axs, _ = C.panel_grid(1, 1, margin_l=0.47)
+    ax = axs[0][0]
+    cols = plt.cm.viridis(np.linspace(0, 0.85, 5))
+    for th, (c, c2), col in zip((0, 20, 40, 60, 70), ((0.28, 0.20),) * 3 + ((0.12, 0.06),) * 2, cols):
+        r = []
+        for cc in (c * a, c2 * a):
+            dcx, o = cf.complex_response_shifted(lambda w: lens(w, th), t, LENS_ETA, 5.0, T0, cc)
+            r.append(np.abs(o / dcx) ** 2)
+        x = t - T0
+        tmax = min(40.0, 30 / (LENS_ETA * a - c * a))
+        ok = (x > LENS_D.sum()) & (x <= tmax) & (np.abs(np.log10(r[0] / r[1])) < np.log10(1.02))
+        ax.semilogy(x[ok], r[0][ok], color=col, lw=C.LW_THIN, label=rf'$\theta={th}^\circ$')
+        print(f'B3L3 theta={th}: |t(t)|^2 at t=20: {np.interp(20, x, r[0]):.3g}; shown to t={x[ok].max():.1f}')
+    ax.axhline(1, color='k', ls=':', lw=C.LW_GUIDE)
+    ax.set_xlim(0, 40); ax.set_ylim(1e-3, 1e9)
+    ax.set_xlabel(r'time after turn-on ($T_r$)'); ax.set_ylabel(r'$|t(t)|^2$')
+    ax.legend(loc='upper left', fontsize=5)
+    C.save(fig, os.path.join(OUT, 'B3L3_lens_angles.png'))
+
+
 def fig_grow():
     """B4: the stable flip side. A GROWING drive (eta < 0) puts every pole below w_c, so the
     steady state is always reached; LOSSLESS Lorentz media (gam -> 0) then realise a lossy
@@ -924,7 +957,7 @@ def fig_grow():
 FIGS = {'freq': fig_freq, 'freq_simple': fig_freq_simple, 'eta_zero': fig_eta_zero, 'trunc': fig_trunc,
         'time': fig_time, 'grow': fig_grow, 'single_layer': fig_single_layer, 'slab_td': fig_slab_td,
         'slab_td_t': lambda: fig_slab_td('t'), 'slab_td_raw': lambda: fig_slab_td('raw'),
-        'lens': fig_lens, 'lens_kx': fig_lens_kx, 'slab_wide': fig_slab_wide, 'drive_delay': fig_drive_delay}
+        'lens': fig_lens, 'lens_kx': fig_lens_kx, 'lens_angles': fig_lens_angles, 'slab_wide': fig_slab_wide, 'drive_delay': fig_drive_delay}
 
 if __name__ == '__main__':
     names = sys.argv[1:] or list(FIGS)

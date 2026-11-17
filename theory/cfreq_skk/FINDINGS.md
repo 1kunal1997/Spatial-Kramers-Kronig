@@ -610,3 +610,14 @@ A separate claude.ai session (literature only: no code, plots or numbers) listed
 - Physics: a source with fixed spatial profile (Long's Gaussian) has fixed real k∥; in any background, waves near
   grazing at that k∥ decay slower than the drive (in vacuum the branch point ω = k∥ is ON the real axis). Fixed-angle
   excitation (B9, k∥ = ω sin θ) has no such branch point, which is why B9 settled. TO CHECK before any claim.
+
+## Lens back to vacuum outside; fixed k∥ vs fixed angle (2026-11-17)
+- B3L reverted to vacuum cladding (Kunal: no branch cuts in the talk). |t(ω_c)|² = 0.988, |r|² = 1.4e-5 (Table 1
+  rounding), |t(40)|² = 8.0e4. Medium-1 version is in ed85492.
+- Fixed real k∥ with VACUUM outside is worse, not better: vacuum's light-line branch point is ON the real axis (ω = k∥),
+  so its grazing waves never decay. Lens |t(10)/t(ω_c)|² = 2.1e9, 6.4e8, 1.1e6, 1.9e4, 4.3 at k∥/k₀ = 0.05, 0.1, 0.2,
+  0.3, 0.5 (two contours agree). Fixed real k∥ cannot isolate the lens in any background. B3L2 png removed (code kept).
+- Fixed ANGLE (plane wave from direction θ, k∥ = ω sin θ, vacuum, TM) has no light-line branch point:
+  B3L3_lens_angles.png. |t(ω_c)|² = 1 at every angle (refit Medium 2), and |t(t)|² diverges at every angle:
+  t = 20: 104 (0°), 93 (20°), 95 (40°), 740 (60°), 4.0e8 (70°); t = 40: 8.1e4, 6.7e4, 2.2e5. 60–70° need a smaller
+  contour shift (0.12 vs 0.06 ω_r agree), so they are shown to t = 24 only; 80° unresolved (contours disagree).
