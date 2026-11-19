@@ -9,6 +9,7 @@
   python theory/cfreq_skk/fig_stable_gain.py slab_thick   # B7 1 lam vs 5 lam (B7_{eit,fano2}_thick)
   python theory/cfreq_skk/fig_stable_gain.py eps_map      # |eps(w)| vs |t(w)| maps (B7_{eit,fano2}_eps_map)
   python theory/cfreq_skk/fig_stable_gain.py pole_vs_L    # highest slab pole vs thickness (B7_pole_vs_thickness)
+  python theory/cfreq_skk/fig_stable_gain.py longhi       # B10: Longhi 2016 bidirectional target (data/longhi_bidir.npz)
 slab_thick / eps_map / pole_vs_L and the two-line B7 maps read data/slab_poles.npz (exp_slab_poles.py).
 """
 import sys, os, json
@@ -505,11 +506,77 @@ def fig_angle():
     C.save(fig, os.path.join(OUT, 'B9_angles_eit_layers.png'))
 
 
+def fig_longhi():
+    """B10 (2026-11-19, same 2x3 layout as B8): Longhi's BIDIRECTIONAL-invisibility target (Opt. Lett.
+    2016, Eq. 13, Theta = 3 k0) at eta = 0.05, from data/longhi_bidir.npz (exp_longhi_bidir.py).
+    rows: single-Lorentz layers (top), two-line layers (bottom).
+    a: target eps(x, w_c) (central part; the stack runs over |x| <= 4.77 lam_r);
+    d: the two-line layers at real w_r (passive).
+    b, e: log10 T(w) over complex w of each stack (b zoomed on w_c, as B8 b).
+    c, f: R_L, R_R, T(t) in the time domain; dotted = frequency-domain values at w_c."""
+    Q = np.load(os.path.join(_HERE, 'data', 'longhi_bidir.npz')); QM = json.loads(str(Q['meta']))
+    gap = 0.08 + 0.08 + 2 * C.YLABEL_W_IN + C.CENTER_GAP_IN
+    fig, axs, _ = C.panel_grid(2, 3, has_twin=True, width_in=7.5, margin_l=0.56, col_gap=gap,
+                               margin_t=C.LAYOUT_PAD_IN + 0.16,
+                               row_gap=C.XLABEL_H_IN + C.GAP_WS_IN + 0.16)
+    (ax_a, ax_b, ax_c), (ax_d, ax_e, ax_f) = axs
+    XL = 1.5
+    xf, tf = Q['xf'], Q['chif']
+    axr = C.profile_panel(ax_a, xf, 1 + tf.real, tf.imag, xlabel=r'$x/\lambda_r$',
+                          ylab_im=r"$\epsilon''(x,\omega_c)$", xlim=(-XL, XL))
+    ax_a.set_ylabel(r"$\epsilon'(x,\omega_c)$", color=C.C_EPS_RE)
+    axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
+    axr.fill_between(xf, tf.imag, 0, where=tf.imag < 0, color=C.C_EPS_IM, alpha=0.15, lw=0)
+    er = Q['fano2_eps_real']
+    axr = C.profile_panel(ax_d, Q['x'], er.real, er.imag, xlabel=r'$x/\lambda_r$',
+                          ylab_im=r"$\epsilon''(x,\omega_r)$", xlim=(-XL, XL))
+    ax_d.set_ylabel(r"$\epsilon'(x,\omega_r)$", color=C.C_EPS_RE)
+    axr.axhline(0, color='gray', lw=C.LW_GUIDE, ls=':')
+    axr.set_ylim(bottom=-0.02)
+    ax_a.set_title(r'target at $\omega_c$ (Longhi 2016)', fontsize=7)
+    ax_d.set_title(r'two-line layers at real $\omega_r$', fontsize=7)
+
+    L = float(Q['L'])
+    for ax, (xk, yk, zk) in ((ax_b, ('zoom_x', 'zoom_y', 'zoom_t_lorentz')), (ax_e, ('map_x', 'map_y', 'map_t_fano2'))):
+        xm, ym = Q[xk], Q[yk]
+        Z = _to_T(Q[zk], ym, L)
+        im = ax.pcolormesh(xm, ym, np.maximum(Z, B8_MAP_LIM[0]), cmap=MAGMA_OVER, vmin=B8_MAP_LIM[0],
+                           vmax=B8_MAP_LIM[1], shading='auto', rasterized=True)
+        ax.axhline(-0.05, color='w', lw=C.LW_GUIDE, ls='--')
+        ax.axhline(0, color='w', lw=C.LW_GUIDE, ls=':')
+        ax.plot([1], [-0.05], marker='*', color='c', ms=7, ls='none', zorder=5)
+        ax.text(1.008 if ax is ax_e else 1.002, -0.05 + 0.004, r'$\omega_c$', color='c', fontsize=6)
+        ax.set_xlabel(r"Re $\omega/\omega_r$"); ax.set_ylabel(r"Im $\omega/\omega_r$")
+        ax.set_ylim(ym[0], ym[-1])
+        _cbar_right(fig, ax, im, r'$\log_{10}T(\omega)$')
+    ax_b.set_title('single Lorentz layers', fontsize=7); ax_e.set_title('two-line layers', fontsize=7)
+
+    t = Q['t']
+    m = (t > 1) & (t < np.log(1e12) / (2 * np.pi * 0.05))
+    for ax, nm in ((ax_c, 'lorentz'), (ax_f, 'fano2')):
+        M = QM['media'][nm]
+        for key, ref, col, ls, lab in (('rL', 'RL', C.C_R, '-', r'$R_L$'), ('rR', 'RR', C.C_R, '--', r'$R_R$'),
+                                       ('tauL', 'T', C.C_T, '-', r'$T$')):
+            ax.semilogy(t[m], Q[f'{nm}_{key}'][m] ** 2, color=col, ls=ls, lw=C.LW_MAIN, label=lab)
+            ax.axhline(M[ref], color=col, ls=':', lw=C.LW_GUIDE)
+        ax.set_xlim(0, 88); ax.set_ylim(1e-10, 1e4)
+        ax.set_ylabel(r'$R_L,\ R_R,\ T$')
+        ax.set_xlabel(r'time after turn-on ($T_r$)')
+        ax.legend(loc='center right', fontsize=5)
+        print(f'B10 {nm}: at t=85 ' + ' '.join(f'{k}={v:.3g}' for k, v in M['td_t85'].items())
+              + f'; predicted R_L={M["RL"]:.3g} R_R={M["RR"]:.3g} T={M["T"]:.6f}; highest stack pole '
+              f'{M["highest_stack_pole"]}')
+    ax_c.set_title('single Lorentz layers', fontsize=7); ax_f.set_title('two-line layers', fontsize=7)
+    C.label_panels(fig, [(ax, l) for ax, l in zip(axs.ravel(), 'abcdef')], dx_in=0.54)
+    C.save(fig, os.path.join(OUT, 'B10_fano2_longhi_bidir.png'))
+
+
 FIGS = {'slab': lambda: (fig_slab('eit'), fig_slab('fano2')), 'skk': fig_skk, 'angle': fig_angle,
         'skk_fano2': fig_skk_twoline, 'skk_fano2_params': fig_skk_twoline_params, 'slab_noFDTD': lambda: fig_slab('fano2', fdtd=False),
         'slab_wide': lambda: fig_slab('fano2', fdtd=False, wide=True),
         'slab_thick': lambda: (fig_slab_thick('eit'), fig_slab_thick('fano2')),
-        'eps_map': lambda: (fig_eps_map('eit'), fig_eps_map('fano2')), 'pole_vs_L': fig_pole_vs_L}
+        'eps_map': lambda: (fig_eps_map('eit'), fig_eps_map('fano2')), 'pole_vs_L': fig_pole_vs_L,
+        'longhi': fig_longhi}
 if __name__ == '__main__':
     for nm in (sys.argv[1:] or list(FIGS)):
         FIGS[nm]()

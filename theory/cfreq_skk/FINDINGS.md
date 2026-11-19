@@ -621,3 +621,32 @@ A separate claude.ai session (literature only: no code, plots or numbers) listed
   B3L3_lens_angles.png. |t(ω_c)|² = 1 at every angle (refit Medium 2), and |t(t)|² diverges at every angle:
   t = 20: 104 (0°), 93 (20°), 95 (40°), 740 (60°), 4.0e8 (70°); t = 40: 8.1e4, 6.7e4, 2.2e5. 60–70° need a smaller
   contour shift (0.12 vs 0.06 ω_r agree), so they are shown to t = 24 only; 80° unresolved (contours disagree).
+
+## B10: bidirectional invisibility (Longhi 2016) from two-line layers settles (2026-11-19)
+`exp_longhi_bidir.py` → `data/longhi_bidir.npz`; `fig_stable_gain.py longhi` → `B10_fano2_longhi_bidir.png`.
+- **Target.** Longhi, Opt. Lett. 2016 (arXiv:1607.04085, `Papers/Longhi_Bidirectional_Invisibility_sKK_2016.pdf`),
+  Eq. 13: ε(x) = 1 − A(x + iσ)⁻² e^{iΘx}. β = −A(x + iσ)⁻² is analytic in Im x ≥ 0 and e^{iΘx} moves its spectrum
+  to k ≥ Θ, so for Θ ≥ 2k₀ nothing can back-scatter a wave from either side: R_L = R_R = 0, t = 1, every angle,
+  TE and TM. Im ε takes both signs (half the layers), so it needs gain at real ω. His σk₀ = 2, Ak₀² = 1, |x| ≤ 30/k₀
+  (L = 9.55 λ_r); our cos² tail window (flat on |x| ≤ 15/k₀), 955 layers (λ_r/100; 2× and 4× N identical to 3
+  significant figures), η = 0.05 as B8.
+- **Θ = 3k₀, not Longhi's 2k₀.** Θ = 2k₀ is the edge of his theorem: the spectral edge sits exactly at the
+  back-scattering wavenumber 2k, so truncation leaks straight into R_R. Ideal staircase, R_R at real ω_r / at ω_c:
+  Θ = 2k₀: 2.0e-3 / **11** (his hard cut gives 1.1e-3 at real ω, matching his Fig. 2b); Θ = 2.5k₀: 1.5e-7 / 2.6e-3;
+  Θ = 3k₀: 3.9e-9 / 3.5e-6. Under the decaying drive the right-incidence Born integrand carries e^{2|k″||x|} from
+  the far left tail, which decays only as 1/x², so the leak is amplified (the B2 truncation law, η·L/λ = 0.48 here).
+  Moving the spectral edge away from 2k removes it. Same mechanism makes R_R grow with length at Θ = 2k₀
+  (R_R(ω_c) = 1.0 at |x| ≤ 20/k₀, 11 at 30/k₀, 130 at 40/k₀).
+- **Frequency domain at ω_c** (ideal = single Lorentz = two-line, by construction): R_L = 5.3e-9, R_R = 3.5e-6,
+  |τ − 1| = 2.9e-6. All angles 0–89°, s and p (two-line): R_L ≤ 3.9e-8, R_R ≤ 1.2e-5, |τ − 1| ≤ 1.7e-4.
+- **Two-line layers** (γ₁ = 10|ω″|, γ₂ = 4|ω″|, ρ = 0.36, `fano2_design` defaults): passive (min Im ε over real ω
+  = 3e-11 ≥ 0), ω₀/ω_r ∈ [0.884, 1.154], ω_p1 ≤ 0.47 ω_r. Highest stack pole −0.098 ω_r (below the drive line at
+  −0.05; the slab modes pile up against the narrow line's material poles at −0.10). **Time domain settles:** at
+  t = 85, R_L = 5.31e-9, R_R = 3.54e-6, T = 1.0000003, equal to the frequency-domain values; settled by t ≈ 40–50
+  (T within 1e-4 by t = 30).
+- **Single-Lorentz layers** (κ = 0.5 κ_max, as B8): same ω_c response, but their layer poles form a ring around
+  ω_c whose top is at −0.025 ω_r, above the drive line. **Diverges:** R_L = 1.0e3, R_R = 340, T = 320 at t = 85.
+- So the two-line route is not specific to the KHP target: a second, harder target (invisible from BOTH sides,
+  where B8 had R_R = 2.1) works with the same per-layer recipe, at a 2.4× longer structure. Only the profile
+  parameter Θ had to move off the edge of Longhi's own theorem.
+- Not done: time domain at oblique incidence; Θ = 2.5k₀ in time; η = 0.01.
